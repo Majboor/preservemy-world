@@ -1,0 +1,10 @@
+.git
+.gitignore
+.DS_Store
+Dockerfile
+README.md
+node_modules
+npm-debug.log
+yarn-error.log
+assets/lost-relic-source.mp4
+demo-game/scene.ply
