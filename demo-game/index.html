@@ -1,0 +1,1961 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#050505">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Myworld">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="app-icon.png" type="image/png">
+  <link rel="apple-touch-icon" href="app-icon.png">
+  <style>
+    *,
+    *::before,
+    *::after {
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    input,
+    textarea {
+      -webkit-user-select: text;
+      user-select: text;
+    }
+    html,
+    body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+      touch-action: none;
+      overscroll-behavior: none;
+    }
+    #hud {
+      position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
+      background: rgba(0,0,0,.65); color: rgba(255,255,255,.85);
+      font: 11px/1.5 monospace; padding: 5px 16px; border-radius: 6px;
+      z-index: 10; pointer-events: none; white-space: nowrap;
+    }
+    #lost-toast {
+      position: fixed; left: 50%; bottom: 54px; transform: translate(-50%, 10px);
+      z-index: 45; pointer-events: none; opacity: 0;
+      padding: 10px 14px; border-radius: 8px;
+      border: 1px solid rgba(255,255,255,.16);
+      background: rgba(0,0,0,.72); color: #fff;
+      font: bold 11px monospace; letter-spacing: .06em; text-transform: uppercase;
+      box-shadow: 0 16px 45px rgba(0,0,0,.35);
+      transition: opacity .25s ease, transform .25s ease;
+    }
+    #lost-toast.is-visible {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+    #startup-notice {
+      position: fixed; inset: 0; z-index: 120;
+      display: flex; align-items: center; justify-content: center;
+      padding: 18px; background: rgba(0,0,0,.94);
+      color: #fff;
+    }
+    #startup-notice-card {
+      width: min(390px, 100%);
+      border: 1px solid rgba(255,255,255,.16);
+      border-radius: 10px;
+      background: rgba(16,20,28,.94);
+      padding: 18px;
+      box-shadow: 0 22px 70px rgba(0,0,0,.42);
+      font: 13px/1.5 system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+    }
+    #startup-notice-card h1 {
+      margin: 0 0 8px;
+      font-size: 18px;
+      line-height: 1.15;
+    }
+    #startup-notice-card p {
+      margin: 0;
+      color: rgba(255,255,255,.76);
+    }
+    #startup-notice-close {
+      margin-top: 14px;
+      min-height: 38px;
+      padding: 0 14px;
+      border: 0;
+      border-radius: 6px;
+      background: #4af;
+      color: #001426;
+      font: bold 11px monospace;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+    #startup-notice-close:disabled {
+      cursor: wait;
+      opacity: .62;
+      background: rgba(255,255,255,.24);
+      color: rgba(255,255,255,.72);
+    }
+    #startup-load-status {
+      margin-top: 12px;
+      color: #4af;
+      font: bold 10px monospace;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    #startup-load-estimate {
+      margin-top: 6px;
+      color: rgba(255,255,255,.58);
+      font: 11px monospace;
+    }
+    #startup-progress {
+      position: relative;
+      height: 4px;
+      margin-top: 14px;
+      overflow: hidden;
+      border-radius: 2px;
+      background: rgba(255,255,255,.12);
+    }
+    #startup-progress-bar {
+      position: absolute;
+      top: 0; bottom: 0;
+      width: 38%;
+      background: #4af;
+      animation: startup-progress 1.15s ease-in-out infinite;
+    }
+    #startup-notice.is-ready #startup-progress-bar {
+      left: 0;
+      width: 100%;
+      animation: none;
+      background: #4f4;
+    }
+    #startup-notice.is-error #startup-progress-bar {
+      left: 0;
+      width: 100%;
+      animation: none;
+      background: #f66;
+    }
+    @keyframes startup-progress {
+      0% { left: -42%; }
+      50% { left: 34%; }
+      100% { left: 104%; }
+    }
+    #speed {
+      position: fixed; top: 20px; right: 24px; color: #fff;
+      font: bold 18px monospace; z-index: 10; pointer-events: none;
+      text-shadow: 0 0 8px rgba(0,150,255,.6);
+    }
+    #crosshair {
+      position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
+      width: 20px; height: 20px; z-index: 10; pointer-events: none;
+    }
+    #crosshair::before, #crosshair::after {
+      content: ''; position: absolute; background: rgba(255,255,255,.5);
+    }
+    #crosshair::before { top: 50%; left: 0; right: 0; height: 1px; margin-top: -.5px; }
+    #crosshair::after { left: 50%; top: 0; bottom: 0; width: 1px; margin-left: -.5px; }
+
+    /* ── Throttle gauge ──────────────────────────────────────────────────── */
+    #throttle-panel {
+      position: fixed; right: 24px; bottom: 60px; z-index: 20;
+      width: 36px; height: 180px;
+      background: rgba(0,0,0,.6); border-radius: 8px;
+      border: 1px solid rgba(255,255,255,.12);
+      backdrop-filter: blur(6px);
+      display: flex; flex-direction: column; align-items: center;
+      padding: 8px 0;
+    }
+    #throttle-panel .label {
+      font: bold 9px monospace; color: rgba(255,255,255,.5);
+      letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px;
+    }
+    #throttle-track {
+      position: relative; width: 6px; flex: 1;
+      background: rgba(255,255,255,.08); border-radius: 3px; overflow: hidden;
+    }
+    #throttle-fill {
+      position: absolute; bottom: 0; left: 0; width: 100%;
+      background: linear-gradient(to top, #1a6, #4f4, #ff4);
+      border-radius: 3px; transition: height 0.05s;
+    }
+    #throttle-val {
+      font: bold 11px monospace; color: #fff; margin-top: 6px;
+      text-shadow: 0 0 6px rgba(0,200,100,.4);
+    }
+    #throttle-slider {
+      position: absolute; left: -14px; width: 64px; height: 100%;
+      opacity: 0; cursor: ns-resize; writing-mode: bt-lr;
+      -webkit-appearance: slider-vertical;
+    }
+    /* Tick marks on throttle */
+    #throttle-ticks {
+      position: absolute; right: 10px; top: 0; bottom: 0; width: 8px;
+    }
+    #throttle-ticks span {
+      position: absolute; left: 0; width: 8px; height: 1px;
+      background: rgba(255,255,255,.15);
+    }
+    /* ── Minimap ─────────────────────────────────────────────────────────── */
+    #minimap {
+      position: fixed; bottom: 60px; left: 24px; z-index: 20;
+      width: 140px; height: 140px;
+      background: rgba(0,0,0,.55); border-radius: 8px;
+      border: 1px solid rgba(255,255,255,.12);
+      backdrop-filter: blur(4px); overflow: hidden;
+    }
+    #minimap canvas { width: 100%; height: 100%; }
+    #minimap .label {
+      position: absolute; top: 4px; left: 0; width: 100%;
+      text-align: center; font: bold 8px monospace;
+      color: rgba(255,255,255,.4); letter-spacing: 1px;
+    }
+
+    /* ── Altitude bar ───────────────────────────────────────────────────── */
+    #alt-bar {
+      position: fixed; left: 170px; bottom: 60px; z-index: 20;
+      width: 18px; height: 140px;
+      background: rgba(0,0,0,.5); border-radius: 6px;
+      border: 1px solid rgba(255,255,255,.1);
+      backdrop-filter: blur(4px);
+      display: flex; flex-direction: column; align-items: center;
+      padding: 4px 0;
+    }
+    #alt-bar .label { font: bold 8px monospace; color: rgba(255,255,255,.4); letter-spacing: 1px; }
+    #alt-track { position: relative; width: 4px; flex: 1; background: rgba(255,255,255,.06); border-radius: 2px; margin: 3px 0; }
+    #alt-indicator {
+      position: absolute; left: -3px; width: 10px; height: 3px;
+      background: #4af; border-radius: 1px; transition: bottom 0.05s;
+    }
+    #alt-val { font: bold 9px monospace; color: #4af; }
+
+    /* ── Compass ─────────────────────────────────────────────────────────── */
+    #compass {
+      position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+      z-index: 20; pointer-events: none;
+      width: 200px; height: 24px; overflow: hidden;
+      background: rgba(0,0,0,.45); border-radius: 4px;
+      border: 1px solid rgba(255,255,255,.08);
+    }
+    #compass-strip {
+      position: absolute; top: 0; height: 100%;
+      font: bold 10px monospace; color: rgba(255,255,255,.6);
+      white-space: nowrap; display: flex; align-items: center;
+      transition: left 0.05s;
+    }
+    #compass-strip .mark {
+      display: inline-block; width: 50px; text-align: center;
+      border-left: 1px solid rgba(255,255,255,.12);
+    }
+    #compass-strip .mark.cardinal { color: #fff; }
+    #compass-needle {
+      position: absolute; left: 50%; top: 0; width: 2px; height: 100%;
+      background: #f44; transform: translateX(-1px);
+    }
+
+    /* ── Waypoint rings + score ──────────────────────────────────────────── */
+    #score-panel {
+      position: fixed; top: 50px; right: 24px; z-index: 20; pointer-events: none;
+      font: 12px monospace; color: #fff; text-align: right;
+      text-shadow: 0 0 6px rgba(0,0,0,.6);
+    }
+    #score-panel .big { font-size: 20px; font-weight: bold; color: #4f4; }
+    #ring-msg {
+      position: fixed; top: 50%; left: 50%; transform: translate(-50%,-80px);
+      z-index: 30; pointer-events: none;
+      font: bold 24px monospace; color: #4f4;
+      text-shadow: 0 0 20px rgba(0,255,100,.6);
+      opacity: 0; transition: opacity 0.3s;
+    }
+    #back-link {
+      position: fixed; top: 20px; left: 24px; z-index: 40;
+      display: inline-flex; min-height: 34px; align-items: center;
+      padding: 0 12px; border: 1px solid rgba(255,255,255,.18);
+      border-radius: 6px; background: rgba(0,0,0,.55);
+      color: rgba(255,255,255,.9); font: bold 10px monospace;
+      letter-spacing: .08em; text-decoration: none; text-transform: uppercase;
+      backdrop-filter: blur(6px);
+    }
+    #back-link:hover { background: rgba(0,0,0,.72); color: #fff; }
+    #tutorial-overlay {
+      position: fixed; inset: 0; z-index: 90;
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px; background: rgba(0,0,0,.72);
+      color: #fff; backdrop-filter: blur(8px);
+    }
+    #tutorial-card {
+      width: min(340px, 100%);
+      background: rgba(16,20,28,.94);
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 10px;
+      padding: 18px;
+      font: 13px/1.5 system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+      box-shadow: 0 20px 70px rgba(0,0,0,.45);
+    }
+    #tutorial-card h1 {
+      margin: 0 0 8px;
+      font-size: 20px;
+      line-height: 1.1;
+    }
+    #tutorial-card p { margin: 0; color: rgba(255,255,255,.78); }
+    .tutorial-step { display: none; }
+    .tutorial-step.is-active { display: block; }
+    .tutorial-count {
+      margin-bottom: 8px;
+      color: #4af;
+      font: bold 10px monospace;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+    .tutorial-hint {
+      margin-top: 12px;
+      padding: 10px;
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 7px;
+      background: rgba(255,255,255,.05);
+      color: rgba(255,255,255,.78);
+      font-size: 12px;
+    }
+    .tutorial-hint strong {
+      display: block;
+      color: #fff;
+      font-size: 11px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .tutorial-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+    .tutorial-actions button {
+      min-height: 38px;
+      padding: 0 14px;
+      border-radius: 6px;
+      font: bold 11px monospace;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+    #tutorial-quick,
+    #tutorial-next,
+    #tutorial-watch { border: 0; background: #4af; color: #001426; }
+    #tutorial-back,
+    #tutorial-control {
+      border: 1px solid rgba(255,255,255,.22);
+      background: transparent; color: #fff;
+    }
+    .tutorial-final-actions { display: none; }
+    .tutorial-final-actions.is-active { display: flex; }
+    #mobile-controls,
+    #rotate-landscape {
+      display: none;
+    }
+    @media (max-width: 760px), (pointer: coarse) {
+      body { touch-action: none; }
+      #controls,
+      #throttle-panel,
+      #hud,
+      #score-panel {
+        display: none;
+      }
+      #back-link {
+        top: 12px; left: 12px; min-height: 34px;
+        padding: 0 10px; z-index: 70;
+      }
+      #speed {
+        top: 12px; right: 12px; font-size: 14px;
+      }
+      #compass {
+        top: 52px; width: 156px;
+      }
+      #minimap {
+        left: 12px; bottom: 14px;
+        width: 94px; height: 94px;
+      }
+      #alt-bar {
+        display: none;
+      }
+      #controls {
+        display: block;
+        top: 54px !important;
+        left: 12px !important;
+        right: auto !important;
+        max-width: calc(100vw - 250px);
+        padding: 4px 6px !important;
+        border-radius: 4px !important;
+        background: rgba(0,0,0,.48) !important;
+        font: 9px/1.2 monospace !important;
+        white-space: nowrap;
+        overflow: hidden;
+      }
+      #controls br {
+        display: none;
+      }
+      #controls label {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        margin: 0 6px 0 0 !important;
+      }
+      #controls input {
+        width: 13px;
+        height: 13px;
+        margin: 0;
+      }
+      #controls > div {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        margin-top: 0 !important;
+      }
+      #controls button {
+        min-height: 23px;
+        padding: 0 7px !important;
+        border-radius: 3px !important;
+        font: 9px monospace !important;
+      }
+      #follow-status {
+        display: none;
+      }
+      #mobile-controls {
+        position: fixed;
+        inset: auto 0 0;
+        height: 180px;
+        z-index: 68;
+        display: block;
+        pointer-events: none;
+      }
+      .touch-pad,
+      .touch-actions {
+        position: absolute;
+        display: grid; gap: 8px;
+        pointer-events: auto;
+      }
+      .touch-pad {
+        left: max(14px, env(safe-area-inset-left));
+        bottom: max(14px, env(safe-area-inset-bottom));
+        grid-template-columns: repeat(3, 52px);
+        grid-template-rows: repeat(3, 50px);
+      }
+      .touch-extra {
+        position: absolute;
+        display: grid;
+        right: max(14px, env(safe-area-inset-right));
+        bottom: max(14px, env(safe-area-inset-bottom));
+        grid-template-columns: repeat(2, 58px);
+        grid-template-rows: repeat(2, 52px);
+        gap: 8px;
+        pointer-events: auto;
+      }
+      .touch-actions {
+        left: 50%;
+        bottom: max(14px, env(safe-area-inset-bottom));
+        transform: translateX(-50%);
+        grid-template-columns: repeat(3, 56px);
+        grid-template-rows: 52px;
+      }
+      .touch-btn {
+        min-height: 50px;
+        border: 1px solid rgba(255,255,255,.22);
+        border-radius: 8px; background: rgba(0,0,0,.58);
+        color: #fff; font: bold 22px/1 monospace;
+        letter-spacing: 0;
+        backdrop-filter: blur(8px); touch-action: none;
+        overflow-wrap: anywhere;
+        -webkit-user-select: none;
+        user-select: none;
+        -webkit-touch-callout: none;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .touch-btn:active,
+      .touch-btn.is-active {
+        background: rgba(68,170,255,.48);
+        border-color: rgba(120,200,255,.78);
+      }
+      .touch-fwd { grid-column: 2; grid-row: 1; }
+      .touch-strafe-left { grid-column: 1; grid-row: 2; }
+      .touch-strafe-right { grid-column: 3; grid-row: 2; }
+      .touch-back { grid-column: 2; grid-row: 3; }
+      .touch-left { grid-column: 1; grid-row: 1; }
+      .touch-right { grid-column: 2; grid-row: 1; }
+      .touch-up { grid-column: 1; grid-row: 2; }
+      .touch-down { grid-column: 2; grid-row: 2; }
+      .touch-yaw { font-size: 20px; }
+      @media (max-width: 460px) {
+        .touch-pad {
+          left: max(10px, env(safe-area-inset-left));
+          grid-template-columns: repeat(3, 50px);
+        }
+        .touch-extra {
+          right: max(10px, env(safe-area-inset-right));
+          bottom: max(10px, env(safe-area-inset-bottom));
+          grid-template-columns: repeat(2, 56px);
+        }
+        .touch-actions {
+          bottom: max(10px, env(safe-area-inset-bottom));
+          grid-template-columns: repeat(3, 54px);
+        }
+        .touch-btn {
+          min-height: 50px;
+          font-size: 20px;
+        }
+      }
+      #tutorial-overlay { align-items: flex-end; padding: 12px; }
+      #tutorial-card {
+        max-height: calc(100svh - 24px);
+        overflow: auto;
+        padding: 18px;
+      }
+      #tutorial-card h1 { font-size: 19px; }
+      #lost-toast {
+        bottom: 122px;
+        max-width: calc(100vw - 32px);
+        white-space: normal;
+        text-align: center;
+      }
+      #lost-toast .desktop-hint {
+        display: none;
+      }
+      #lost-toast .mobile-hint {
+        display: inline;
+      }
+    }
+    @media (max-width: 900px) and (orientation: portrait), (pointer: coarse) and (orientation: portrait) {
+      #rotate-landscape {
+        position: fixed;
+        inset: 0;
+        z-index: 130;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        background: #050505;
+        color: #fff;
+        text-align: center;
+        font: 14px/1.5 system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+      }
+      #rotate-landscape-card {
+        width: min(320px, 100%);
+        padding: 18px;
+        border: 1px solid rgba(255,255,255,.18);
+        border-radius: 8px;
+        background: rgba(20,20,22,.96);
+      }
+      #rotate-landscape-icon {
+        width: 54px;
+        height: 34px;
+        margin: 0 auto 14px;
+        border: 2px solid rgba(255,255,255,.76);
+        border-radius: 5px;
+      }
+      #rotate-landscape-card h1 {
+        margin: 0 0 6px;
+        font-size: 18px;
+        line-height: 1.2;
+      }
+      #rotate-landscape-card p {
+        margin: 0;
+        color: rgba(255,255,255,.72);
+      }
+      .pwa-install,
+      .ios-install-guide {
+        display: none;
+        margin-top: 14px;
+        border-top: 1px solid rgba(255,255,255,.12);
+        padding-top: 14px;
+      }
+      body.is-android .pwa-install,
+      body.is-ios .ios-install-guide {
+        display: block;
+      }
+      #android-install-btn {
+        min-height: 38px;
+        width: 100%;
+        border: 0;
+        border-radius: 6px;
+        background: #fff;
+        color: #050505;
+        font: bold 12px monospace;
+      }
+      #android-install-help,
+      .ios-install-guide ol {
+        margin: 10px 0 0;
+        color: rgba(255,255,255,.72);
+        font-size: 12px;
+        text-align: left;
+      }
+      .ios-install-guide ol {
+        padding-left: 18px;
+      }
+      .ios-install-guide li + li {
+        margin-top: 4px;
+      }
+      .ios-install-visuals {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        margin-top: 12px;
+      }
+      .ios-install-visuals img {
+        display: block;
+        width: 100%;
+        aspect-ratio: 9 / 16;
+        object-fit: cover;
+        object-position: top center;
+        border: 1px solid rgba(255,255,255,.16);
+        border-radius: 6px;
+        background: #111;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="startup-notice" role="dialog" aria-modal="true" aria-labelledby="startup-notice-title">
+    <div id="startup-notice-card">
+      <h1 id="startup-notice-title">Experimental 3D reconstruction demo</h1>
+      <p id="startup-notice-copy">We are still experimenting with 3D reconstruction, so this might not be the best experience yet. Thanks for the support.</p>
+      <div id="startup-load-status">Loading reconstruction...</div>
+      <div id="startup-load-estimate">Estimated wait: 25s</div>
+      <div id="startup-progress" aria-hidden="true"><div id="startup-progress-bar"></div></div>
+      <button id="startup-notice-close" type="button" disabled>Loading...</button>
+    </div>
+  </div>
+  <a id="back-link" href="../index.html">Back</a>
+  <div id="crosshair"></div>
+  <div id="speed">0 m/s</div>
+  <div id="maneuver" style="position:fixed;top:60px;right:24px;color:#ffaa00;font:bold 14px monospace;z-index:10;pointer-events:none;opacity:0;transition:opacity .2s;text-shadow:0 0 10px rgba(255,170,0,.6);"></div>
+  <!-- Throttle gauge -->
+  <div id="throttle-panel">
+    <div class="label">THR</div>
+    <div id="throttle-track">
+      <div id="throttle-fill" style="height:0%"></div>
+      <div id="throttle-ticks"></div>
+      <input type="range" id="speed-slider" min="0.01" max="1.5" step="0.01" value="0.04" orient="vertical" id="throttle-slider">
+    </div>
+    <div id="throttle-val">0.04</div>
+  </div>
+
+  <!-- Controls panel -->
+  <div id="controls" style="position:fixed;top:64px;left:24px;z-index:20;font:11px monospace;color:#fff;background:rgba(0,0,0,.55);padding:8px 12px;border-radius:6px;backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.08);">
+    <label><input type="checkbox" id="bounds-toggle" checked> Boundary</label>
+    <label style="margin-left:8px;"><input type="checkbox" id="closeup-toggle" checked> Closeup</label><br>
+    <div style="margin-top:5px;">
+      <button id="follow-btn" style="padding:3px 10px;font:10px monospace;cursor:pointer;border-radius:3px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;">Follow Path</button>
+      <button id="stop-btn" style="padding:3px 10px;font:10px monospace;cursor:pointer;border-radius:3px;border:1px solid rgba(255,100,100,.3);background:rgba(255,50,50,.15);color:#f88;display:none;">Stop</button>
+      <button id="flip-btn" style="padding:3px 10px;font:10px monospace;cursor:pointer;border-radius:3px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;">Flip [H]</button>
+      <button id="viewmodel-btn" style="padding:3px 10px;font:10px monospace;cursor:pointer;border-radius:3px;border:1px solid rgba(100,180,255,.3);background:rgba(50,120,255,.15);color:#8cf;">View Jet [M]</button>
+    </div>
+    <span id="follow-status" style="color:#4af;font-size:10px;"></span>
+  </div>
+  <!-- Minimap -->
+  <div id="minimap">
+    <div class="label">MAP</div>
+    <canvas id="minimap-canvas" width="140" height="140"></canvas>
+  </div>
+
+  <!-- Altitude bar -->
+  <div id="alt-bar">
+    <div class="label">ALT</div>
+    <div id="alt-track"><div id="alt-indicator"></div></div>
+    <div id="alt-val">0</div>
+  </div>
+
+  <!-- Compass -->
+  <div id="compass">
+    <div id="compass-strip"></div>
+    <div id="compass-needle"></div>
+  </div>
+
+  <!-- Score -->
+  <div id="score-panel">
+    <div>RINGS</div>
+    <div class="big"><span id="ring-count">0</span> / <span id="ring-total">0</span></div>
+    <div id="timer" style="color:#4af;font-size:14px;">00:00</div>
+  </div>
+  <div id="ring-msg"></div>
+
+  <div id="hud">WASD fly &middot; Shift boost &middot; Scroll zoom &middot; ` help</div>
+  <div id="lost-toast">
+    <span class="desktop-hint">Press P if you are lost</span>
+    <span class="mobile-hint" style="display:none;">Press &#8962; if you are lost</span>
+  </div>
+  <div id="rotate-landscape" aria-live="polite">
+    <div id="rotate-landscape-card">
+      <div id="rotate-landscape-icon" aria-hidden="true"></div>
+      <h1>Tilt to landscape</h1>
+      <p>The flight controls are laid out for a wider screen.</p>
+      <div class="pwa-install">
+        <button id="android-install-btn" type="button">Install app</button>
+        <p id="android-install-help">If the button is unavailable, open Chrome menu and choose Add to Home screen.</p>
+      </div>
+      <div class="ios-install-guide">
+        <p>Add this game to your Home Screen:</p>
+        <ol>
+          <li>Open this page in Safari.</li>
+          <li>Tap Share.</li>
+          <li>Tap Add to Home Screen.</li>
+        </ol>
+        <div class="ios-install-visuals" aria-label="iOS Add to Home Screen examples">
+          <img src="install-assets/ios-add-home-arrow.jpg" alt="Safari share menu showing Add to Home Screen with an arrow">
+          <img src="install-assets/ios-add-home-highlight.webp" alt="Safari share menu with Add to Home Screen highlighted">
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="mobile-controls" aria-label="Mobile flight controls">
+    <div class="touch-pad">
+      <button class="touch-btn touch-fwd" type="button" data-key="KeyW" aria-label="Forward">&#8593;</button>
+      <button class="touch-btn touch-strafe-left" type="button" data-key="KeyA" aria-label="Slide left">&#8592;</button>
+      <button class="touch-btn touch-strafe-right" type="button" data-key="KeyD" aria-label="Slide right">&#8594;</button>
+      <button class="touch-btn touch-back" type="button" data-key="KeyS" aria-label="Back">&#8595;</button>
+    </div>
+    <div class="touch-extra">
+      <button class="touch-btn touch-left touch-yaw" type="button" data-key="ArrowLeft" aria-label="Yaw left">&#8634;</button>
+      <button class="touch-btn touch-right touch-yaw" type="button" data-key="ArrowRight" aria-label="Yaw right">&#8635;</button>
+      <button class="touch-btn touch-up" type="button" data-key="ArrowUp" aria-label="Look up">&#10514;</button>
+      <button class="touch-btn touch-down" type="button" data-key="ArrowDown" aria-label="Look down">&#10515;</button>
+    </div>
+    <div class="touch-actions">
+      <button class="touch-btn" type="button" data-key="ShiftLeft" aria-label="Boost">&#8679;</button>
+      <button class="touch-btn" type="button" data-action="fit" aria-label="Fit view">&#9633;</button>
+      <button class="touch-btn" type="button" data-action="home" aria-label="Home">&#8962;</button>
+    </div>
+  </div>
+
+  <div id="tutorial-overlay" role="dialog" aria-modal="true" aria-labelledby="tutorial-title">
+    <div id="tutorial-card">
+      <div class="tutorial-count"><span id="tutorial-current">1</span> / 4</div>
+      <div class="tutorial-step is-active">
+        <h1 id="tutorial-title">Recorded video to Spatial AI.</h1>
+        <p>This world was captured from real footage, then converted into a walkable 3D scene.</p>
+      </div>
+      <div class="tutorial-step">
+        <h1>Watch the route first.</h1>
+        <p>The capture trajectory starts automatically so you can see the original recorded path.</p>
+      </div>
+      <div class="tutorial-step">
+        <h1>Resolution is limited.</h1>
+        <p>Compute and storage are limited in this demo, so some areas resolve better than others.</p>
+      </div>
+      <div class="tutorial-step">
+        <h1>Fly it yourself.</h1>
+        <p>Use the controls to leave the route and explore. If you spawn at an odd angle, hold Shift for boost and use Left/Right yaw to straighten your path.</p>
+        <div class="tutorial-hint"><strong>Controls</strong>Drag on the scene to look around. W/S or Fwd/Back move. A/D or Left/Right slide sideways. Arrow Left/Right or Yaw buttons rotate. Space/C or Up/Down change height. P or Home returns to spawn.</div>
+      </div>
+      <div class="tutorial-actions">
+        <button id="tutorial-back" type="button">Back</button>
+        <button id="tutorial-quick" type="button">Quick start</button>
+        <button id="tutorial-next" type="button">Next</button>
+        <span class="tutorial-final-actions">
+          <button id="tutorial-watch" type="button">Watch route</button>
+          <button id="tutorial-control" type="button">Take control</button>
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Help overlay -->
+  <div id="help-overlay" style="display:none;position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.8);backdrop-filter:blur(8px);justify-content:center;align-items:center;">
+    <div style="background:rgba(20,20,30,.95);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:28px 36px;max-width:420px;font:12px/2 monospace;color:rgba(255,255,255,.85);">
+      <div style="font:bold 14px monospace;color:#fff;margin-bottom:12px;border-bottom:1px solid rgba(255,255,255,.1);padding-bottom:8px;">Controls</div>
+      <b style="color:#4af;">Flight</b><br>
+      W / S &mdash; throttle forward / back<br>
+      A / D &mdash; slide left / right<br>
+      Arrow Left / Right &mdash; clean yaw left / right<br>
+      Mouse &mdash; pitch + yaw<br>
+      Space &mdash; move up<br>
+      C &mdash; move down<br>
+      Shift &mdash; boost<br>
+      Scroll &mdash; zoom in/out<br><br>
+      <b style="color:#fa0;">Maneuvers</b><br>
+      R &mdash; barrel roll<br>
+      F &mdash; backflip<br>
+      T &mdash; loop<br>
+      G &mdash; hover spin<br>
+      V &mdash; immelman<br>
+      B &mdash; knife edge<br>
+      X &mdash; brake drift<br><br>
+      <b style="color:#4f4;">Modes</b><br>
+      H &mdash; flip camera<br>
+      J &mdash; closeup camera<br>
+      M &mdash; orbit view jet<br>
+      P &mdash; follow camera path<br>
+      ` &mdash; toggle this help<br><br>
+      <div style="text-align:center;margin-top:8px;color:rgba(255,255,255,.4);font-size:10px;">Press ` (backtick) or click to close</div>
+    </div>
+  </div>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.170.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.170.0/examples/jsm/",
+      "@sparkjsdev/spark": "https://sparkjs.dev/releases/spark/0.1.10/spark.module.js"
+    }
+  }
+  </script>
+
+  <script type="module">
+import * as THREE from "three";
+import { SplatMesh } from "@sparkjsdev/spark";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+
+const ua = navigator.userAgent || "";
+const isAndroid = /Android/i.test(ua);
+const isIOS = /iPad|iPhone|iPod/i.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+let deferredInstallPrompt = null;
+
+document.body.classList.toggle("is-android", isAndroid);
+document.body.classList.toggle("is-ios", isIOS);
+
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("./sw.js").catch((error) => {
+    console.warn("Service worker registration failed:", error);
+  });
+}
+
+window.addEventListener("beforeinstallprompt", (event) => {
+  event.preventDefault();
+  deferredInstallPrompt = event;
+  const installButton = document.getElementById("android-install-btn");
+  if (installButton && isAndroid) {
+    installButton.disabled = false;
+    installButton.textContent = "Install app";
+  }
+});
+
+document.getElementById("android-install-btn")?.addEventListener("click", async (event) => {
+  event.preventDefault();
+  event.stopPropagation();
+  const help = document.getElementById("android-install-help");
+  if (!deferredInstallPrompt) {
+    if (help) help.textContent = "For local testing, Chrome may require HTTPS before showing the install prompt. Use Chrome menu > Add to Home screen.";
+    return;
+  }
+  deferredInstallPrompt.prompt();
+  await deferredInstallPrompt.userChoice;
+  deferredInstallPrompt = null;
+});
+
+const readyState = {
+  trajectory: false,
+  splat: false,
+  jet: false,
+};
+const estimatedLoadSeconds = 25;
+let loadEstimateRemaining = estimatedLoadSeconds;
+let loadEstimateTimer = null;
+
+function markReady(key) {
+  readyState[key] = true;
+  updateStartupReady();
+}
+
+function updateLoadEstimateText() {
+  const estimate = document.getElementById("startup-load-estimate");
+  if (!estimate) return;
+  if (loadEstimateRemaining > 0) {
+    estimate.textContent = `Estimated wait: ${loadEstimateRemaining}s`;
+  } else {
+    estimate.textContent = "Still loading. Large scenes can take a moment.";
+  }
+}
+
+function stopLoadEstimate(message) {
+  if (loadEstimateTimer) {
+    clearInterval(loadEstimateTimer);
+    loadEstimateTimer = null;
+  }
+  const estimate = document.getElementById("startup-load-estimate");
+  if (estimate && message) estimate.textContent = message;
+}
+
+function markLoadError(label) {
+  const button = document.getElementById("startup-notice-close");
+  const status = document.getElementById("startup-load-status");
+  const notice = document.getElementById("startup-notice");
+  stopLoadEstimate("The scene could not be loaded.");
+  if (notice) notice.classList.add("is-error");
+  if (status) status.textContent = `${label} failed to load`;
+  if (button) {
+    button.disabled = false;
+    button.textContent = "Continue";
+  }
+}
+
+function updateStartupReady() {
+  const button = document.getElementById("startup-notice-close");
+  const status = document.getElementById("startup-load-status");
+  const notice = document.getElementById("startup-notice");
+  if (!button || !status) return;
+  const labels = {
+    trajectory: "route",
+    splat: "3D scene",
+    jet: "jet",
+  };
+
+  const pending = Object.entries(readyState)
+    .filter(([, ready]) => !ready)
+    .map(([key]) => labels[key] || key);
+
+  if (pending.length === 0) {
+    if (notice) notice.classList.add("is-ready");
+    stopLoadEstimate("Scene ready.");
+    status.textContent = "Ready";
+    button.disabled = false;
+    button.textContent = "Continue";
+  } else {
+    status.textContent = `Loading ${pending.join(", ")}...`;
+    button.disabled = true;
+    button.textContent = "Loading...";
+  }
+}
+
+updateLoadEstimateText();
+loadEstimateTimer = setInterval(() => {
+  loadEstimateRemaining = Math.max(0, loadEstimateRemaining - 1);
+  updateLoadEstimateText();
+}, 1000);
+
+// ── Scene ───────────────────────────────────────────────────────────────────
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(70, innerWidth / innerHeight, 0.1, 10000);
+const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: "high-performance" });
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+document.body.appendChild(renderer.domElement);
+
+// ── Load splat ──────────────────────────────────────────────────────────────
+const splat = new SplatMesh({ url: "https://dev.heyharoon.io/share_it/scene.ply", maxSh: 3 });
+const SPLAT_ROLL_OFFSET = 1.8;
+splat.rotation.z = SPLAT_ROLL_OFFSET;
+scene.add(splat);
+splat.initialized
+  .then(() => markReady("splat"))
+  .catch((error) => {
+    console.error("Failed to load splat:", error);
+    markLoadError("3D scene");
+  });
+
+// ── Load trajectory + bounds ────────────────────────────────────────────────
+let trajectory = [];
+let sceneBounds = null;
+let followMode = false;
+let followFrame = 0;
+let followFPS = 4;
+const FOLLOW_START_FRAME = 30;
+const homePosition = new THREE.Vector3();
+let homeYaw = 0;
+let homePitch = -0.3;
+
+fetch("trajectory.json").then(r => r.json()).then(data => {
+  trajectory = data.trajectory || [];
+  sceneBounds = data.bounds || null;
+  console.log(`Loaded ${trajectory.length} camera poses, bounds:`, sceneBounds);
+
+  // Spawn ship at provided spawn point, or compute one above the scene bounds
+  if (data.spawn) {
+    ship.position.set(data.spawn[0], data.spawn[1], data.spawn[2]);
+  } else if (sceneBounds) {
+    const cx = (sceneBounds.lo[0] + sceneBounds.hi[0]) / 2;
+    const cy = sceneBounds.hi[1] + (sceneBounds.hi[1] - sceneBounds.lo[1]) * 0.5;
+    const cz = sceneBounds.hi[2] + (sceneBounds.hi[2] - sceneBounds.lo[2]) * 0.3;
+    ship.position.set(cx, cy, cz);
+  }
+  if (data.spawnRotation) {
+    if (Number.isFinite(data.spawnRotation.yaw)) shipYaw = data.spawnRotation.yaw;
+    if (Number.isFinite(data.spawnRotation.pitch)) shipPitch = data.spawnRotation.pitch;
+  }
+  homePosition.copy(ship.position);
+  homeYaw = shipYaw;
+  homePitch = shipPitch;
+  visualYawOffset = 0;
+  visualPitchOffset = 0;
+  smoothCamPos.copy(ship.position).add(new THREE.Vector3(0, 0.15, 1.5));
+  smoothCamTarget.copy(ship.position);
+
+  // Draw trajectory path
+  if (trajectory.length > 1) {
+    const pts = trajectory.map(p => new THREE.Vector3(p.position[0], p.position[1], p.position[2]));
+    const lineGeo = new THREE.BufferGeometry().setFromPoints(pts);
+    const lineMat = new THREE.LineBasicMaterial({ color: 0xff7722, transparent: true, opacity: 0.4 });
+    scene.add(new THREE.Line(lineGeo, lineMat));
+  }
+
+  // Spawn waypoint rings after trajectory is loaded
+  setTimeout(spawnRings, 500);
+  markReady("trajectory");
+}).catch(() => console.log("No trajectory.json found"));
+
+function clampToBounds(pos) {
+  if (!sceneBounds || !document.getElementById("bounds-toggle").checked) return;
+  const lo = sceneBounds.lo, hi = sceneBounds.hi;
+  if (pos.x < lo[0]) { pos.x = lo[0]; vel.x = Math.max(0, vel.x); }
+  if (pos.x > hi[0]) { pos.x = hi[0]; vel.x = Math.min(0, vel.x); }
+  if (pos.y < lo[1]) { pos.y = lo[1]; vel.y = Math.max(0, vel.y); }
+  if (pos.y > hi[1]) { pos.y = hi[1]; vel.y = Math.min(0, vel.y); }
+  if (pos.z < lo[2]) { pos.z = lo[2]; vel.z = Math.max(0, vel.z); }
+  if (pos.z > hi[2]) { pos.z = hi[2]; vel.z = Math.min(0, vel.z); }
+}
+
+// ── Compass setup ───────────────────────────────────────────────────────────
+const compassStrip = document.getElementById("compass-strip");
+const directions = ["N","","","NE","","","E","","","SE","","","S","","","SW","","","W","","","NW","",""];
+for (let i = 0; i < directions.length * 2; i++) {
+  const mark = document.createElement("div");
+  mark.className = "mark" + (directions[i % directions.length].length <= 2 && directions[i % directions.length] ? " cardinal" : "");
+  mark.textContent = directions[i % directions.length] || "|";
+  compassStrip.appendChild(mark);
+}
+
+// ── Minimap setup ───────────────────────────────────────────────────────────
+const minimapCanvas = document.getElementById("minimap-canvas");
+const mmCtx = minimapCanvas.getContext("2d");
+
+function drawMinimap(shipPos, shipYaw, bounds, trajectory) {
+  const w = 140, h = 140;
+  mmCtx.clearRect(0, 0, w, h);
+
+  if (!bounds) return;
+  const lo = bounds.lo, hi = bounds.hi;
+  // Map scene X→canvas X, scene Z→canvas Y
+  const mapX = (x) => ((x - lo[0]) / (hi[0] - lo[0])) * (w - 16) + 8;
+  const mapY = (z) => ((z - lo[2]) / (hi[2] - lo[2])) * (h - 16) + 8;
+
+  // Draw bounds
+  mmCtx.strokeStyle = "rgba(255,255,255,.15)";
+  mmCtx.strokeRect(8, 8, w - 16, h - 16);
+
+  // Draw trajectory
+  if (trajectory.length > 1) {
+    mmCtx.beginPath();
+    mmCtx.strokeStyle = "rgba(255,120,30,.25)";
+    mmCtx.lineWidth = 1;
+    trajectory.forEach((p, i) => {
+      const x = mapX(p.position[0]), y = mapY(p.position[2]);
+      i === 0 ? mmCtx.moveTo(x, y) : mmCtx.lineTo(x, y);
+    });
+    mmCtx.stroke();
+  }
+
+  // Draw waypoint rings
+  rings.forEach((ring, i) => {
+    if (ring.hit) return;
+    const x = mapX(ring.pos.x), y = mapY(ring.pos.z);
+    mmCtx.beginPath();
+    mmCtx.arc(x, y, 3, 0, Math.PI * 2);
+    mmCtx.fillStyle = "#4f4";
+    mmCtx.fill();
+  });
+
+  // Draw ship (triangle pointing in yaw direction)
+  const sx = mapX(shipPos.x), sy = mapY(shipPos.z);
+  mmCtx.save();
+  mmCtx.translate(sx, sy);
+  mmCtx.rotate(-shipYaw + Math.PI);
+  mmCtx.beginPath();
+  mmCtx.moveTo(0, -6);
+  mmCtx.lineTo(-4, 4);
+  mmCtx.lineTo(4, 4);
+  mmCtx.closePath();
+  mmCtx.fillStyle = "#4af";
+  mmCtx.fill();
+  mmCtx.strokeStyle = "#fff";
+  mmCtx.lineWidth = 1;
+  mmCtx.stroke();
+  // FOV cone
+  mmCtx.beginPath();
+  mmCtx.moveTo(0, 0);
+  mmCtx.lineTo(-12, -20);
+  mmCtx.lineTo(12, -20);
+  mmCtx.closePath();
+  mmCtx.fillStyle = "rgba(70,170,255,.1)";
+  mmCtx.fill();
+  mmCtx.restore();
+}
+
+// ── Waypoint rings ──────────────────────────────────────────────────────────
+const rings = [];
+const ringMeshes = [];
+let ringsHit = 0;
+let gameTimer = 0;
+let gameStarted = false;
+const ringCountEl = document.getElementById("ring-count");
+const ringTotalEl = document.getElementById("ring-total");
+const timerEl = document.getElementById("timer");
+const ringMsgEl = document.getElementById("ring-msg");
+updateStartupReady();
+
+function spawnRings() {
+  // Place rings along the trajectory path at intervals
+  if (!trajectory.length) return;
+  const step = Math.max(1, Math.floor(trajectory.length / 8));
+  for (let i = step; i < trajectory.length; i += step) {
+    const p = trajectory[i].position;
+    const pos = new THREE.Vector3(p[0], p[1], p[2]);
+    // Create a torus ring
+    const ringGeo = new THREE.TorusGeometry(0.06, 0.004, 8, 24);
+    const ringMat = new THREE.MeshBasicMaterial({ color: 0x44ff66, transparent: true, opacity: 0.7, side: THREE.DoubleSide });
+    const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+    ringMesh.position.copy(pos);
+    // Face toward next waypoint for interesting angles
+    if (i + 1 < trajectory.length) {
+      const next = trajectory[Math.min(i + step, trajectory.length - 1)].position;
+      ringMesh.lookAt(next[0], next[1], next[2]);
+    }
+    scene.add(ringMesh);
+    rings.push({ pos, hit: false, mesh: ringMesh });
+    ringMeshes.push(ringMesh);
+  }
+  ringTotalEl.textContent = rings.length;
+  ringCountEl.textContent = "0";
+}
+
+function checkRingCollisions(shipPos) {
+  const hitDist = 0.1;
+  rings.forEach((ring, i) => {
+    if (ring.hit) return;
+    if (shipPos.distanceTo(ring.pos) < hitDist) {
+      ring.hit = true;
+      ringsHit++;
+      ringCountEl.textContent = ringsHit;
+      ring.mesh.material.color.setHex(0x888888);
+      ring.mesh.material.opacity = 0.2;
+      // Flash message
+      ringMsgEl.textContent = ringsHit === rings.length ? "ALL RINGS!" : `+1  (${ringsHit}/${rings.length})`;
+      ringMsgEl.style.opacity = "1";
+      ringMsgEl.style.color = ringsHit === rings.length ? "#ff4" : "#4f4";
+      setTimeout(() => ringMsgEl.style.opacity = "0", 1200);
+      if (!gameStarted) { gameStarted = true; gameTimer = 0; }
+    }
+  });
+}
+
+function updateTimer(dt) {
+  if (!gameStarted || ringsHit >= rings.length) return;
+  gameTimer += dt;
+  const m = Math.floor(gameTimer / 60);
+  const s = Math.floor(gameTimer % 60);
+  timerEl.textContent = String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
+}
+
+function animateRings(time) {
+  rings.forEach((ring, i) => {
+    if (ring.hit) return;
+    // Gentle pulse + bob
+    const s = 1 + Math.sin(time * 3 + i) * 0.08;
+    ring.mesh.scale.setScalar(s);
+    ring.mesh.rotation.z += 0.01;
+  });
+}
+
+// ── Lights ──────────────────────────────────────────────────────────────────
+scene.add(new THREE.AmbientLight(0xffffff, 1.5));
+const sun = new THREE.DirectionalLight(0xffeedd, 2.0);
+sun.position.set(5, 10, 5);
+scene.add(sun);
+const fillLight = new THREE.DirectionalLight(0x8899cc, 1.0);
+fillLight.position.set(-5, -3, -5);
+scene.add(fillLight);
+
+// ── Load F-16 model ─────────────────────────────────────────────────────────
+const ship = new THREE.Group();
+const shipVisual = new THREE.Group();
+ship.add(shipVisual);
+
+// Engine glow (added to ship, positioned after model loads)
+const glowGeo = new THREE.SphereGeometry(0.005, 8, 8);
+const glowMatL = new THREE.MeshBasicMaterial({ color: 0xff6600 });
+const glowMatR = new THREE.MeshBasicMaterial({ color: 0xff6600 });
+const glowL = new THREE.Mesh(glowGeo, glowMatL);
+const glowR = new THREE.Mesh(glowGeo, glowMatR);
+glowL.position.set(-0.01, 0, 0.05);
+glowR.position.set(0.01, 0, 0.05);
+shipVisual.add(glowL, glowR);
+
+new GLTFLoader().load("f16.glb", (gltf) => {
+  const model = gltf.scene;
+  // Auto-scale: measure bounding box and fit to target size
+  const box = new THREE.Box3().setFromObject(model);
+  const size = new THREE.Vector3();
+  box.getSize(size);
+  const maxDim = Math.max(size.x, size.y, size.z);
+  const targetSize = 0.12;  // desired length in scene units
+  const s = targetSize / maxDim;
+  model.scale.setScalar(s);
+  // Center the model
+  const center = new THREE.Vector3();
+  box.getCenter(center);
+  model.position.set(-center.x * s, -center.y * s, -center.z * s);
+  // F-16 native nose points -Z (forward), no rotation needed
+  shipVisual.add(model);
+  // Reposition glow behind the jet (tail at +Z in ship-local)
+  glowL.position.set(-0.008, 0, 0.06);
+  glowR.position.set(0.008, 0, 0.06);
+  // Brighten dark materials
+  model.traverse(child => {
+    if (child.isMesh && child.material) {
+      const mat = child.material;
+      if (mat.color) {
+        const hsl = {};
+        mat.color.getHSL(hsl);
+        if (hsl.l < 0.3) mat.color.setHSL(hsl.h, hsl.s, Math.min(0.5, hsl.l + 0.25));
+      }
+      if (mat.metalness !== undefined) mat.metalness = Math.min(mat.metalness, 0.6);
+      if (mat.roughness !== undefined) mat.roughness = Math.max(mat.roughness, 0.3);
+      mat.envMapIntensity = 1.5;
+    }
+  });
+  console.log(`F-16 loaded: ${size.x.toFixed(1)} x ${size.y.toFixed(1)} x ${size.z.toFixed(1)}, scaled ${s.toFixed(4)}`);
+  markReady("jet");
+}, undefined, (err) => {
+  console.error("Failed to load F-16:", err);
+  // Fallback: simple cone
+  const g = new THREE.ConeGeometry(0.02, 0.08, 6);
+  g.rotateX(Math.PI / 2);
+  shipVisual.add(new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color: 0x22aaff })));
+  markReady("jet");
+});
+
+// Trail
+const trailCount = 80;
+const trailGeo = new THREE.BufferGeometry();
+trailGeo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(trailCount * 3), 3));
+const trailMat = new THREE.PointsMaterial({
+  color: 0xff8800, size: 0.004, transparent: true, opacity: 0.5,
+  depthWrite: false, blending: THREE.AdditiveBlending,
+});
+const trail = new THREE.Points(trailGeo, trailMat);
+scene.add(trail);
+const trailHistory = [];
+
+ship.position.set(0, 0, 0);
+scene.add(ship);
+
+// ── Ship flight state ───────────────────────────────────────────────────────
+// Ship has its own yaw + pitch that the mouse and keys control directly.
+// Camera follows behind the ship — always.
+let shipYaw   = 0;   // radians
+let shipPitch = -0.3;   // radians — start nose down toward terrain
+let visualYawOffset = 0; // arrow-key-only rotation; does not steer velocity
+let visualPitchOffset = 0; // arrow-key-only pitch; does not steer velocity
+let throttle  = 0;   // 0..1 current thrust
+const vel = new THREE.Vector3();
+const keys = {};
+
+const ACCEL       = 3.0;   // throttle ramp-up per second
+const DECEL       = 2.0;   // throttle ramp-down per second
+let BASE_SPEED    = 0.04;  // world units/s at full throttle
+const BOOST_MULT  = 3.0;
+const STRAFE_MULT = 0.9;
+const YAW_SPEED   = 2.5;   // rad/s from keyboard
+const PITCH_SPEED = 1.8;   // rad/s from keyboard
+const MOUSE_YAW   = 0.003; // rad/px
+const MOUSE_PITCH = 0.003;
+const TOUCH_YAW   = 0.006;
+const TOUCH_PITCH = 0.005;
+const FRICTION    = 2.5;
+const ROLL_RATE   = 4.0;
+const PITCH_CLAMP = 1.3;   // ~75 degrees
+
+let currentRoll = 0;
+let camDist = 1;
+const DEFAULT_CAM_DIST = 1;
+const CAM_MIN = 0.2, CAM_MAX = 5;
+const CAM_HEIGHT_OFFSET = 0.15;
+const CAM_LAG = 18;
+const smoothCamPos = new THREE.Vector3(0, 0.15, 1.5);
+const smoothCamTarget = new THREE.Vector3(0, 0, 0);
+
+// ── Maneuver system ─────────────────────────────────────────────────────────
+// Each maneuver is a timed animation that overrides ship roll/pitch/yaw.
+// While active, normal input is dampened so the maneuver plays clean.
+let maneuver = null;    // { name, duration, elapsed, execute(t, dt) }
+let maneuverRoll = 0;   // additive roll from maneuver (radians)
+let maneuverPitch = 0;  // additive pitch from maneuver
+let maneuverYaw = 0;    // additive yaw from maneuver
+const maneuverEl = document.getElementById("maneuver");
+
+function startManeuver(name, duration, executeFn) {
+  if (maneuver) return;  // one at a time
+  maneuver = { name, duration, elapsed: 0, execute: executeFn };
+  maneuverRoll = maneuverPitch = maneuverYaw = 0;
+  maneuverEl.textContent = name.toUpperCase();
+  maneuverEl.style.opacity = "1";
+}
+
+function endManeuver() {
+  maneuver = null;
+  maneuverRoll = maneuverPitch = maneuverYaw = 0;
+  maneuverEl.style.opacity = "0";
+}
+
+function tickManeuver(dt) {
+  if (!maneuver) return;
+  maneuver.elapsed += dt;
+  const t = Math.min(maneuver.elapsed / maneuver.duration, 1);
+  maneuver.execute(t, dt);
+  if (t >= 1) endManeuver();
+}
+
+// Maneuver definitions
+function doBarrelRoll(dir) {
+  // Full 360 roll over 0.6s, slight forward thrust
+  startManeuver(dir > 0 ? "Barrel Roll R" : "Barrel Roll L", 0.6, (t, dt) => {
+    maneuverRoll = dir * t * Math.PI * 2;
+    vel.addScaledVector(new THREE.Vector3(0, 0, -1).applyQuaternion(tmpQ), BASE_SPEED * 2 * dt);
+  });
+}
+
+function doBackflip() {
+  // Full backward pitch loop over 0.8s
+  startManeuver("Backflip", 0.8, (t, dt) => {
+    maneuverPitch = -t * Math.PI * 2;
+    vel.y += 1.5 * dt;  // lift during flip
+  });
+}
+
+function doLoop() {
+  // Full forward pitch loop (inside loop) over 1.2s
+  const startSpeed = vel.length();
+  startManeuver("Loop", 1.2, (t, dt) => {
+    maneuverPitch = t * Math.PI * 2;
+    // Maintain speed through the loop
+    const fwdDir = new THREE.Vector3(0, 0, -1).applyQuaternion(tmpQ);
+    vel.addScaledVector(fwdDir, Math.max(startSpeed, BASE_SPEED) * 1.5 * dt);
+  });
+}
+
+function doHoverSpin() {
+  // 360 yaw spin in place over 0.7s, kills velocity
+  startManeuver("Hover Spin", 0.7, (t, dt) => {
+    maneuverYaw = t * Math.PI * 2;
+    vel.multiplyScalar(0.9);  // brake hard
+  });
+}
+
+function doImmelman() {
+  // Half loop up + half roll to level out, 1.0s
+  startManeuver("Immelman", 1.0, (t, dt) => {
+    if (t < 0.6) {
+      // Half loop (pitch up 180)
+      maneuverPitch = (t / 0.6) * Math.PI;
+      vel.y += 2.0 * dt;
+    } else {
+      maneuverPitch = Math.PI;
+      // Half roll to level
+      maneuverRoll = ((t - 0.6) / 0.4) * Math.PI;
+    }
+    const fwdDir = new THREE.Vector3(0, 0, -1).applyQuaternion(tmpQ);
+    vel.addScaledVector(fwdDir, BASE_SPEED * dt);
+  });
+}
+
+function doKnifeEdge() {
+  // Roll 90 degrees, hold, roll back. 1.2s
+  startManeuver("Knife Edge", 1.2, (t, dt) => {
+    if (t < 0.2) maneuverRoll = (t / 0.2) * Math.PI * 0.5;
+    else if (t < 0.8) maneuverRoll = Math.PI * 0.5;
+    else maneuverRoll = Math.PI * 0.5 * (1 - (t - 0.8) / 0.4);
+    const fwdDir = new THREE.Vector3(0, 0, -1).applyQuaternion(tmpQ);
+    vel.addScaledVector(fwdDir, BASE_SPEED * dt);
+  });
+}
+
+function doBrakeDrift() {
+  // Hard brake + 180 spin (combat reverse), 0.9s
+  const startYaw = shipYaw;
+  startManeuver("Brake Drift", 0.9, (t, dt) => {
+    maneuverYaw = t * Math.PI;  // 180 turn
+    vel.multiplyScalar(Math.exp(-8 * dt));  // slam brakes
+    // Slight drift sideways
+    const rgtDir = new THREE.Vector3(1, 0, 0).applyQuaternion(tmpQ);
+    vel.addScaledVector(rgtDir, 0.3 * dt * (1 - t));
+    maneuverRoll = Math.sin(t * Math.PI) * 0.3;  // slight roll during drift
+  });
+}
+
+// ── Throttle gauge ─────────────────────────────────────────────────────────
+const speedSlider   = document.getElementById("speed-slider");
+const throttleFill  = document.getElementById("throttle-fill");
+const throttleValEl = document.getElementById("throttle-val");
+
+// Add tick marks
+const ticksEl = document.getElementById("throttle-ticks");
+for (let i = 0; i <= 10; i++) {
+  const tick = document.createElement("span");
+  tick.style.bottom = (i * 10) + "%";
+  ticksEl.appendChild(tick);
+}
+
+// Style the vertical slider to overlay the track
+speedSlider.style.cssText = "position:absolute;left:-14px;width:64px;height:100%;opacity:0;cursor:ns-resize;writing-mode:vertical-lr;direction:rtl;-webkit-appearance:slider-vertical;";
+
+function updateThrottleGauge() {
+  const val = parseFloat(speedSlider.value);
+  BASE_SPEED = val;
+  const pct = (val / 1.5) * 100;
+  throttleFill.style.height = pct + "%";
+  throttleValEl.textContent = val.toFixed(2);
+  // Color shift: green → yellow → red
+  if (pct > 66) throttleFill.style.background = "linear-gradient(to top, #1a6, #ff4, #f44)";
+  else if (pct > 33) throttleFill.style.background = "linear-gradient(to top, #1a6, #4f4, #ff4)";
+  else throttleFill.style.background = "linear-gradient(to top, #1a6, #4f4)";
+}
+speedSlider.addEventListener("input", updateThrottleGauge);
+updateThrottleGauge();
+
+// ── Follow path ────────────────────────────────────────────────────────────
+const followBtn    = document.getElementById("follow-btn");
+const stopBtn      = document.getElementById("stop-btn");
+const followStatus = document.getElementById("follow-status");
+
+function startFollow() {
+  if (!trajectory.length) { followStatus.textContent = "No trajectory"; return; }
+  followMode = true;
+  followFrame = Math.min(FOLLOW_START_FRAME, Math.max(0, trajectory.length - 2));
+  followBtn.style.display = "none";
+  stopBtn.style.display = "inline";
+  followStatus.textContent = "Following...";
+  vel.set(0, 0, 0);
+  throttle = 0;
+}
+function stopFollow() {
+  followMode = false;
+  followBtn.style.display = "inline";
+  stopBtn.style.display = "none";
+  followStatus.textContent = "";
+}
+
+function clearFlightInput() {
+  Object.keys(keys).forEach((key) => delete keys[key]);
+  document.querySelectorAll(".touch-btn.is-active").forEach((button) => {
+    button.classList.remove("is-active");
+  });
+}
+
+function resetCameraFit() {
+  camDist = DEFAULT_CAM_DIST;
+  closeupMode = true;
+  closeupToggle.checked = closeupMode;
+  viewModelMode = false;
+  viewModelBtn.style.background = "rgba(50,120,255,.15)";
+  visualYawOffset = 0;
+  visualPitchOffset = 0;
+  const resetQ = new THREE.Quaternion().setFromEuler(new THREE.Euler(shipPitch, shipYaw, 0, "YXZ"));
+  smoothCamPos.copy(ship.position).add(new THREE.Vector3(0, 0.1, 0.4).applyQuaternion(resetQ));
+  smoothCamTarget.copy(ship.position).add(new THREE.Vector3(0, 0.02, -0.2).applyQuaternion(resetQ));
+}
+
+function recoverViewportZoom() {
+  if (!window.visualViewport) return;
+  if (window.visualViewport.scale > 1.01) {
+    window.scrollTo(0, 0);
+    resetCameraFit();
+  }
+}
+
+window.visualViewport?.addEventListener("resize", recoverViewportZoom);
+window.visualViewport?.addEventListener("scroll", recoverViewportZoom);
+
+function returnHome() {
+  clearFlightInput();
+  stopFollow();
+  ship.position.copy(homePosition);
+  shipYaw = homeYaw;
+  shipPitch = homePitch;
+  vel.set(0, 0, 0);
+  throttle = 0;
+  resetCameraFit();
+  followStatus.textContent = "Returned home";
+  setTimeout(() => {
+    if (!followMode) followStatus.textContent = "";
+  }, 1200);
+}
+
+followBtn.addEventListener("click", e => { e.stopPropagation(); returnHome(); });
+stopBtn.addEventListener("click", e => { e.stopPropagation(); stopFollow(); });
+
+// ── Flip (180 roll hold) ───────────────────────────────────────────────────
+let flipped = false;
+const flipBtn = document.getElementById("flip-btn");
+flipBtn.addEventListener("click", e => { e.stopPropagation(); flipped = !flipped; flipBtn.style.background = flipped ? "#744" : "#333"; });
+
+// ── Closeup camera ─────────────────────────────────────────────────────────
+const closeupToggle = document.getElementById("closeup-toggle");
+let closeupMode = true;
+closeupToggle.addEventListener("change", () => { closeupMode = closeupToggle.checked; });
+
+// ── View Model mode ────────────────────────────────────────────────────────
+const viewModelBtn = document.getElementById("viewmodel-btn");
+let viewModelMode = false;
+let viewModelAngle = 0;
+
+function toggleViewModel() {
+  viewModelMode = !viewModelMode;
+  viewModelBtn.style.background = viewModelMode ? "rgba(50,120,255,.4)" : "rgba(50,120,255,.15)";
+  if (viewModelMode) {
+    vel.set(0, 0, 0);
+    throttle = 0;
+  }
+}
+viewModelBtn.addEventListener("click", e => { e.stopPropagation(); toggleViewModel(); });
+
+// ── Input ───────────────────────────────────────────────────────────────────
+const mobileControls = document.getElementById("mobile-controls");
+
+[document.getElementById("controls"), mobileControls].forEach((panel) => {
+  panel.addEventListener("click", e => e.stopPropagation());
+  panel.addEventListener("pointerdown", e => e.stopPropagation());
+});
+
+document.querySelectorAll(".touch-btn").forEach((button) => {
+  const keyCode = button.dataset.key;
+  const action = button.dataset.action;
+
+  button.addEventListener("contextmenu", e => e.preventDefault());
+  button.addEventListener("selectstart", e => e.preventDefault());
+
+  const press = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    button.classList.add("is-active");
+
+    if (keyCode) {
+      keys[keyCode] = true;
+    } else if (action === "home") {
+      returnHome();
+      window.setTimeout(() => button.classList.remove("is-active"), 120);
+    } else if (action === "fit") {
+      resetCameraFit();
+      window.setTimeout(() => button.classList.remove("is-active"), 120);
+    }
+  };
+
+  const release = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    button.classList.remove("is-active");
+    if (keyCode) delete keys[keyCode];
+  };
+
+  if (action === "home" || action === "fit") {
+    button.addEventListener("pointerdown", press);
+  } else {
+    button.addEventListener("pointerdown", press);
+    button.addEventListener("pointerup", release);
+    button.addEventListener("pointercancel", release);
+    button.addEventListener("pointerleave", release);
+  }
+});
+
+document.addEventListener("keydown", e => {
+  keys[e.code] = true;
+  if (["Space", "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.code)) e.preventDefault();
+  // Maneuver keys (only when not already in a maneuver)
+  if (!maneuver) {
+    if (e.code === "KeyR") doBarrelRoll(keys["KeyA"] ? -1 : 1);
+    if (e.code === "KeyF") doBackflip();
+    if (e.code === "KeyT") doLoop();
+    if (e.code === "KeyG") doHoverSpin();
+    if (e.code === "KeyV") doImmelman();
+    if (e.code === "KeyB") doKnifeEdge();
+    if (e.code === "KeyX") doBrakeDrift();
+  }
+  if (e.code === "KeyP") { returnHome(); }
+  if (e.code === "KeyH") { flipped = !flipped; flipBtn.style.background = flipped ? "#744" : "#333"; }
+  if (e.code === "KeyJ") { closeupMode = !closeupMode; closeupToggle.checked = closeupMode; }
+  if (e.code === "KeyM") toggleViewModel();
+  if (e.key === "?" || e.code === "Backquote") {
+    const h = document.getElementById("help-overlay");
+    h.style.display = h.style.display === "none" ? "flex" : "none";
+  }
+});
+document.addEventListener("keyup", e => { delete keys[e.code]; });
+let lastTouchEnd = 0;
+document.addEventListener("selectstart", e => e.preventDefault());
+document.addEventListener("contextmenu", e => {
+  if (matchMedia("(pointer: coarse)").matches) e.preventDefault();
+});
+document.addEventListener("dblclick", e => e.preventDefault(), { passive: false });
+document.addEventListener("gesturestart", e => e.preventDefault(), { passive: false });
+document.addEventListener("gesturechange", e => e.preventDefault(), { passive: false });
+document.addEventListener("gestureend", e => e.preventDefault(), { passive: false });
+document.addEventListener("touchend", e => {
+  const now = Date.now();
+  if (now - lastTouchEnd <= 320) e.preventDefault();
+  lastTouchEnd = now;
+}, { passive: false });
+
+let locked = false;
+let touchLookActive = false;
+let touchLookId = null;
+let touchLookX = 0;
+let touchLookY = 0;
+
+function isTouchUI(target) {
+  return !!target.closest("#mobile-controls, #controls, #tutorial-overlay, #startup-notice, #rotate-landscape, #back-link");
+}
+
+document.addEventListener("click", () => {
+  const h = document.getElementById("help-overlay");
+  if (h.style.display !== "none") { h.style.display = "none"; return; }
+  if (tutorialOverlay.style.display !== "none") return;
+  if (matchMedia("(pointer: coarse)").matches) return;
+  renderer.domElement.requestPointerLock();
+});
+document.addEventListener("pointerlockchange", () => { locked = !!document.pointerLockElement; });
+document.addEventListener("mousemove", e => {
+  if (!locked) return;
+  const m = maneuver ? 0.15 : 1;  // dampen mouse during maneuvers
+  const flipMul = flipped ? -1 : 1;
+  shipYaw   -= e.movementX * MOUSE_YAW * m * flipMul;
+  shipPitch -= e.movementY * MOUSE_PITCH * m;
+  shipPitch  = Math.max(-PITCH_CLAMP, Math.min(PITCH_CLAMP, shipPitch));
+});
+renderer.domElement.addEventListener("pointerdown", e => {
+  if (!matchMedia("(pointer: coarse)").matches || isTouchUI(e.target)) return;
+  e.preventDefault();
+  touchLookActive = true;
+  touchLookId = e.pointerId;
+  touchLookX = e.clientX;
+  touchLookY = e.clientY;
+  renderer.domElement.setPointerCapture(e.pointerId);
+});
+renderer.domElement.addEventListener("pointermove", e => {
+  if (!touchLookActive || e.pointerId !== touchLookId) return;
+  e.preventDefault();
+  const dx = e.clientX - touchLookX;
+  const dy = e.clientY - touchLookY;
+  touchLookX = e.clientX;
+  touchLookY = e.clientY;
+  const m = maneuver ? 0.15 : 1;
+  const flipMul = flipped ? -1 : 1;
+  shipYaw -= dx * TOUCH_YAW * m * flipMul;
+  shipPitch -= dy * TOUCH_PITCH * m;
+  shipPitch = Math.max(-PITCH_CLAMP, Math.min(PITCH_CLAMP, shipPitch));
+});
+function endTouchLook(e) {
+  if (!touchLookActive || e.pointerId !== touchLookId) return;
+  touchLookActive = false;
+  touchLookId = null;
+  try {
+    renderer.domElement.releasePointerCapture(e.pointerId);
+  } catch {}
+}
+renderer.domElement.addEventListener("pointerup", endTouchLook);
+renderer.domElement.addEventListener("pointercancel", endTouchLook);
+document.addEventListener("wheel", e => {
+  if (e.ctrlKey || e.metaKey) {
+    e.preventDefault();
+    return;
+  }
+  camDist *= (1 + e.deltaY * 0.001);
+  camDist = Math.max(CAM_MIN, Math.min(CAM_MAX, camDist));
+}, { passive: false });
+
+const speedEl = document.getElementById("speed");
+const hudEl = document.getElementById("hud");
+const lostToast = document.getElementById("lost-toast");
+const startupNotice = document.getElementById("startup-notice");
+const startupNoticeTitle = document.getElementById("startup-notice-title");
+const startupNoticeCopy = document.getElementById("startup-notice-copy");
+const startupNoticeClose = document.getElementById("startup-notice-close");
+document.getElementById("back-link").addEventListener("click", e => e.stopPropagation());
+const tutorialOverlay = document.getElementById("tutorial-overlay");
+const tutorialSteps = Array.from(document.querySelectorAll(".tutorial-step"));
+const tutorialCurrent = document.getElementById("tutorial-current");
+const tutorialBack = document.getElementById("tutorial-back");
+const tutorialQuick = document.getElementById("tutorial-quick");
+const tutorialNext = document.getElementById("tutorial-next");
+const tutorialFinalActions = document.querySelector(".tutorial-final-actions");
+let tutorialStepIndex = 0;
+
+if (matchMedia("(max-width: 760px), (pointer: coarse)").matches) {
+  startupNoticeTitle.textContent = "Mobile view is not optimized yet";
+  startupNoticeCopy.textContent = "This demo is still experimental on mobile. We are experimenting with 3D reconstruction, so it may not be the best experience yet. Thanks for the support.";
+}
+
+startupNoticeClose.addEventListener("click", e => {
+  e.stopPropagation();
+  if (startupNoticeClose.disabled) return;
+  startupNotice.style.display = "none";
+});
+startupNotice.addEventListener("click", e => e.stopPropagation());
+
+function updateTutorialStep() {
+  tutorialSteps.forEach((step, index) => {
+    step.classList.toggle("is-active", index === tutorialStepIndex);
+  });
+  tutorialCurrent.textContent = String(tutorialStepIndex + 1);
+  tutorialBack.style.visibility = tutorialStepIndex === 0 ? "hidden" : "visible";
+  tutorialQuick.style.display = tutorialStepIndex === 0 ? "inline-flex" : "none";
+  tutorialNext.style.display = tutorialStepIndex === tutorialSteps.length - 1 ? "none" : "inline-flex";
+  tutorialFinalActions.classList.toggle("is-active", tutorialStepIndex === tutorialSteps.length - 1);
+}
+
+tutorialBack.addEventListener("click", e => {
+  e.stopPropagation();
+  tutorialStepIndex = Math.max(0, tutorialStepIndex - 1);
+  updateTutorialStep();
+});
+
+tutorialQuick.addEventListener("click", e => {
+  e.stopPropagation();
+  tutorialOverlay.style.display = "none";
+  stopFollow();
+});
+
+tutorialNext.addEventListener("click", e => {
+  e.stopPropagation();
+  tutorialStepIndex = Math.min(tutorialSteps.length - 1, tutorialStepIndex + 1);
+  updateTutorialStep();
+});
+
+document.getElementById("tutorial-watch").addEventListener("click", e => {
+  e.stopPropagation();
+  tutorialOverlay.style.display = "none";
+});
+document.getElementById("tutorial-control").addEventListener("click", e => {
+  e.stopPropagation();
+  tutorialOverlay.style.display = "none";
+  stopFollow();
+});
+tutorialOverlay.addEventListener("click", e => e.stopPropagation());
+updateTutorialStep();
+
+// ── Animate ─────────────────────────────────────────────────────────────────
+const clock = new THREE.Clock();
+const tmpQ = new THREE.Quaternion();
+const tmpE = new THREE.Euler(0, 0, 0, "YXZ");
+let flightToastTimer = 0;
+let flightToastShown = false;
+
+function showLostToast() {
+  lostToast.classList.add("is-visible");
+  setTimeout(() => lostToast.classList.remove("is-visible"), 4200);
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = Math.min(clock.getDelta(), 0.1);
+  const boost = keys["ShiftLeft"] || keys["ShiftRight"];
+  const isFlyingInput =
+    keys["KeyW"] || keys["KeyS"] || keys["KeyA"] || keys["KeyD"] ||
+    keys["ArrowLeft"] || keys["ArrowRight"] || keys["ArrowUp"] || keys["ArrowDown"] ||
+    keys["Space"] || keys["KeyC"];
+
+  if (!flightToastShown && isFlyingInput && tutorialOverlay.style.display === "none") {
+    flightToastTimer += dt;
+    if (flightToastTimer >= 3) {
+      flightToastShown = true;
+      showLostToast();
+    }
+  } else if (!flightToastShown && !isFlyingInput) {
+    flightToastTimer = 0;
+  }
+
+  // ── Tick maneuvers ─────────────────────────────────────────────────────
+  tickManeuver(dt);
+  const inManeuver = !!maneuver;
+
+  // ── Keyboard steering (dampened during maneuvers) ─────────────────────
+  const steerMult = inManeuver ? 0.15 : 1;
+  const kFlip = flipped ? -1 : 1;
+  if (keys["ArrowLeft"])                  visualYawOffset += YAW_SPEED * dt * steerMult * kFlip;
+  if (keys["ArrowRight"])                 visualYawOffset -= YAW_SPEED * dt * steerMult * kFlip;
+  if (keys["ArrowUp"])                    visualPitchOffset += PITCH_SPEED * dt * steerMult;
+  if (keys["ArrowDown"])                  visualPitchOffset -= PITCH_SPEED * dt * steerMult;
+  shipPitch = Math.max(-PITCH_CLAMP, Math.min(PITCH_CLAMP, shipPitch));
+  visualPitchOffset = Math.max(
+    -PITCH_CLAMP - shipPitch,
+    Math.min(PITCH_CLAMP - shipPitch, visualPitchOffset)
+  );
+
+  // ── Throttle ──────────────────────────────────────────────────────────
+  if (keys["KeyW"]) throttle = Math.min(1, throttle + ACCEL * dt);
+  else if (keys["KeyS"]) throttle = Math.max(-0.4, throttle - DECEL * dt);
+  else throttle *= Math.exp(-1.5 * dt);
+
+  // ── Build ship orientation quaternion (base + maneuver additive) ──────
+  tmpE.set(shipPitch, shipYaw, 0);
+  tmpQ.setFromEuler(tmpE);
+  // Apply maneuver yaw/pitch on top
+  if (maneuverYaw !== 0 || maneuverPitch !== 0) {
+    const mq = new THREE.Quaternion().setFromEuler(
+      new THREE.Euler(maneuverPitch, maneuverYaw, 0, "YXZ")
+    );
+    tmpQ.multiply(mq);
+  }
+
+  // Forward direction (ship nose)
+  const fwd = new THREE.Vector3(0, 0, -1).applyQuaternion(tmpQ);
+  const upDir = new THREE.Vector3(0, 1, 0);
+
+  // ── Velocity ──────────────────────────────────────────────────────────
+  const thrustMag = throttle * BASE_SPEED * (boost ? BOOST_MULT : 1);
+  vel.addScaledVector(fwd, thrustMag * dt);
+
+  // Vertical override: Space = up, C = down
+  if (keys["Space"] || keys["KeyQ"]) vel.y += BASE_SPEED * (boost ? BOOST_MULT : 1) * dt;
+  if (keys["KeyC"] || keys["KeyE"])  vel.y -= BASE_SPEED * (boost ? BOOST_MULT : 1) * dt;
+
+  // Lateral movement: A/D and mobile Left/Right slide the ship instead of yawing it.
+  if (keys["KeyA"] || keys["KeyD"]) {
+    const strafeSign = (keys["KeyD"] ? 1 : 0) - (keys["KeyA"] ? 1 : 0);
+    const rightDir = new THREE.Vector3(1, 0, 0).applyQuaternion(tmpQ).normalize();
+    vel.addScaledVector(rightDir, strafeSign * BASE_SPEED * STRAFE_MULT * (boost ? BOOST_MULT : 1) * dt);
+  }
+
+  // Friction
+  vel.multiplyScalar(Math.exp(-FRICTION * dt));
+
+  // Move ship
+  if (followMode && trajectory.length > 0) {
+    // Advance along trajectory
+    followFrame += followFPS * dt;
+    if (followFrame >= trajectory.length) {
+      followFrame = 0; // loop
+    }
+    const idx = Math.floor(followFrame);
+    const frac = followFrame - idx;
+    const nextIdx = Math.min(idx + 1, trajectory.length - 1);
+    const p0 = trajectory[idx].position;
+    const p1 = trajectory[nextIdx].position;
+    // Lerp position
+    ship.position.set(
+      p0[0] + (p1[0] - p0[0]) * frac,
+      p0[1] + (p1[1] - p0[1]) * frac,
+      p0[2] + (p1[2] - p0[2]) * frac
+    );
+    // Look toward next pose
+    if (nextIdx !== idx) {
+      const dir = new THREE.Vector3(p1[0]-p0[0], p1[1]-p0[1], p1[2]-p0[2]).normalize();
+      shipYaw = Math.atan2(-dir.x, -dir.z);
+      shipPitch = Math.asin(dir.y);
+    }
+    followStatus.textContent = `Frame ${idx+1}/${trajectory.length}`;
+    vel.set(0, 0, 0);
+    // Any key input stops follow
+    if (keys["KeyW"] || keys["KeyS"] || keys["KeyA"] || keys["KeyD"] || keys["ArrowLeft"] || keys["ArrowRight"] || keys["Space"] || keys["KeyC"]) stopFollow();
+  } else {
+    ship.position.addScaledVector(vel, dt * 60);
+  }
+
+  // Boundary collision
+  clampToBounds(ship.position);
+
+  // ── Ship visual rotation: WASD keeps original bank feel; arrows stay clean.
+  let targetRoll = 0;
+  if (keys["KeyA"]) targetRoll =  0.6;
+  if (keys["KeyD"]) targetRoll = -0.6;
+  currentRoll += (targetRoll - currentRoll) * Math.min(1, ROLL_RATE * dt);
+
+  const visualYaw = shipYaw + visualYawOffset;
+  const visualPitch = shipPitch + visualPitchOffset;
+  const visualQ = new THREE.Quaternion().setFromEuler(new THREE.Euler(visualPitch, visualYaw, 0, "YXZ"));
+  ship.quaternion.copy(visualQ);
+  // When flipped, roll ship 180° so it appears right-side-up from the inverted camera
+  if (flipped) ship.rotateZ(Math.PI);
+  ship.rotateZ(currentRoll + maneuverRoll);
+  shipVisual.rotation.z = 0;
+
+  // ── Engine glow ───────────────────────────────────────────────────────
+  const speed01 = vel.length() / (BASE_SPEED * BOOST_MULT);
+  const pulse = Math.sin(performance.now() * 0.015) * 0.1;
+  const glowScale = 0.4 + Math.abs(throttle) * 1.0 + pulse;
+  glowL.scale.setScalar(glowScale);
+  glowR.scale.setScalar(glowScale);
+  const hue = 0.08 - Math.abs(throttle) * 0.06;
+  glowMatL.color.setHSL(hue, 1, 0.5 + speed01 * 0.4);
+  glowMatR.color.setHSL(hue, 1, 0.5 + speed01 * 0.4);
+
+  // ── Trail ─────────────────────────────────────────────────────────────
+  const exhaust = new THREE.Vector3(0, 0, 0.16).applyQuaternion(ship.quaternion).add(ship.position);
+  trailHistory.unshift(exhaust);
+  if (trailHistory.length > trailCount) trailHistory.length = trailCount;
+  const posAttr = trailGeo.getAttribute("position");
+  for (let i = 0; i < trailHistory.length; i++) {
+    posAttr.setXYZ(i, trailHistory[i].x, trailHistory[i].y, trailHistory[i].z);
+  }
+  posAttr.needsUpdate = true;
+  trailMat.opacity = 0.2 + Math.abs(throttle) * 0.6;
+  trailGeo.setDrawRange(0, trailHistory.length);
+
+  // ── Camera ─────────────────────────────────────────────────────────────
+  if (viewModelMode) {
+    // Orbit camera around the jet
+    viewModelAngle += dt * 0.8;
+    const orbitR = 0.25;
+    const orbitH = 0.08;
+    const orbitPos = new THREE.Vector3(
+      Math.sin(viewModelAngle) * orbitR,
+      orbitH,
+      Math.cos(viewModelAngle) * orbitR
+    ).add(ship.position);
+    smoothCamPos.lerp(orbitPos, 0.05);
+    smoothCamTarget.lerp(ship.position, 0.1);
+    camera.position.copy(smoothCamPos);
+    camera.up.set(0, 1, 0);
+    camera.lookAt(smoothCamTarget);
+    // Any movement key exits view mode
+    if (keys["KeyW"] || keys["KeyS"] || keys["KeyA"] || keys["KeyD"] || keys["ArrowLeft"] || keys["ArrowRight"]) toggleViewModel();
+  } else {
+    const useDist   = closeupMode ? 0.4 : camDist;
+    const useHeight = closeupMode ? 0.1 : CAM_HEIGHT_OFFSET;
+
+    const camOffset = new THREE.Vector3(0, flipped ? -useHeight : useHeight, useDist);
+    camOffset.applyQuaternion(visualQ);
+    const desiredCamPos = ship.position.clone().add(camOffset);
+
+    const lookAhead = new THREE.Vector3(0, 0.02, -useDist * 0.5);
+    lookAhead.applyQuaternion(visualQ);
+    const desiredTarget = ship.position.clone().add(lookAhead);
+
+    const t = 1 - Math.exp(-CAM_LAG * dt);
+    smoothCamPos.lerp(desiredCamPos, t);
+    smoothCamTarget.lerp(desiredTarget, t);
+
+    camera.position.copy(smoothCamPos);
+    camera.up.set(0, flipped ? -1 : 1, 0);
+    camera.lookAt(smoothCamTarget);
+  }
+
+  // ── Game systems ───────────────────────────────────────────────────────
+  checkRingCollisions(ship.position);
+  updateTimer(dt);
+  animateRings(performance.now() * 0.001);
+
+  // ── Compass ───────────────────────────────────────────────────────────
+  const headingDeg = (((-shipYaw * 180 / Math.PI) % 360) + 360) % 360;
+  const stripOffset = -(headingDeg / 360) * (compassStrip.children.length * 50) + 100;
+  compassStrip.style.left = stripOffset + "px";
+
+  // ── Altitude bar ──────────────────────────────────────────────────────
+  if (sceneBounds) {
+    const altPct = ((ship.position.y - sceneBounds.lo[1]) / (sceneBounds.hi[1] - sceneBounds.lo[1])) * 100;
+    document.getElementById("alt-indicator").style.bottom = Math.max(0, Math.min(100, altPct)) + "%";
+    document.getElementById("alt-val").textContent = ship.position.y.toFixed(2);
+  }
+
+  // ── Minimap ───────────────────────────────────────────────────────────
+  drawMinimap(ship.position, shipYaw, sceneBounds, trajectory);
+
+  // ── HUD ───────────────────────────────────────────────────────────────
+  const spd = (vel.length() * 60);
+  speedEl.textContent = spd.toFixed(1) + " m/s" + (boost ? " BOOST" : "");
+  speedEl.style.color = boost ? "#ff4444" : spd > 3 ? "#44aaff" : "#ffffff";
+  hudEl.textContent =
+    `W/S fly · A/D slide · arrows rotate view · Shift boost · xyz ${ship.position.x.toFixed(2)}, ${ship.position.y.toFixed(2)}, ${ship.position.z.toFixed(2)} · yaw ${visualYaw.toFixed(2)} · pitch ${visualPitch.toFixed(2)}`;
+
+  sun.position.copy(ship.position).add(new THREE.Vector3(5, 10, 5));
+  fillLight.position.copy(ship.position).add(new THREE.Vector3(-5, -3, -5));
+  renderer.render(scene, camera);
+}
+
+animate();
+
+window.addEventListener("resize", () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+  </script>
+</body>
+</html>

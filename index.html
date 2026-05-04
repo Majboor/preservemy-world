@@ -1,0 +1,1873 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>preservemy.world - Walkable Memory and Heritage Preservation</title>
+    <style>
+      :root {
+        --un-blue: #009edb;
+        --un-blue-dark: #0072bc;
+        --un-blue-deep: #003366;
+        --un-gold: #c8a951;
+        --ink: #1b1b1b;
+        --ink-soft: #3a3a3a;
+        --muted: #65717c;
+        --line: #e3e7eb;
+        --bg: #ffffff;
+        --bg-tint: #f6f8fa;
+        --hero-glass: rgba(0, 51, 102, 0.42);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+        font-size: 16px;
+        line-height: 1.6;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        overflow-x: hidden;
+      }
+
+      body.is-loading {
+        overflow: hidden;
+      }
+
+      a {
+        color: var(--un-blue-dark);
+        text-decoration: none;
+      }
+
+      a:hover {
+        text-decoration: underline;
+      }
+
+      .container {
+        width: min(1180px, calc(100% - 40px));
+        margin: 0 auto;
+      }
+
+      .loader {
+        position: fixed;
+        inset: 0;
+        z-index: 80;
+        display: grid;
+        place-items: center;
+        background:
+          linear-gradient(180deg, rgba(0, 35, 72, 0.78), rgba(0, 22, 44, 0.94)),
+          url("assets/lost-relic-poster.jpg") center / cover;
+        opacity: 1;
+        visibility: visible;
+        transition: opacity 420ms ease, visibility 420ms ease;
+      }
+
+      .loader.is-hidden {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+      }
+
+      .loader-panel {
+        width: min(360px, calc(100vw - 48px));
+      }
+
+      .loader-title {
+        margin: 0 0 16px;
+        color: rgba(255, 255, 255, 0.86);
+        font-size: 15px;
+        font-weight: 600;
+      }
+
+      .loader-track {
+        height: 3px;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.22);
+      }
+
+      .loader-bar {
+        width: 0%;
+        height: 100%;
+        background: linear-gradient(90deg, #ffffff, var(--un-gold));
+        transition: width 180ms ease;
+      }
+
+      .utility {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 50;
+        background: rgba(0, 35, 72, 0.18);
+        color: #d6e8f6;
+        font-size: 12px;
+        backdrop-filter: blur(10px);
+        transition: background 180ms ease, border-color 180ms ease;
+      }
+
+      .utility .container,
+      .header-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+      }
+
+      .utility .container {
+        min-height: 34px;
+      }
+
+      .utility-links,
+      .utility-locale,
+      .nav,
+      .header-cta {
+        display: flex;
+        align-items: center;
+      }
+
+      .utility-links,
+      .utility-locale {
+        gap: 18px;
+      }
+
+      .utility a {
+        color: #d6e8f6;
+      }
+
+      .header {
+        position: fixed;
+        top: 34px;
+        left: 0;
+        right: 0;
+        z-index: 50;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+        background: rgba(255, 255, 255, 0.04);
+        color: #fff;
+        backdrop-filter: blur(12px);
+        transition: background 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+      }
+
+      .header-inner {
+        min-height: 64px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: #fff;
+      }
+
+      .brand:hover {
+        text-decoration: none;
+      }
+
+      .brand-mark {
+        display: block;
+        width: 42px;
+        height: 42px;
+        flex: 0 0 auto;
+      }
+
+      .brand-mark img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
+
+      .brand-text {
+        line-height: 1.12;
+      }
+
+      .brand-text strong {
+        display: block;
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+      }
+
+      .brand-text span {
+        display: none;
+        margin-top: 2px;
+        color: rgba(255, 255, 255, 0.68);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      .nav {
+        gap: 28px;
+      }
+
+      .nav a {
+        padding: 6px 0;
+        border-bottom: 2px solid transparent;
+        color: rgba(255, 255, 255, 0.86);
+        font-size: 14px;
+        font-weight: 700;
+      }
+
+      .nav a:hover {
+        border-bottom-color: var(--un-blue);
+        color: var(--un-blue-dark);
+        text-decoration: none;
+      }
+
+      .header-cta {
+        gap: 12px;
+      }
+
+      .btn {
+        display: inline-flex;
+        min-height: 44px;
+        align-items: center;
+        justify-content: center;
+        padding: 0 20px;
+        border: 1px solid transparent;
+        color: inherit;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        text-decoration: none;
+      }
+
+      .btn:hover {
+        text-decoration: none;
+      }
+
+      .btn-primary {
+        background: var(--un-blue);
+        color: #fff;
+      }
+
+      .btn-primary:hover {
+        background: var(--un-blue-dark);
+      }
+
+      .btn-ghost {
+        border-color: rgba(255, 255, 255, 0.42);
+        color: #fff;
+      }
+
+      .btn-ghost:hover {
+        border-color: var(--un-blue);
+        color: var(--un-blue-dark);
+      }
+
+      .btn-light {
+        background: #fff;
+        color: var(--un-blue-deep);
+      }
+
+      .btn-outline-light {
+        border-color: rgba(255, 255, 255, 0.62);
+        color: #fff;
+      }
+
+      .hero {
+        position: relative;
+        height: 100svh;
+        min-height: 100svh;
+        display: flex;
+        align-items: center;
+        isolation: isolate;
+        overflow: hidden;
+        background: var(--un-blue-deep);
+      }
+
+      body.has-scrolled .utility {
+        background: var(--un-blue-deep);
+      }
+
+      body.has-scrolled .header {
+        border-bottom-color: var(--line);
+        background: rgba(255, 255, 255, 0.96);
+        color: var(--ink);
+        box-shadow: 0 8px 24px rgba(0, 35, 72, 0.08);
+      }
+
+      body.has-scrolled .brand {
+        color: var(--ink);
+      }
+
+      body.has-scrolled .brand-text span {
+        color: var(--muted);
+      }
+
+      body.has-scrolled .nav a {
+        color: var(--ink);
+      }
+
+      body.has-scrolled .btn-ghost {
+        border-color: var(--line);
+        color: var(--ink);
+      }
+
+      body.is-over-video .utility {
+        background: transparent;
+      }
+
+      body.is-over-video .header {
+        border-bottom-color: rgba(255, 255, 255, 0.18);
+        background: transparent;
+        color: #fff;
+        box-shadow: none;
+      }
+
+      body.is-over-video .brand {
+        color: #fff;
+      }
+
+      body.is-over-video .brand-text span {
+        color: rgba(255, 255, 255, 0.68);
+      }
+
+      body.is-over-video .nav a,
+      body.is-over-video .btn-ghost {
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      body.is-over-video .btn-ghost {
+        border-color: rgba(255, 255, 255, 0.42);
+      }
+
+      .hero video {
+        position: absolute;
+        inset: 0;
+        z-index: -3;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .hero::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: -2;
+        background:
+          linear-gradient(90deg, rgba(0, 22, 44, 0.78) 0%, rgba(0, 45, 82, 0.42) 36%, rgba(0, 18, 36, 0.08) 100%),
+          linear-gradient(180deg, rgba(0, 18, 36, 0.02) 0%, rgba(0, 22, 44, 0.58) 100%);
+      }
+
+      .hero::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 2;
+        height: 4px;
+        background: linear-gradient(90deg, var(--un-blue), var(--un-gold));
+      }
+
+      .hero-inner {
+        position: relative;
+        width: 100%;
+        padding: 132px clamp(20px, 3vw, 36px) 92px;
+      }
+
+      .hero-copy {
+        max-width: 460px;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        color: var(--un-gold);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+      }
+
+      .eyebrow::before {
+        content: "";
+        width: 28px;
+        height: 2px;
+        background: currentColor;
+      }
+
+      .hero h1 {
+        max-width: 430px;
+        margin: 0 0 16px;
+        color: #fff;
+        font-size: clamp(36px, 4.8vw, 62px);
+        font-weight: 500;
+        letter-spacing: 0;
+        line-height: 1.04;
+      }
+
+      .hero p {
+        max-width: 360px;
+        margin: 0;
+        color: rgba(255, 255, 255, 0.82);
+        font-size: clamp(15px, 1.12vw, 17px);
+        line-height: 1.48;
+      }
+
+      .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 18px;
+        margin-top: 24px;
+      }
+
+      .section-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 14px;
+        margin-top: 28px;
+      }
+
+      .hero-link {
+        color: rgba(255, 255, 255, 0.88);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .hero-link:hover {
+        color: #fff;
+      }
+
+      .text-link {
+        color: var(--un-blue-dark);
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .text-link:hover {
+        color: var(--un-blue-deep);
+      }
+
+      body.modal-open {
+        overflow: hidden;
+      }
+
+      .contact-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 90;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        background: rgba(0, 18, 36, 0.62);
+      }
+
+      .contact-modal.is-open {
+        display: flex;
+      }
+
+      .contact-dialog {
+        position: relative;
+        width: min(520px, 100%);
+        border: 1px solid var(--line);
+        background: #fff;
+        color: var(--ink);
+        box-shadow: 0 22px 70px rgba(0, 35, 72, 0.28);
+      }
+
+      .contact-close {
+        position: absolute;
+        top: 14px;
+        right: 14px;
+        display: grid;
+        width: 36px;
+        height: 36px;
+        place-items: center;
+        border: 1px solid var(--line);
+        background: #fff;
+        color: var(--ink);
+        cursor: pointer;
+        font-size: 20px;
+        line-height: 1;
+      }
+
+      .contact-body {
+        padding: 42px clamp(22px, 5vw, 44px) 38px;
+      }
+
+      .contact-body h2 {
+        max-width: 360px;
+        margin: 0 0 14px;
+        color: var(--ink);
+        font-size: clamp(28px, 4vw, 38px);
+        line-height: 1.08;
+      }
+
+      .contact-body p {
+        margin: 0;
+        color: var(--ink-soft);
+        font-size: 16px;
+        line-height: 1.62;
+      }
+
+      .contact-links {
+        display: grid;
+        gap: 10px;
+        margin-top: 26px;
+      }
+
+      .contact-link {
+        display: flex;
+        min-height: 54px;
+        align-items: center;
+        gap: 14px;
+        border: 1px solid var(--line);
+        padding: 0 16px;
+        color: var(--ink);
+        font-size: 14px;
+        font-weight: 700;
+      }
+
+      .contact-link:hover {
+        border-color: var(--un-blue);
+        color: var(--un-blue-deep);
+        text-decoration: none;
+      }
+
+      .contact-link svg {
+        width: 22px;
+        height: 22px;
+        flex: 0 0 auto;
+        fill: currentColor;
+      }
+
+      .contact-note {
+        margin-top: 18px;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.5;
+      }
+
+      .hero-controls {
+        position: absolute;
+        right: clamp(20px, 4vw, 44px);
+        bottom: 28px;
+        z-index: 4;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: rgba(255, 255, 255, 0.84);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .hero-controls > span {
+        display: none;
+      }
+
+      .play {
+        display: inline-grid;
+        width: 48px;
+        height: 48px;
+        place-items: center;
+        border: 1px solid rgba(255, 255, 255, 0.48);
+        background: var(--hero-glass);
+        color: #fff;
+        cursor: pointer;
+        backdrop-filter: blur(10px);
+      }
+
+      .play:hover {
+        border-color: var(--un-blue);
+        background: rgba(0, 114, 188, 0.72);
+      }
+
+      .play svg {
+        width: 19px;
+        height: 19px;
+        fill: currentColor;
+      }
+
+      .play .pause-icon,
+      .play.is-playing .play-icon {
+        display: none;
+      }
+
+      .play.is-playing .pause-icon {
+        display: block;
+      }
+
+      .stats-wrap {
+        position: relative;
+        z-index: 5;
+        margin-top: 0;
+        padding: clamp(48px, 6vw, 76px) 0 0;
+        background: #fff;
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        border: 1px solid var(--line);
+        border-top: 4px solid var(--un-blue);
+        background: #fff;
+        box-shadow: 0 18px 50px rgba(0, 51, 102, 0.1);
+      }
+
+      .stat {
+        min-height: 144px;
+        padding: 34px 30px;
+        border-right: 1px solid var(--line);
+      }
+
+      .stat:last-child {
+        border-right: 0;
+      }
+
+      .stat-num {
+        color: var(--un-blue-deep);
+        font-size: clamp(34px, 4vw, 48px);
+        font-weight: 700;
+        line-height: 1;
+      }
+
+      .stat-label {
+        margin-top: 12px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+
+      section {
+        scroll-margin-top: 112px;
+        padding: clamp(88px, 10vw, 136px) 0;
+      }
+
+      .section-head {
+        max-width: 760px;
+        margin: 0 auto 64px;
+        text-align: center;
+      }
+
+      .section-head .eyebrow {
+        justify-content: center;
+        color: var(--un-blue-dark);
+      }
+
+      .section-head h2,
+      .editorial-body h2,
+      .report-copy h2,
+      .cta h2 {
+        margin: 18px 0;
+        color: var(--ink);
+        font-size: clamp(32px, 4vw, 48px);
+        font-weight: 700;
+        line-height: 1.16;
+      }
+
+      .section-head p,
+      .editorial-body p,
+      .report-copy p,
+      .program p,
+      .timeline p,
+      .cta p {
+        color: var(--ink-soft);
+        font-size: 18px;
+        line-height: 1.7;
+      }
+
+      .mission {
+        padding: 0;
+        background: #fff;
+        border-top: 1px solid var(--line);
+      }
+
+      .mission-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        align-items: stretch;
+      }
+
+      .mission-text {
+        display: flex;
+        align-items: center;
+        padding:
+          clamp(80px, 10vw, 132px)
+          clamp(20px, 4vw, 56px)
+          clamp(80px, 10vw, 132px)
+          clamp(20px, 7vw, 96px);
+        background: #fff;
+      }
+
+      .mission-text-inner {
+        max-width: 460px;
+      }
+
+      .mission-text-inner h2 {
+        margin: 18px 0 22px;
+        color: var(--ink);
+        font-size: clamp(30px, 3.4vw, 42px);
+        font-weight: 700;
+        line-height: 1.16;
+      }
+
+      .mission-text-inner p {
+        margin: 0 0 20px;
+        color: var(--ink-soft);
+        font-size: 18px;
+        line-height: 1.7;
+      }
+
+      .mission-text-inner p:last-child {
+        margin-bottom: 0;
+      }
+
+      .editorial-label {
+        display: inline-block;
+        padding-top: 10px;
+        border-top: 2px solid var(--un-blue-dark);
+        color: var(--un-blue-dark);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+      }
+
+      .mission-media {
+        position: relative;
+        height: 100svh;
+        min-height: 100svh;
+        overflow: hidden;
+        background:
+          linear-gradient(180deg, rgba(0, 51, 102, 0.04), rgba(0, 35, 72, 0.34)),
+          url("assets/lost-relic-meadows-poster.jpg") center / cover;
+      }
+
+      .mission-media video {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .mission-media::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(180deg, rgba(0, 18, 36, 0.04) 60%, rgba(0, 22, 44, 0.55)),
+          linear-gradient(90deg, rgba(0, 22, 44, 0.18), transparent 48%);
+        pointer-events: none;
+      }
+
+      .mission-media-caption {
+        position: absolute;
+        left: 24px;
+        right: 24px;
+        bottom: 22px;
+        z-index: 2;
+        display: flex;
+        justify-content: space-between;
+        gap: 18px;
+        color: rgba(255, 255, 255, 0.88);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .mission-media-caption .chapter-tag {
+        color: var(--un-gold);
+      }
+
+      .pull-quote {
+        margin: 28px 0 0;
+        padding-top: 20px;
+        border-top: 1px solid var(--line);
+        color: var(--un-blue-deep);
+        font-size: 18px;
+        font-style: italic;
+        line-height: 1.52;
+      }
+
+      .pull-quote cite {
+        display: block;
+        margin-top: 14px;
+        color: var(--muted);
+        font-size: 13px;
+        font-style: normal;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .programs {
+        background: var(--bg-tint);
+      }
+
+      .program-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1px;
+        margin-top: 86px;
+        border: 1px solid var(--line);
+        background: var(--line);
+      }
+
+      .program {
+        min-height: 320px;
+        padding: 32px;
+        background: #fff;
+      }
+
+      .program-number {
+        display: block;
+        margin-bottom: 80px;
+        color: var(--un-blue-dark);
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+      }
+
+      .program h3 {
+        margin: 0 0 14px;
+        color: var(--ink);
+        font-size: 24px;
+        line-height: 1.18;
+      }
+
+      .program p {
+        margin: 0;
+        font-size: 16px;
+      }
+
+      #report {
+        height: 100svh;
+        min-height: 100svh;
+        padding: 0;
+        scroll-margin-top: 0;
+        overflow: hidden;
+      }
+
+      .report-grid {
+        position: relative;
+        width: 100%;
+        max-width: none;
+        height: 100svh;
+        min-height: 100svh;
+        display: grid;
+        align-items: end;
+        padding: 0;
+      }
+
+      .report-media {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        min-height: 100%;
+        overflow: hidden;
+        border: 0;
+        background: #00162c;
+      }
+
+      .report-media video {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .report-media::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(180deg, rgba(0, 18, 36, 0.08), rgba(0, 24, 54, 0.62)),
+          linear-gradient(90deg, rgba(0, 22, 44, 0.76), rgba(0, 51, 102, 0.36) 46%, rgba(0, 22, 44, 0.08));
+        pointer-events: none;
+      }
+
+      .report-media-caption {
+        position: absolute;
+        left: 22px;
+        right: 22px;
+        bottom: 20px;
+        z-index: 2;
+        display: flex;
+        justify-content: space-between;
+        gap: 18px;
+        color: rgba(255, 255, 255, 0.86);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      .report-copy {
+        position: relative;
+        z-index: 2;
+        max-width: 640px;
+        padding: clamp(112px, 13vw, 168px) clamp(20px, 5vw, 72px) clamp(64px, 8vw, 96px);
+        color: #fff;
+      }
+
+      .report-copy .eyebrow,
+      .report-copy h2,
+      .report-copy p {
+        color: #fff;
+      }
+
+      .report-title-mobile {
+        display: none;
+      }
+
+      .report-list {
+        display: grid;
+        gap: 16px;
+        margin-top: 30px;
+      }
+
+      .report-item {
+        padding: 18px 0 18px 22px;
+        border-left: 4px solid var(--un-gold);
+        color: rgba(255, 255, 255, 0.82);
+        font-size: 16px;
+      }
+
+      .timeline {
+        background: var(--un-blue-deep);
+        color: #fff;
+      }
+
+      .timeline .section-head h2,
+      .timeline .section-head p {
+        color: #fff;
+      }
+
+      .timeline .section-head .eyebrow {
+        color: var(--un-gold);
+      }
+
+      .timeline-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1px;
+        background: rgba(255, 255, 255, 0.22);
+      }
+
+      .timeline-card {
+        min-height: 260px;
+        padding: 28px;
+        background: rgba(0, 35, 72, 0.92);
+      }
+
+      .timeline-card span {
+        display: block;
+        margin-bottom: 70px;
+        color: var(--un-gold);
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .timeline-card h3 {
+        margin: 0 0 10px;
+        color: #fff;
+        font-size: 21px;
+      }
+
+      .timeline-card p {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.78);
+        font-size: 15px;
+      }
+
+      .footage {
+        padding: clamp(88px, 10vw, 136px) 0 0;
+        background: var(--bg-tint);
+      }
+
+      .footage .footage-head {
+        max-width: 760px;
+        margin: 0 auto clamp(48px, 6vw, 72px);
+        text-align: left;
+      }
+
+      .footage .footage-head .eyebrow {
+        justify-content: flex-start;
+        color: var(--un-blue-dark);
+      }
+
+      .footage .footage-head h2 {
+        margin: 18px 0;
+        color: var(--ink);
+        font-size: clamp(32px, 4vw, 48px);
+        font-weight: 700;
+        line-height: 1.16;
+      }
+
+      .footage .footage-head p {
+        max-width: 620px;
+        color: var(--ink-soft);
+      }
+
+      .footage-frame {
+        position: relative;
+        width: 100%;
+        height: 100svh;
+        min-height: 100svh;
+        overflow: hidden;
+        background:
+          linear-gradient(180deg, rgba(0, 51, 102, 0.04), rgba(0, 35, 72, 0.34)),
+          url("assets/lost-relic-wadi-rum-poster.jpg") center / cover;
+        border-top: 4px solid var(--un-gold);
+      }
+
+      .footage-frame video {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .footage-frame::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(180deg, rgba(0, 18, 36, 0.04) 55%, rgba(0, 22, 44, 0.62)),
+          linear-gradient(90deg, rgba(0, 22, 44, 0.22), transparent 52%);
+        pointer-events: none;
+      }
+
+      .footage-caption {
+        position: absolute;
+        left: clamp(20px, 4vw, 56px);
+        right: clamp(20px, 4vw, 56px);
+        bottom: clamp(22px, 3vw, 32px);
+        z-index: 2;
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        color: rgba(255, 255, 255, 0.88);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .footage-caption .chapter-tag {
+        color: var(--un-gold);
+      }
+
+      .cta {
+        background:
+          linear-gradient(90deg, rgba(0, 51, 102, 0.94), rgba(0, 114, 188, 0.8)),
+          url("assets/lost-relic-poster.jpg") center / cover;
+        color: #fff;
+      }
+
+      .cta-inner {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 42px;
+        align-items: center;
+      }
+
+      .cta h2,
+      .cta p {
+        color: #fff;
+      }
+
+      .cta p {
+        max-width: 640px;
+        margin-bottom: 0;
+      }
+
+      .footer {
+        padding: 34px 0;
+        background: #f2f5f7;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .footer .container {
+        display: flex;
+        justify-content: space-between;
+        gap: 24px;
+      }
+
+      @media (max-width: 980px) {
+        .nav,
+        .header-cta,
+        .utility-links {
+          display: none;
+        }
+
+        .stats,
+        .program-grid,
+        .timeline-grid,
+        .mission-grid,
+        .report-grid,
+        .cta-inner {
+          grid-template-columns: 1fr;
+        }
+
+        .stat {
+          border-right: 0;
+          border-bottom: 1px solid var(--line);
+        }
+
+        .program-number,
+        .timeline-card span {
+          margin-bottom: 42px;
+        }
+
+        #report .report-media {
+          min-height: 100%;
+        }
+
+        .mission {
+          padding: 0;
+        }
+
+        .mission-grid {
+          min-height: 0;
+        }
+
+        .mission-text {
+          padding: 72px 20px 40px;
+        }
+
+        .mission-text-inner {
+          max-width: none;
+        }
+
+        .mission-media {
+          min-height: 100svh;
+        }
+
+        .footage {
+          padding: clamp(88px, 10vw, 136px) 0 0;
+        }
+
+        .footage-frame {
+          min-height: 100svh;
+        }
+      }
+
+      @media (max-width: 760px) {
+        .container {
+          width: min(100% - 32px, 1180px);
+        }
+
+        .utility {
+          display: none;
+        }
+
+        .header {
+          top: 0;
+        }
+
+        .hero {
+          min-height: 100svh;
+        }
+
+        .hero-inner {
+          padding: 116px 0 92px;
+        }
+
+        .hero-copy {
+          max-width: 280px;
+        }
+
+        .hero h1 {
+          max-width: 280px;
+          font-size: clamp(34px, 9vw, 44px);
+          line-height: 1.04;
+        }
+
+        .hero p {
+          max-width: 260px;
+          font-size: 14px;
+          line-height: 1.48;
+        }
+
+        .hero-actions {
+          gap: 16px;
+          margin-top: 24px;
+        }
+
+        .section-actions {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .hero-controls {
+          left: 16px;
+          right: 16px;
+          justify-content: space-between;
+        }
+
+        .stats-wrap {
+          margin-top: 0;
+        }
+
+        section {
+          padding: 72px 0;
+        }
+
+        .section-head {
+          margin-bottom: 42px;
+          text-align: left;
+        }
+
+        .section-head .eyebrow {
+          justify-content: flex-start;
+        }
+
+        .section-head h2,
+        .editorial-body h2 {
+          font-size: 30px;
+          line-height: 1.14;
+        }
+
+        .section-head p,
+        .editorial-body p,
+        .program p,
+        .timeline p,
+        .cta p {
+          font-size: 16px;
+          line-height: 1.58;
+        }
+
+        .mission-text {
+          padding: 64px 20px 32px;
+        }
+
+        .mission-text-inner h2 {
+          font-size: 28px;
+          line-height: 1.16;
+        }
+
+        .mission-media {
+          min-height: 100svh;
+        }
+
+        .footage {
+          padding: 64px 0 0;
+        }
+
+        .footage .footage-head {
+          margin-bottom: 36px;
+        }
+
+        .footage .footage-head h2 {
+          font-size: 28px;
+          line-height: 1.16;
+        }
+
+        .footage-frame {
+          min-height: 100svh;
+        }
+
+        .mission-media-caption,
+        .footage-caption {
+          left: 16px;
+          right: 16px;
+          bottom: 16px;
+          gap: 12px;
+          font-size: 11px;
+          letter-spacing: 0.1em;
+        }
+
+        #report {
+          min-height: 100svh;
+          margin-top: 0;
+        }
+
+        .report-grid {
+          min-height: 100svh;
+          align-items: center;
+        }
+
+        .report-copy {
+          max-width: none;
+          padding: 52px 20px 46px;
+        }
+
+        .report-copy h2 {
+          max-width: 290px;
+          font-size: clamp(32px, 10vw, 42px);
+          line-height: 1;
+        }
+
+        .report-title-desktop {
+          display: none;
+        }
+
+        .report-title-mobile {
+          display: block;
+        }
+
+        .report-copy p {
+          display: none;
+        }
+
+        .report-list {
+          display: none;
+        }
+
+        .report-media-caption {
+          left: 16px;
+          right: 16px;
+          bottom: 14px;
+          gap: 12px;
+          font-size: 10px;
+          letter-spacing: 0.08em;
+        }
+
+        .brand-text span {
+          display: none;
+        }
+
+        .brand-mark {
+          width: 38px;
+          height: 38px;
+        }
+
+        .footage-caption,
+        .footer .container {
+          flex-direction: column;
+        }
+      }
+
+      @media (max-width: 760px) and (max-height: 480px) {
+        .report-copy {
+          padding: 34px 18px 34px;
+        }
+
+        .report-copy .eyebrow {
+          font-size: 11px;
+          letter-spacing: 0.12em;
+        }
+
+        .report-copy h2 {
+          max-width: 250px;
+          font-size: clamp(28px, 8vw, 36px);
+        }
+
+        .report-media-caption {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body class="is-loading">
+    <div class="loader" role="status" aria-live="polite" aria-label="Loading video footage">
+      <div class="loader-panel">
+        <p class="loader-title">Loading field footage</p>
+        <div class="loader-track" aria-hidden="true">
+          <div class="loader-bar"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="utility">
+      <div class="container">
+        <div class="utility-links">
+          <a href="#">Peace, dignity and heritage on a healthy planet</a>
+          <a href="#">Reports</a>
+          <a href="#">Data</a>
+        </div>
+        <div class="utility-locale">
+          <span>English</span>
+          <span>Search</span>
+        </div>
+      </div>
+    </div>
+
+    <header class="header">
+      <div class="container header-inner">
+        <a class="brand" href="#">
+          <span class="brand-mark">
+            <img src="assets/preservethe-world-logo.png" alt="">
+          </span>
+          <span class="brand-text">
+            <strong>preservemy.world</strong>
+            <span>Heritage at Risk</span>
+          </span>
+        </a>
+
+        <nav class="nav" aria-label="Primary">
+          <a href="#mission">How it works</a>
+          <a href="#programs">Use cases</a>
+          <a href="#timeline">Movement</a>
+          <a href="#footage">Technology</a>
+        </nav>
+
+        <div class="header-cta">
+          <a class="btn btn-ghost upload-memory-trigger" href="#upload-memory">Upload a memory</a>
+          <a class="btn btn-primary" href="demo-game/index.html">Play now</a>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero" id="home">
+        <video
+          id="heroVideo"
+          autoplay
+          muted
+          loop
+          playsinline
+          preload="auto"
+          poster="assets/lost-relic-poster.jpg"
+          src="assets/lost-relic-hero-loop.mp4"
+        ></video>
+
+        <div class="container hero-inner">
+          <div class="hero-copy">
+            <h1>Walk through what mattered.</h1>
+            <p>Send us a video. We turn it into a 3D memory.</p>
+            <div class="hero-actions">
+              <a class="btn btn-primary" href="demo-game/index.html">Play now</a>
+              <a class="hero-link upload-memory-trigger" href="#upload-memory">Upload a memory</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-controls">
+          <span>Memory capture</span>
+          <button class="play is-playing" type="button" aria-label="Pause hero video" aria-pressed="true">
+            <svg class="play-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M8 5v14l11-7z"></path>
+            </svg>
+            <svg class="pause-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M7 5h4v14H7zM13 5h4v14h-4z"></path>
+            </svg>
+          </button>
+        </div>
+      </section>
+
+      <div class="stats-wrap">
+        <div class="container">
+          <div class="stats" aria-label="Preservation access points">
+            <div class="stat">
+              <div class="stat-num">Video</div>
+              <div class="stat-label">Start with footage you already have</div>
+            </div>
+            <div class="stat">
+              <div class="stat-num">3D</div>
+              <div class="stat-label">Turn places into walkable worlds</div>
+            </div>
+            <div class="stat">
+              <div class="stat-num">Free</div>
+              <div class="stat-label">No money or equipment required</div>
+            </div>
+            <div class="stat">
+              <div class="stat-num">Spatial AI</div>
+              <div class="stat-label">Video becomes an explorable world</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <section class="mission" id="mission">
+        <div class="mission-grid">
+          <div class="mission-text">
+            <div class="mission-text-inner">
+              <span class="editorial-label">How it works</span>
+              <h2>Record a place. We make it walkable.</h2>
+              <p>Send a video from a phone, camera, or archive. Our Spatial AI pipeline turns it into a world that can be explored like a memory you can step inside.</p>
+              <p>You do not need money. You do not need special equipment. If you have footage of a meaningful place, you can help preserve it.</p>
+              <div class="section-actions">
+                <a class="btn btn-primary" href="demo-game/index.html">Play now</a>
+                <a class="text-link upload-memory-trigger" href="#upload-memory">Upload a memory</a>
+              </div>
+            </div>
+          </div>
+          <div class="mission-media">
+            <video class="lazy-video" muted loop playsinline preload="auto" poster="assets/lost-relic-meadows-poster.jpg" data-src="assets/lost-relic-meadows-feed.mp4"></video>
+            <div class="mission-media-caption">
+              <span class="chapter-tag">Simple footage</span>
+              <span>Walkable 3D memory</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="programs" id="programs">
+        <div class="container">
+          <div class="section-head">
+            <span class="eyebrow">What people can preserve</span>
+            <h2>A 3D archive of real places, built by everyone.</h2>
+            <p>preservemy.world is for culture, family memory, education, travel, and emergency documentation. A place does not need to be famous to be worth saving.</p>
+            <div class="section-actions">
+              <a class="btn btn-primary" href="demo-game/index.html">Play now</a>
+              <a class="text-link upload-memory-trigger" href="#upload-memory">Upload a memory</a>
+            </div>
+          </div>
+
+          <div class="program-grid">
+            <article class="program">
+              <span class="program-number">01</span>
+              <h3>Cultural heritage</h3>
+              <p>Mosques, shrines, temples, churches, forts, museums, old streets, historical buildings, and everyday spaces that carry identity.</p>
+            </article>
+            <article class="program">
+              <span class="program-number">02</span>
+              <h3>Personal memories</h3>
+              <p>Childhood homes, family rooms, grandparents' spaces, schools, favorite cafes, wedding venues, pet memories, and places that shaped us.</p>
+            </article>
+            <article class="program">
+              <span class="program-number">03</span>
+              <h3>Education and play</h3>
+              <p>Students can explore real places instead of only reading about them, and young people can walk through preserved worlds with friends.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="report">
+        <div class="report-grid">
+          <div class="report-media">
+            <video autoplay muted loop playsinline preload="auto" poster="assets/lost-relic-mountain-poster.jpg" src="assets/lost-relic-mountain-feed.mp4"></video>
+            <div class="report-media-caption">
+            <span>Why now</span>
+            <span>Experience over screenshots</span>
+            </div>
+          </div>
+          <div class="report-copy">
+            <span class="eyebrow">Why now</span>
+            <h2 class="report-title-desktop">We already record the world. Now make it walkable.</h2>
+            <h2 class="report-title-mobile">Record the world. Make it walkable.</h2>
+            <p>The world is changing faster than we can document it. Photos and long videos matter, but future generations need a way to experience places, not just look at them.</p>
+            <div class="report-list">
+              <div class="report-item">Phones are everywhere, and people already carry footage of meaningful places.</div>
+              <div class="report-item">3D reconstruction is finally becoming accessible to schools, communities, and families.</div>
+              <div class="report-item">The next generation expects interactive archives, not static folders.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="timeline" id="timeline">
+        <div class="container">
+          <div class="section-head">
+            <span class="eyebrow">Simple process</span>
+            <h2>From phone video to explorable world.</h2>
+            <p>The platform is built around a real Spatial AI flow: create a session, upload footage, track progress, and generate an explorable 3D world.</p>
+            <div class="section-actions">
+              <a class="btn btn-primary" href="demo-game/index.html">Play now</a>
+              <a class="text-link upload-memory-trigger" href="#upload-memory">Upload a memory</a>
+            </div>
+          </div>
+          <div class="timeline-grid">
+            <article class="timeline-card">
+              <span>Phase 01</span>
+              <h3>Record</h3>
+              <p>Capture or find video of a place worth remembering: a room, monument, street, school, shrine, home, or cultural site.</p>
+            </article>
+            <article class="timeline-card">
+              <span>Phase 02</span>
+              <h3>Upload</h3>
+              <p>Send the footage to preservemy.world. The upload starts a 3D preservation session.</p>
+            </article>
+            <article class="timeline-card">
+              <span>Phase 03</span>
+              <h3>Process</h3>
+              <p>The Spatial AI pipeline tracks progress and turns the video into a photorealistic place you can explore.</p>
+            </article>
+            <article class="timeline-card">
+              <span>Phase 04</span>
+              <h3>Explore</h3>
+              <p>The result becomes a walkable 3D world that can be viewed, shared, downloaded, and remembered.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="footage" id="footage">
+        <div class="container">
+          <div class="footage-head">
+            <span class="eyebrow">Community-led preservation</span>
+            <h2>This is a movement, not a database.</h2>
+            <p>Students, schools, universities, NGOs, museums, local historians, travel creators, cultural organizations, and families can all help build a global memory map.</p>
+            <p>Behind the scenes, Spatial AI turns footage into lightweight, photorealistic worlds that can be viewed, shared, and explored.</p>
+            <div class="section-actions">
+              <a class="btn btn-primary" href="demo-game/index.html">Play now</a>
+              <a class="text-link upload-memory-trigger" href="#upload-memory">Upload a memory</a>
+            </div>
+          </div>
+        </div>
+        <div class="footage-frame">
+          <video class="lazy-video" muted loop playsinline preload="auto" poster="assets/lost-relic-wadi-rum-poster.jpg" data-src="assets/lost-relic-wadi-rum-feed.mp4"></video>
+          <div class="footage-caption">
+            <span class="chapter-tag">Community footage</span>
+            <span>Shared preservation map</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="cta" id="support">
+        <div class="container cta-inner">
+          <div>
+            <span class="eyebrow">Preserve your world</span>
+            <h2>Have a video of a place worth remembering?</h2>
+            <p>A memory on your phone could become a world someone walks through years from now. Send us footage, nominate a place, become a student ambassador, or partner with the preservation map.</p>
+          </div>
+          <div class="section-actions">
+            <a class="btn btn-light" href="demo-game/index.html">Play now</a>
+            <a class="btn btn-outline-light upload-memory-trigger" href="#upload-memory">Upload a memory</a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="container">
+        <span>preservemy.world</span>
+        <span>The future deserves more than screenshots.</span>
+      </div>
+    </footer>
+
+    <div class="contact-modal" id="uploadMemoryModal" role="dialog" aria-modal="true" aria-labelledby="uploadMemoryTitle" aria-hidden="true">
+      <div class="contact-dialog">
+        <button class="contact-close" type="button" aria-label="Close upload contact options">&times;</button>
+        <div class="contact-body">
+          <h2 id="uploadMemoryTitle">Approach us before sending footage.</h2>
+          <p>Storage and processing resources are limited right now, so coordinate with our team first. We will guide you on what to record, how to send it, and what happens next.</p>
+          <div class="contact-links" aria-label="Contact options">
+            <a class="contact-link" href="https://wa.me/14254729807?text=Hi%2C%20I%E2%80%99m%20interested%20in%20getting%20my%203D%20scene%20created.%20I%20understand%20storage%20resources%20are%20limited%2C%20so%20I%E2%80%99ll%20coordinate%20with%20your%20representative%20before%20sending%20any%20videos.%20Please%20guide%20me%20on%20the%20next%20steps." target="_blank" rel="noopener">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M20.52 3.48A11.82 11.82 0 0 0 12.1 0C5.54 0 .2 5.34.2 11.9c0 2.1.55 4.15 1.6 5.96L0 24l6.3-1.65a11.9 11.9 0 0 0 5.8 1.48h.01c6.56 0 11.9-5.34 11.9-11.9 0-3.18-1.24-6.16-3.49-8.45ZM12.1 21.82a9.86 9.86 0 0 1-5.03-1.38l-.36-.21-3.74.98 1-3.64-.24-.37a9.84 9.84 0 0 1-1.51-5.3c0-5.45 4.43-9.88 9.88-9.88 2.64 0 5.12 1.03 6.99 2.9a9.82 9.82 0 0 1 2.9 7c0 5.45-4.44 9.9-9.89 9.9Zm5.42-7.4c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.17-.17.2-.35.22-.64.07-.3-.15-1.25-.46-2.38-1.47a8.9 8.9 0 0 1-1.64-2.04c-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.07-.15-.67-1.61-.92-2.2-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.22 3.08c.15.2 2.1 3.2 5.08 4.49.71.31 1.27.49 1.7.63.71.23 1.36.2 1.88.12.57-.09 1.76-.72 2-1.42.25-.69.25-1.28.17-1.41-.07-.12-.27-.2-.57-.35Z"/>
+              </svg>
+              WhatsApp
+            </a>
+            <a class="contact-link" href="https://www.instagram.com/preservemy.world/" target="_blank" rel="noopener">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M7.8 2h8.4A5.8 5.8 0 0 1 22 7.8v8.4a5.8 5.8 0 0 1-5.8 5.8H7.8A5.8 5.8 0 0 1 2 16.2V7.8A5.8 5.8 0 0 1 7.8 2Zm0 2A3.8 3.8 0 0 0 4 7.8v8.4A3.8 3.8 0 0 0 7.8 20h8.4a3.8 3.8 0 0 0 3.8-3.8V7.8A3.8 3.8 0 0 0 16.2 4H7.8Zm8.7 1.55a1.35 1.35 0 1 1 0 2.7 1.35 1.35 0 0 1 0-2.7ZM12 7.15A4.85 4.85 0 1 1 12 16.85 4.85 4.85 0 0 1 12 7.15Zm0 2A2.85 2.85 0 1 0 12 14.85 2.85 2.85 0 0 0 12 9.15Z"/>
+              </svg>
+              Instagram
+            </a>
+            <a class="contact-link" href="https://www.linkedin.com/company/techrealm" target="_blank" rel="noopener">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M20.45 20.45h-3.56v-5.58c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.95v5.67H9.34V9h3.42v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.61 0 4.27 2.37 4.27 5.46v6.28ZM5.32 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12Zm1.78 13.02H3.53V9H7.1v11.45ZM22.23 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.46c.98 0 1.77-.77 1.77-1.72V1.72C24 .77 23.21 0 22.23 0Z"/>
+              </svg>
+              LinkedIn
+            </a>
+          </div>
+          <div class="contact-note">Please do not send large videos until a representative confirms the next steps.</div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const video = document.querySelector("#heroVideo");
+      const playButton = document.querySelector(".play");
+      const loader = document.querySelector(".loader");
+      const loaderBar = document.querySelector(".loader-bar");
+      let hasFinishedLoading = false;
+      const lazyVideos = document.querySelectorAll(".lazy-video");
+      const pageVideos = Array.from(document.querySelectorAll("video"));
+      const videoChapters = document.querySelectorAll(".hero, .mission-media, #report, .footage-frame");
+      const uploadMemoryModal = document.querySelector("#uploadMemoryModal");
+      const uploadMemoryTriggers = document.querySelectorAll(".upload-memory-trigger");
+      const uploadMemoryClose = uploadMemoryModal.querySelector(".contact-close");
+
+      const openUploadMemoryModal = () => {
+        uploadMemoryModal.classList.add("is-open");
+        uploadMemoryModal.setAttribute("aria-hidden", "false");
+        document.body.classList.add("modal-open");
+        uploadMemoryClose.focus();
+      };
+
+      const closeUploadMemoryModal = () => {
+        uploadMemoryModal.classList.remove("is-open");
+        uploadMemoryModal.setAttribute("aria-hidden", "true");
+        document.body.classList.remove("modal-open");
+      };
+
+      uploadMemoryTriggers.forEach((trigger) => {
+        trigger.addEventListener("click", (event) => {
+          event.preventDefault();
+          openUploadMemoryModal();
+        });
+      });
+
+      uploadMemoryClose.addEventListener("click", closeUploadMemoryModal);
+
+      uploadMemoryModal.addEventListener("click", (event) => {
+        if (event.target === uploadMemoryModal) {
+          closeUploadMemoryModal();
+        }
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && uploadMemoryModal.classList.contains("is-open")) {
+          closeUploadMemoryModal();
+        }
+      });
+
+      const updateHeader = () => {
+        const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+        const isOverVideo = Array.from(videoChapters).some((chapter) => {
+          const rect = chapter.getBoundingClientRect();
+          const visible = Math.min(rect.bottom, viewportHeight) - Math.max(rect.top, 0);
+          const ratio = visible / Math.min(rect.height, viewportHeight);
+          return visible > 0 && ratio >= 0.42;
+        });
+
+        document.body.classList.toggle("has-scrolled", window.scrollY > 24);
+        document.body.classList.toggle("is-over-video", isOverVideo);
+      };
+
+      updateHeader();
+      window.addEventListener("scroll", updateHeader, { passive: true });
+      window.addEventListener("resize", updateHeader);
+
+      const activateLazyVideo = (lazyVideo) => {
+        if (!lazyVideo.src && lazyVideo.dataset.src) {
+          lazyVideo.src = lazyVideo.dataset.src;
+          lazyVideo.load();
+        }
+
+        if (!lazyVideo.src) {
+          return;
+        }
+
+        lazyVideo.play().catch(() => {});
+      };
+
+      if ("IntersectionObserver" in window) {
+        const lazyObserver = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                activateLazyVideo(entry.target);
+                lazyObserver.unobserve(entry.target);
+              }
+            });
+          },
+          { rootMargin: "240px 0px" }
+        );
+
+        lazyVideos.forEach((lazyVideo) => lazyObserver.observe(lazyVideo));
+      } else {
+        lazyVideos.forEach(activateLazyVideo);
+      }
+
+      const prepareVideo = (targetVideo) => new Promise((resolve) => {
+        if (!targetVideo.src && targetVideo.dataset.src) {
+          targetVideo.src = targetVideo.dataset.src;
+        }
+
+        targetVideo.preload = "auto";
+
+        if (targetVideo.readyState >= 3) {
+          resolve(targetVideo);
+          return;
+        }
+
+        const done = () => {
+          targetVideo.removeEventListener("canplay", done);
+          targetVideo.removeEventListener("loadeddata", done);
+          targetVideo.removeEventListener("error", done);
+          resolve(targetVideo);
+        };
+
+        targetVideo.addEventListener("canplay", done, { once: true });
+        targetVideo.addEventListener("loadeddata", done, { once: true });
+        targetVideo.addEventListener("error", done, { once: true });
+        targetVideo.load();
+        window.setTimeout(done, 6500);
+      });
+
+      const setLoadProgress = () => {
+        const progressItems = pageVideos.map((targetVideo) => {
+          if (targetVideo.readyState >= 3) {
+            return 1;
+          }
+
+          if (!targetVideo.duration || !targetVideo.buffered.length) {
+            return targetVideo.readyState >= 2 ? 0.55 : 0.18;
+          }
+
+          const bufferedEnd = targetVideo.buffered.end(targetVideo.buffered.length - 1);
+          return Math.min(bufferedEnd / targetVideo.duration, 1);
+        });
+
+        const progress = progressItems.reduce((sum, item) => sum + item, 0) / Math.max(progressItems.length, 1);
+        loaderBar.style.width = `${Math.min(progress * 100, 98)}%`;
+      };
+
+      const finishLoading = async () => {
+        if (hasFinishedLoading) {
+          return;
+        }
+
+        hasFinishedLoading = true;
+        loaderBar.style.width = "100%";
+        document.body.classList.remove("is-loading");
+        loader.classList.add("is-hidden");
+
+        try {
+          await video.play();
+        } catch {
+          playButton.classList.remove("is-playing");
+          playButton.setAttribute("aria-pressed", "false");
+          playButton.setAttribute("aria-label", "Play hero video");
+        }
+      };
+
+      video.addEventListener("progress", setLoadProgress);
+      video.addEventListener("loadedmetadata", setLoadProgress);
+      pageVideos.forEach((targetVideo) => {
+        targetVideo.addEventListener("progress", setLoadProgress);
+        targetVideo.addEventListener("loadeddata", setLoadProgress);
+        targetVideo.addEventListener("canplay", setLoadProgress);
+      });
+      Promise.allSettled(pageVideos.map(prepareVideo)).then(finishLoading);
+
+      window.setTimeout(() => {
+        finishLoading();
+      }, 9000);
+
+      playButton.addEventListener("click", async () => {
+        if (video.paused) {
+          await video.play();
+        } else {
+          video.pause();
+        }
+
+        const isPlaying = !video.paused;
+        playButton.classList.toggle("is-playing", isPlaying);
+        playButton.setAttribute("aria-pressed", String(isPlaying));
+        playButton.setAttribute("aria-label", isPlaying ? "Pause hero video" : "Play hero video");
+      });
+    </script>
+  </body>
+</html>

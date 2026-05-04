@@ -1,0 +1,850 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>The Lost Relic - Test Page</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #061217;
+        --surface: #0a1d22;
+        --surface-2: #0f2a31;
+        --text: #f7f4ee;
+        --muted: rgba(247, 244, 238, 0.68);
+        --soft: rgba(247, 244, 238, 0.46);
+        --line: rgba(178, 225, 236, 0.2);
+        --glass: rgba(8, 32, 39, 0.5);
+        --blue-glass: rgba(72, 166, 202, 0.2);
+        --quest: #e5d64b;
+        --stone: #a39886;
+        --green: #24535d;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+        background: var(--bg);
+        color: var(--text);
+        font-family: "Avenir Next", "SF Pro Display", "Helvetica Neue", sans-serif;
+      }
+
+      body {
+        overflow-x: hidden;
+      }
+
+      body.is-loading {
+        overflow: hidden;
+      }
+
+      a {
+        color: inherit;
+      }
+
+      .loader {
+        position: fixed;
+        inset: 0;
+        z-index: 20;
+        display: grid;
+        place-items: center;
+        background:
+          linear-gradient(180deg, rgba(5, 18, 23, 0.72), rgba(5, 18, 23, 0.94)),
+          url("assets/lost-relic-poster.jpg") center / cover;
+        opacity: 1;
+        visibility: visible;
+        transition: opacity 420ms ease, visibility 420ms ease;
+      }
+
+      .loader.is-hidden {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+      }
+
+      .loader-panel {
+        width: min(340px, calc(100vw - 48px));
+      }
+
+      .loader-title {
+        margin: 0 0 16px;
+        color: rgba(247, 244, 238, 0.82);
+        font-size: 15px;
+        font-weight: 500;
+      }
+
+      .loader-track {
+        height: 2px;
+        overflow: hidden;
+        background: rgba(247, 244, 238, 0.16);
+      }
+
+      .loader-bar {
+        width: 0%;
+        height: 100%;
+        background: linear-gradient(90deg, #f7f4ee, var(--quest));
+        transition: width 180ms ease;
+      }
+
+      .hero {
+        position: relative;
+        min-height: 100svh;
+        isolation: isolate;
+        overflow: hidden;
+      }
+
+      .hero video,
+      .hero::before,
+      .hero::after {
+        position: absolute;
+        inset: 0;
+      }
+
+      .hero video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+        z-index: -3;
+      }
+
+      .hero::before {
+        content: "";
+        z-index: -2;
+        background:
+          linear-gradient(90deg, rgba(4, 13, 17, 0.76) 0%, rgba(10, 50, 60, 0.44) 34%, rgba(42, 118, 154, 0.12) 70%),
+          linear-gradient(180deg, rgba(5, 18, 23, 0.12) 0%, rgba(5, 18, 23, 0.06) 46%, rgba(5, 18, 23, 0.58) 100%);
+      }
+
+      .hero::after {
+        content: "";
+        z-index: -1;
+        pointer-events: none;
+        background: rgba(7, 30, 38, 0.1);
+      }
+
+      .hero-shell {
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        min-height: 100svh;
+        padding: 28px clamp(20px, 4vw, 56px);
+      }
+
+      .topbar,
+      .hero-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+      }
+
+      .brand {
+        font-size: 15px;
+        font-weight: 600;
+      }
+
+      .nav {
+        display: flex;
+        align-items: center;
+        gap: 22px;
+        color: rgba(247, 244, 238, 0.68);
+        font-size: 14px;
+      }
+
+      .nav a {
+        text-decoration: none;
+      }
+
+      .nav a:hover {
+        color: var(--text);
+      }
+
+      .hero-copy {
+        align-self: center;
+        max-width: 560px;
+        padding-bottom: 7vh;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin-top: 0;
+      }
+
+      h1 {
+        margin-bottom: 0;
+        font-size: clamp(48px, 8vw, 92px);
+        line-height: 0.94;
+        letter-spacing: 0;
+        font-weight: 500;
+      }
+
+      .hero-copy p {
+        max-width: 430px;
+        margin: 22px 0 0;
+        color: var(--muted);
+        font-size: 18px;
+        line-height: 1.55;
+      }
+
+      .play {
+        display: inline-grid;
+        place-items: center;
+        width: 56px;
+        height: 56px;
+        border: 1px solid rgba(210, 235, 238, 0.28);
+        border-radius: 8px;
+        background: var(--glass);
+        color: var(--text);
+        cursor: pointer;
+        backdrop-filter: blur(12px);
+        transition: background 160ms ease, border-color 160ms ease;
+      }
+
+      .play:hover {
+        background: rgba(12, 24, 25, 0.62);
+        border-color: rgba(229, 214, 75, 0.42);
+      }
+
+      .play svg {
+        width: 22px;
+        height: 22px;
+        fill: currentColor;
+      }
+
+      .play .pause-icon {
+        display: none;
+      }
+
+      .play.is-playing .play-icon {
+        display: none;
+      }
+
+      .play.is-playing .pause-icon {
+        display: block;
+      }
+
+      .hero-footer {
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .quest {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+      }
+
+      .quest::before,
+      .route-dot::before,
+      .stat::before {
+        content: "";
+        width: 8px;
+        height: 8px;
+        flex: 0 0 auto;
+        border: 1px solid var(--quest);
+        rotate: 45deg;
+      }
+
+      .section {
+        position: relative;
+        scroll-margin-top: 24px;
+        padding: clamp(72px, 10vw, 132px) clamp(20px, 4vw, 56px);
+        overflow: hidden;
+      }
+
+      .section-inner {
+        width: min(1180px, 100%);
+        margin: 0 auto;
+      }
+
+      .section-title {
+        max-width: 680px;
+        margin-bottom: 34px;
+      }
+
+      .section-title h2 {
+        margin-bottom: 14px;
+        font-size: clamp(34px, 4.8vw, 58px);
+        line-height: 1;
+        letter-spacing: 0;
+        font-weight: 500;
+      }
+
+      .section-title p,
+      .panel p,
+      .route-card p,
+      .final p {
+        color: var(--muted);
+        font-size: 16px;
+        line-height: 1.62;
+      }
+
+      .story {
+        background:
+          linear-gradient(180deg, #061217 0%, #0a1c21 100%);
+      }
+
+      .story-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(280px, 420px);
+        gap: clamp(26px, 5vw, 64px);
+        align-items: end;
+      }
+
+      .story-image {
+        min-height: 520px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background:
+          linear-gradient(180deg, rgba(7, 30, 38, 0.1), rgba(5, 18, 23, 0.58)),
+          url("assets/lost-relic-poster.jpg") center / cover;
+      }
+
+      .story-copy {
+        padding-bottom: 10px;
+      }
+
+      .story-copy h2 {
+        margin-bottom: 18px;
+        font-size: clamp(34px, 4vw, 52px);
+        line-height: 1.02;
+        font-weight: 500;
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1px;
+        margin-top: 32px;
+        border: 1px solid var(--line);
+        background: var(--line);
+      }
+
+      .stat {
+        display: flex;
+        min-height: 116px;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 20px;
+        padding: 18px;
+        background: rgba(10, 29, 34, 0.94);
+      }
+
+      .stat strong {
+        font-size: 28px;
+        font-weight: 500;
+      }
+
+      .stat span {
+        color: var(--soft);
+        font-size: 13px;
+      }
+
+      .world {
+        background:
+          linear-gradient(180deg, #0a1c21 0%, #0f2a31 45%, #061217 100%);
+      }
+
+      .panel-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1px;
+        border: 1px solid var(--line);
+        background: var(--line);
+      }
+
+      .panel {
+        min-height: 310px;
+        padding: 24px;
+        background:
+          linear-gradient(180deg, rgba(72, 166, 202, 0.18), rgba(10, 29, 34, 0.94)),
+          var(--surface);
+      }
+
+      .panel h3,
+      .route-card h3 {
+        margin-bottom: 12px;
+        color: rgba(247, 244, 238, 0.92);
+        font-size: 21px;
+        line-height: 1.15;
+        font-weight: 500;
+      }
+
+      .panel p,
+      .route-card p {
+        margin-bottom: 0;
+      }
+
+      .panel-number {
+        display: block;
+        margin-bottom: 92px;
+        color: rgba(229, 214, 75, 0.72);
+        font-size: 14px;
+      }
+
+      .route {
+        background:
+          linear-gradient(180deg, #061217 0%, #0a2026 100%);
+      }
+
+      .route-layout {
+        display: grid;
+        grid-template-columns: 0.86fr 1.14fr;
+        gap: clamp(28px, 5vw, 70px);
+        align-items: center;
+      }
+
+      .route-map {
+        position: relative;
+        min-height: 610px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background:
+          linear-gradient(180deg, rgba(7, 30, 38, 0.2), rgba(5, 18, 23, 0.74)),
+          url("assets/lost-relic-poster.jpg") 58% center / cover;
+        overflow: hidden;
+      }
+
+      .route-map::after {
+        content: "";
+        position: absolute;
+        inset: auto 12% 12% 12%;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(247, 244, 238, 0.56), transparent);
+      }
+
+      .route-dot {
+        position: absolute;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: rgba(247, 244, 238, 0.82);
+        font-size: 13px;
+      }
+
+      .route-dot:nth-child(1) {
+        left: 16%;
+        top: 24%;
+      }
+
+      .route-dot:nth-child(2) {
+        right: 14%;
+        top: 44%;
+      }
+
+      .route-dot:nth-child(3) {
+        left: 30%;
+        bottom: 22%;
+      }
+
+      .route-list {
+        display: grid;
+        gap: 14px;
+      }
+
+      .route-card {
+        padding: 22px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(10, 29, 34, 0.78);
+      }
+
+      .showcase {
+        background:
+          linear-gradient(180deg, #0a2026 0%, #051014 100%);
+      }
+
+      .showcase-frame {
+        position: relative;
+        min-height: min(72vw, 720px);
+        border: 1px solid rgba(221, 235, 226, 0.16);
+        border-radius: 8px;
+        overflow: hidden;
+        background: #050706;
+      }
+
+      .showcase-frame video {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .showcase-caption {
+        position: absolute;
+        left: 24px;
+        right: 24px;
+        bottom: 24px;
+        display: flex;
+        justify-content: space-between;
+        gap: 24px;
+        color: rgba(247, 244, 238, 0.72);
+        font-size: 14px;
+      }
+
+      .final {
+        min-height: 80svh;
+        display: grid;
+        place-items: center;
+        background:
+          linear-gradient(180deg, rgba(7, 30, 38, 0.46), rgba(5, 16, 20, 0.9)),
+          url("assets/lost-relic-poster.jpg") center / cover;
+      }
+
+      .final-content {
+        width: min(760px, 100%);
+        text-align: center;
+      }
+
+      .final h2 {
+        margin-bottom: 18px;
+        font-size: clamp(38px, 6vw, 76px);
+        line-height: 0.98;
+        font-weight: 500;
+      }
+
+      .final p {
+        max-width: 520px;
+        margin: 0 auto 28px;
+      }
+
+      .button-row {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .button {
+        display: inline-flex;
+        min-height: 46px;
+        align-items: center;
+        justify-content: center;
+        padding: 0 18px;
+        border: 1px solid rgba(210, 235, 238, 0.28);
+        border-radius: 8px;
+        background: rgba(12, 24, 25, 0.52);
+        color: var(--text);
+        font-size: 14px;
+        text-decoration: none;
+        backdrop-filter: blur(10px);
+      }
+
+      .button.secondary {
+        background: rgba(247, 244, 238, 0.08);
+        color: rgba(247, 244, 238, 0.78);
+      }
+
+      .site-footer {
+        display: flex;
+        justify-content: space-between;
+        gap: 24px;
+        padding: 24px clamp(20px, 4vw, 56px);
+        border-top: 1px solid var(--line);
+        background: #051014;
+        color: rgba(247, 244, 238, 0.48);
+        font-size: 13px;
+      }
+
+      @media (max-width: 900px) {
+        .story-grid,
+        .route-layout,
+        .panel-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .panel {
+          min-height: 240px;
+        }
+
+        .panel-number {
+          margin-bottom: 46px;
+        }
+      }
+
+      @media (max-width: 720px) {
+        .hero-shell {
+          padding: 22px 18px;
+        }
+
+        .nav {
+          display: none;
+        }
+
+        .hero-copy {
+          max-width: 340px;
+          padding-bottom: 12vh;
+        }
+
+        .hero-copy p {
+          font-size: 16px;
+        }
+
+        .hero-footer {
+          align-items: flex-end;
+        }
+
+        .quest {
+          max-width: 210px;
+          line-height: 1.35;
+        }
+
+        .story-image,
+        .route-map {
+          min-height: 420px;
+        }
+
+        .stats {
+          grid-template-columns: 1fr;
+        }
+
+        .showcase-caption,
+        .site-footer {
+          flex-direction: column;
+        }
+      }
+    </style>
+  </head>
+  <body class="is-loading">
+    <div class="loader" role="status" aria-live="polite" aria-label="Loading video footage">
+      <div class="loader-panel">
+        <p class="loader-title">Loading expedition feed</p>
+        <div class="loader-track" aria-hidden="true">
+          <div class="loader-bar"></div>
+        </div>
+      </div>
+    </div>
+
+    <main>
+      <section class="hero" id="home">
+        <video
+          id="heroVideo"
+          autoplay
+          muted
+          loop
+          playsinline
+          preload="auto"
+          poster="assets/lost-relic-poster.jpg"
+          src="assets/lost-relic-hero-loop.mp4"
+        ></video>
+
+        <div class="hero-shell">
+          <header class="topbar" aria-label="Site header">
+            <div class="brand">The Lost Relic</div>
+            <nav class="nav" aria-label="Primary">
+              <a href="#world">World</a>
+              <a href="#route">Route</a>
+              <a href="#footage">Footage</a>
+              <a href="#launch">Launch</a>
+            </nav>
+          </header>
+
+          <div class="hero-copy">
+            <h1>The Lost Relic</h1>
+            <p>Follow the climb toward the northern ruins through a cinematic world built for motion, distance, and discovery.</p>
+          </div>
+
+          <div class="hero-footer">
+            <div class="quest">Reach the ancient ruins</div>
+            <button class="play is-playing" type="button" aria-label="Pause hero video" aria-pressed="true">
+              <svg class="play-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M8 5v14l11-7z"></path>
+              </svg>
+              <svg class="pause-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M7 5h4v14H7zM13 5h4v14h-4z"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section class="section story" id="story">
+        <div class="section-inner story-grid">
+          <div class="story-image" aria-hidden="true"></div>
+          <div class="story-copy">
+            <h2>A ruin suspended between altitude and memory.</h2>
+            <p>The demo page frames the game as an atmospheric expedition. The visual system borrows from the footage itself: cool sky, glass interface layers, moss-dark terrain, weathered stone, and restrained yellow markers.</p>
+            <div class="stats" aria-label="Expedition stats">
+              <div class="stat">
+                <span>Altitude</span>
+                <strong>452 m</strong>
+              </div>
+              <div class="stat">
+                <span>Distance</span>
+                <strong>2.3 km</strong>
+              </div>
+              <div class="stat">
+                <span>Heading</span>
+                <strong>NE</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section world" id="world">
+        <div class="section-inner">
+          <div class="section-title">
+            <h2>Read the world through its interface.</h2>
+            <p>Every section uses demonstration copy, but the content structure is production-ready: world setting, navigation mechanics, quest states, and footage-first conversion points.</p>
+          </div>
+
+          <div class="panel-grid">
+            <article class="panel">
+              <span class="panel-number">01</span>
+              <h3>Glass quest layers</h3>
+              <p>Objectives sit over the environment with translucent blue-green surfaces, keeping the HUD present without covering the landscape.</p>
+            </article>
+            <article class="panel">
+              <span class="panel-number">02</span>
+              <h3>Directional discovery</h3>
+              <p>Small markers guide the player instead of shouting. The yellow accent stays rare, readable, and tied to action.</p>
+            </article>
+            <article class="panel">
+              <span class="panel-number">03</span>
+              <h3>Motion-led scale</h3>
+              <p>The page keeps footage large so the altitude, distance, and ruin scale do most of the storytelling.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section route" id="route">
+        <div class="section-inner route-layout">
+          <div>
+            <div class="section-title">
+              <h2>The path narrows as the ruins come into view.</h2>
+              <p>The route section turns landing-page detail into something closer to an in-game brief: compact, visual, and tied to progression.</p>
+            </div>
+            <div class="route-list">
+              <article class="route-card">
+                <h3>Cross the lower gardens</h3>
+                <p>Move through dense green cover while distant structures remain partly obscured by altitude haze.</p>
+              </article>
+              <article class="route-card">
+                <h3>Trace the northern ridge</h3>
+                <p>Use sightlines and elevation changes to keep the destination visible without making the route feel flat.</p>
+              </article>
+              <article class="route-card">
+                <h3>Enter the old court</h3>
+                <p>The architecture becomes the focal point as the HUD compresses into clear next-step information.</p>
+              </article>
+            </div>
+          </div>
+
+          <div class="route-map" aria-label="Demonstration route map">
+            <div class="route-dot">Ridge wind</div>
+            <div class="route-dot">Relic signal</div>
+            <div class="route-dot">Garden path</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section showcase" id="footage">
+        <div class="section-inner">
+          <div class="section-title">
+            <h2>Keep the asset in command.</h2>
+            <p>This section uses the same loop as a framed gameplay moment, useful for trailers, feature reveals, or platform-specific capture.</p>
+          </div>
+
+          <div class="showcase-frame">
+            <video autoplay muted loop playsinline preload="metadata" poster="assets/lost-relic-poster.jpg" src="assets/lost-relic-hero-loop.mp4"></video>
+            <div class="showcase-caption">
+              <span>Expedition feed: northern ruins</span>
+              <span>4K capture / 60 fps / vertical route reveal</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section final" id="launch">
+        <div class="final-content">
+          <h2>The relic is already marked.</h2>
+          <p>Demo content for wishlist, trailer, store, or private preview actions. The visual language stays close to the first frame: glass, terrain, sky, stone, and a single quest accent.</p>
+          <div class="button-row">
+            <a class="button" href="#home">Replay footage</a>
+            <a class="button secondary" href="#world">View world notes</a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <span>The Lost Relic</span>
+      <span>Demo landing page / visual direction test</span>
+    </footer>
+
+    <script>
+      const video = document.querySelector("#heroVideo");
+      const playButton = document.querySelector(".play");
+      const loader = document.querySelector(".loader");
+      const loaderBar = document.querySelector(".loader-bar");
+      let hasFinishedLoading = false;
+
+      const setLoadProgress = () => {
+        if (!video.duration || !video.buffered.length) {
+          return;
+        }
+
+        const bufferedEnd = video.buffered.end(video.buffered.length - 1);
+        const progress = Math.min((bufferedEnd / video.duration) * 100, 100);
+        loaderBar.style.width = `${progress}%`;
+      };
+
+      const finishLoading = async () => {
+        if (hasFinishedLoading) {
+          return;
+        }
+
+        hasFinishedLoading = true;
+        loaderBar.style.width = "100%";
+        document.body.classList.remove("is-loading");
+        loader.classList.add("is-hidden");
+
+        try {
+          await video.play();
+        } catch {
+          playButton.classList.remove("is-playing");
+          playButton.setAttribute("aria-pressed", "false");
+          playButton.setAttribute("aria-label", "Play hero video");
+        }
+      };
+
+      video.addEventListener("progress", setLoadProgress);
+      video.addEventListener("loadedmetadata", setLoadProgress);
+      video.addEventListener("canplaythrough", finishLoading, { once: true });
+      video.load();
+
+      window.setTimeout(() => {
+        if (video.readyState >= 3) {
+          finishLoading();
+        }
+      }, 7000);
+
+      playButton.addEventListener("click", async () => {
+        if (video.paused) {
+          await video.play();
+        } else {
+          video.pause();
+        }
+
+        const isPlaying = !video.paused;
+        playButton.classList.toggle("is-playing", isPlaying);
+        playButton.setAttribute("aria-pressed", String(isPlaying));
+        playButton.setAttribute("aria-label", isPlaying ? "Pause hero video" : "Play hero video");
+      });
+    </script>
+  </body>
+</html>
