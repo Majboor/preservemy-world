@@ -1,4 +1,4 @@
-const CACHE_NAME = "preserve-flight-v1";
+const CACHE_NAME = "preserve-flight-v2";
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -8,6 +8,7 @@ self.addEventListener("install", (event) => {
       "./manifest.webmanifest",
       "./app-icon.png",
       "./f16.glb",
+      "./loader-point-cloud.json",
       "./trajectory.json"
     ]))
   );
