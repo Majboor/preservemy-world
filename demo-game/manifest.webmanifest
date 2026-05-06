@@ -1,0 +1,19 @@
+{
+  "name": "Myworld",
+  "short_name": "Myworld",
+  "description": "Explore a reconstructed place as a mobile flight demo.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#050505",
+  "theme_color": "#050505",
+  "icons": [
+    {
+      "src": "./app-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
