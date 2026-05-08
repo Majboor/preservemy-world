@@ -1,0 +1,58 @@
+[
+  {
+    "slug": "norrviken_gardens",
+    "name": "Norrviken Gardens",
+    "loc": "Båstad, Sweden",
+    "file": "01_norrviken_gardens_hero_01_695e7f83-e283-4ec9-94b9-8a17765eff37.jpg",
+    "url": "https://sharetribe.imgix.net/66dea7f1-5d1a-476e-aa49-8b45721631ff/695e7f83-e283-4ec9-94b9-8a17765eff37?auto=format&fit=clip&h=2400&w=2400&s=6cb48701154f4e79c46fb272d08e0456"
+  },
+  {
+    "slug": "copenhagen_central_station",
+    "name": "Copenhagen Central Station",
+    "loc": "Copenhagen, Denmark",
+    "file": "02_copenhagen_central_station_hero_01_67a715b1-f071-4335-9572-a2ea3b1889e8.jpg",
+    "url": "https://sharetribe.imgix.net/66dea7f1-5d1a-476e-aa49-8b45721631ff/67a715b1-f071-4335-9572-a2ea3b1889e8?auto=format&fit=clip&h=2400&w=2400&s=d9ded8788975ba8e045dc7e009009b45"
+  },
+  {
+    "slug": "casino_of_torrevieja",
+    "name": "Casino of Torrevieja",
+    "loc": "Torrevieja, Spain",
+    "file": "03_casino_of_torrevieja_hero_01_67ad10bd-9d1e-41a4-9b8d-b0bb454dfbdb.jpg",
+    "url": "https://sharetribe.imgix.net/66dea7f1-5d1a-476e-aa49-8b45721631ff/67ad10bd-9d1e-41a4-9b8d-b0bb454dfbdb?auto=format&fit=clip&h=2400&w=2400&s=19775d4d85bc05b89e2973fa3387c9e6"
+  },
+  {
+    "slug": "pont_alexandre_iii",
+    "name": "Pont Alexandre III",
+    "loc": "Paris, France",
+    "file": "04_pont_alexandre_iii_hero_01_66e145ef-6846-44bb-800f-4984f6e54a98.jpg",
+    "url": "https://sharetribe.imgix.net/66dea7f1-5d1a-476e-aa49-8b45721631ff/66e145ef-6846-44bb-800f-4984f6e54a98?auto=format&fit=clip&h=2400&w=2400&s=4c3b2c35c61e607cab9942e6ad75a4a3"
+  },
+  {
+    "slug": "theatre_du_renard",
+    "name": "Théâtre du Renard",
+    "loc": "12 Rue du Renard, Paris, France",
+    "file": "05_theatre_du_renard_hero_01_679892de-4fb1-4ed5-8e91-cb5e9cd66604.jpg",
+    "url": "https://sharetribe.imgix.net/66dea7f1-5d1a-476e-aa49-8b45721631ff/679892de-4fb1-4ed5-8e91-cb5e9cd66604?auto=format&fit=clip&h=2400&w=2400&s=16f7c7f3d8aa5aa9d61d95f3d1bc8b7f"
+  },
+  {
+    "slug": "lycee_massena",
+    "name": "Lycée Masséna",
+    "loc": "Nice, France",
+    "file": "06_lycee_massena_hero_01_68bc6578-568d-43dd-959c-f6029b95e0c4.jpg",
+    "url": "https://sharetribe.imgix.net/66dea7f1-5d1a-476e-aa49-8b45721631ff/68bc6578-568d-43dd-959c-f6029b95e0c4?auto=format&fit=clip&h=2400&w=2400&s=cbf513e091509e9935e53c2dc01e4859"
+  },
+  {
+    "slug": "palace_krasinskich_garden",
+    "name": "Palace Krasińskich Garden",
+    "loc": "Warsaw, Poland",
+    "file": "07_palace_krasinskich_garden_hero_01_68886a0c-7748-4d68-b8b0-250c48a62dad.jpg",
+    "url": "https://sharetribe.imgix.net/66dea7f1-5d1a-476e-aa49-8b45721631ff/68886a0c-7748-4d68-b8b0-250c48a62dad?auto=format&fit=clip&h=2400&w=2400&s=2bf34b15cfa4f6b1af56a4fd0e9ef5d8"
+  },
+  {
+    "slug": "villa_izyhali",
+    "name": "Villa Izyhali",
+    "loc": "Konstancin-Jeziorna, Poland",
+    "file": "08_villa_izyhali_hero_01_66e0936c-8d97-4b59-a487-1c8ed8310905.jpg",
+    "url": "https://sharetribe.imgix.net/66dea7f1-5d1a-476e-aa49-8b45721631ff/66e0936c-8d97-4b59-a487-1c8ed8310905?auto=format&fit=clip&h=2400&w=2400&s=26dc0a3edb0f1745da2ed9512d5131cb"
+  }
+]
