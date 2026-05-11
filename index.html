@@ -1090,16 +1090,77 @@
       }
       .form-option.is-active span { color: rgba(255,255,255,0.64); }
       .form-frame {
+        position: relative;
         overflow: hidden;
         border: 1px solid var(--line-dark);
         border-radius: var(--radius);
         background: var(--white);
+        min-height: 980px;
       }
+      .form-frame__head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 14px 18px;
+        border-bottom: 1px solid var(--line-light);
+        background: var(--paper);
+        font-family: var(--mono);
+        font-size: 12px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: rgba(7,22,28,0.62);
+      }
+      .form-frame__head strong {
+        color: var(--ink);
+        font-weight: 500;
+      }
+      .form-frame__open {
+        color: var(--ink);
+        text-decoration: none;
+        border-bottom: 1px solid currentColor;
+        padding-bottom: 1px;
+      }
+      .form-frame__open:hover { color: var(--teal); }
       .form-frame iframe {
         width: 100%;
-        min-height: 980px;
+        min-height: 920px;
         border: 0;
         display: block;
+        background: var(--white);
+        transition: opacity 0.25s ease;
+      }
+      .form-frame__loader {
+        position: absolute;
+        inset: 50px 0 0;
+        display: grid;
+        place-items: center;
+        gap: 16px;
+        background: var(--white);
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+      }
+      .form-frame__loader::before {
+        content: "";
+        width: 28px;
+        height: 28px;
+        border-radius: 999px;
+        border: 2px solid rgba(7,22,28,0.16);
+        border-top-color: var(--ink);
+        animation: pmw-spin 0.9s linear infinite;
+      }
+      .form-frame__loader span {
+        font-family: var(--mono);
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: rgba(7,22,28,0.58);
+      }
+      .form-frame.is-loading .form-frame__loader { opacity: 1; }
+      .form-frame.is-loading iframe { opacity: 0; }
+      @keyframes pmw-spin {
+        to { transform: rotate(360deg); }
       }
 
       .cta {
@@ -1253,6 +1314,7 @@
         .crisp h2,
         .cta h2 { font-size: 52px; }
         .form-option strong { font-size: 24px; }
+        .form-frame { min-height: 1090px; }
         .form-frame iframe { min-height: 1040px; }
         .bold-brand {
           min-height: auto;
@@ -1557,15 +1619,20 @@
             <p>Choose the path that fits. Each form opens here and goes into the same preservation intake sheet.</p>
           </div>
           <div class="forms-grid">
-            <div class="form-list" aria-label="Program forms">
-              <button class="form-option is-active" type="button" data-program="creator-access"><strong>Submit video</strong><span>Creator access</span></button>
-              <button class="form-option" type="button" data-program="internship"><strong>Internship</strong><span>Student roles</span></button>
-              <button class="form-option" type="button" data-program="campus-ambassador"><strong>Campus ambassador</strong><span>Bring PMW to school</span></button>
-              <button class="form-option" type="button" data-program="partnership"><strong>Company partnership</strong><span>Brand and archive work</span></button>
-              <button class="form-option" type="button" data-program="support"><strong>Support / more info</strong><span>Questions and help</span></button>
-              <button class="form-option" type="button" data-program="webinar"><strong>Virtual webinar</strong><span>Attend a session</span></button>
+            <div class="form-list" aria-label="Program forms" role="tablist">
+              <button class="form-option is-active" type="button" role="tab" aria-selected="true" data-program="creator-access" data-label="Submit video"><strong>Submit video</strong><span>Creator access</span></button>
+              <button class="form-option" type="button" role="tab" aria-selected="false" data-program="internship" data-label="Internship"><strong>Internship</strong><span>Student roles</span></button>
+              <button class="form-option" type="button" role="tab" aria-selected="false" data-program="campus-ambassador" data-label="Campus ambassador"><strong>Campus ambassador</strong><span>Bring PMW to school</span></button>
+              <button class="form-option" type="button" role="tab" aria-selected="false" data-program="partnership" data-label="Company partnership"><strong>Company partnership</strong><span>Brand and archive work</span></button>
+              <button class="form-option" type="button" role="tab" aria-selected="false" data-program="support" data-label="Support / more info"><strong>Support / more info</strong><span>Questions and help</span></button>
+              <button class="form-option" type="button" role="tab" aria-selected="false" data-program="webinar" data-label="Virtual webinar"><strong>Virtual webinar</strong><span>Attend a session</span></button>
             </div>
-            <div class="form-frame">
+            <div class="form-frame is-loading" id="formFrame">
+              <div class="form-frame__head">
+                <div>Now showing: <strong id="formFrameLabel">Submit video</strong></div>
+                <a class="form-frame__open" id="formFrameOpen" href="https://script.google.com/macros/s/AKfycbwz0x15zSWKtnwg8Zu2nnojz_qabk_CRkZW6duoT6qXi54V862VhR5hVHCldEzx6OBD/exec?program=creator-access" target="_blank" rel="noopener">Open in new tab</a>
+              </div>
+              <div class="form-frame__loader" aria-hidden="true"><span>Loading form…</span></div>
               <iframe
                 id="programForm"
                 src="https://script.google.com/macros/s/AKfycbwz0x15zSWKtnwg8Zu2nnojz_qabk_CRkZW6duoT6qXi54V862VhR5hVHCldEzx6OBD/exec?program=creator-access"
@@ -1909,15 +1976,35 @@
 
       const FORM_BASE_URL = "https://script.google.com/macros/s/AKfycbwz0x15zSWKtnwg8Zu2nnojz_qabk_CRkZW6duoT6qXi54V862VhR5hVHCldEzx6OBD/exec";
       const programForm = document.getElementById("programForm");
+      const formFrame = document.getElementById("formFrame");
+      const formFrameLabel = document.getElementById("formFrameLabel");
+      const formFrameOpen = document.getElementById("formFrameOpen");
       const formButtons = Array.from(document.querySelectorAll(".form-option"));
       const formsSection = document.getElementById("forms");
+      let currentProgram = "creator-access";
       const setProgram = (program) => {
         if (!programForm || !program) return;
-        programForm.src = `${FORM_BASE_URL}?program=${encodeURIComponent(program)}`;
+        const url = `${FORM_BASE_URL}?program=${encodeURIComponent(program)}`;
+        if (program !== currentProgram) {
+          formFrame?.classList.add("is-loading");
+          programForm.src = url;
+          currentProgram = program;
+        }
+        if (formFrameOpen) formFrameOpen.href = url;
         formButtons.forEach((button) => {
-          button.classList.toggle("is-active", button.dataset.program === program);
+          const active = button.dataset.program === program;
+          button.classList.toggle("is-active", active);
+          button.setAttribute("aria-selected", active ? "true" : "false");
+          if (active && formFrameLabel) {
+            formFrameLabel.textContent = button.dataset.label || button.querySelector("strong")?.textContent || "";
+          }
         });
       };
+      programForm?.addEventListener("load", () => {
+        formFrame?.classList.remove("is-loading");
+      });
+      // Safety: hide loader after a max wait in case the load event is blocked
+      window.setTimeout(() => formFrame?.classList.remove("is-loading"), 8000);
       formButtons.forEach((button) => {
         button.addEventListener("click", () => setProgram(button.dataset.program));
       });
