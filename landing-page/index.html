@@ -1,0 +1,1876 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>preservemy.world - Walkable memory, heritage at risk</title>
+    <meta
+      name="description"
+      content="preservemy.world turns ordinary phone footage into walkable 3D worlds for culture, family memory, travel, and heritage preservation."
+    />
+    <link rel="icon" href="assets/preservethe-world-logo.png" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lenis@1.2.3/dist/lenis.css" />
+    <style>
+      @font-face {
+        font-family: "GT Standard M";
+        src: url("assets/fonts/GTStandardM-NarrowHeavy.otf") format("opentype");
+        font-weight: 900;
+        font-style: normal;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: "Fs R";
+        src: url("assets/fonts/FsR-Regular.otf") format("opentype");
+        font-weight: 400;
+        font-style: normal;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: "Inter";
+        src: url("assets/fonts/Inter-VariableFont.ttf") format("truetype-variations");
+        font-weight: 100 900;
+        font-style: normal;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: "DM Mono";
+        src: url("assets/fonts/DMMono-Regular.ttf") format("truetype");
+        font-weight: 400;
+        font-style: normal;
+        font-display: swap;
+      }
+
+      :root {
+        --ink: #07161c;
+        --ink-2: #0e2a31;
+        --paper: #f3f7f7;
+        --white: #ffffff;
+        --mist: #dce9e6;
+        --teal: #217f6f;
+        --mint: #8fdbbb;
+        --green: #58a677;
+        --clay: #b85f45;
+        --line-dark: rgba(7, 22, 28, 0.14);
+        --line-light: rgba(255, 255, 255, 0.18);
+        --display: "GT Standard M", "Fs R", "Inter", sans-serif;
+        --soft-display: "Fs R", "GT Standard M", "Inter", sans-serif;
+        --body: "Inter", sans-serif;
+        --mono: "DM Mono", monospace;
+        --pad-x: 56px;
+        --radius: 8px;
+      }
+
+      * { box-sizing: border-box; }
+      html {
+        background: var(--ink);
+        color: var(--paper);
+        scroll-behavior: auto;
+      }
+      body {
+        margin: 0;
+        min-width: 320px;
+        background: var(--paper);
+        color: var(--ink);
+        font-family: var(--body);
+        font-size: 16px;
+        line-height: 1.5;
+        overflow-x: hidden;
+      }
+      body.is-loading { overflow: hidden; }
+      a { color: inherit; text-decoration: none; }
+      img, video, canvas { display: block; max-width: 100%; }
+      button { font: inherit; }
+
+      .u-container {
+        width: min(100% - calc(var(--pad-x) * 2), 1320px);
+        margin-inline: auto;
+      }
+
+      .eyebrow {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 0 0 20px;
+        font-family: var(--mono);
+        font-size: 12px;
+        line-height: 1.2;
+        letter-spacing: 0;
+        text-transform: uppercase;
+      }
+      .eyebrow::before {
+        content: "";
+        width: 32px;
+        height: 1px;
+        background: currentColor;
+        opacity: 0.65;
+      }
+
+      .btn {
+        min-height: 46px;
+        padding: 14px 22px;
+        border: 1px solid currentColor;
+        border-radius: var(--radius);
+        background: var(--white);
+        color: var(--ink);
+        font-family: var(--mono);
+        font-size: 12px;
+        line-height: 1;
+        letter-spacing: 0;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: background 160ms ease, color 160ms ease, border-color 160ms ease;
+      }
+      .btn:hover { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+      .btn.is-ghost { background: transparent; color: inherit; border-color: color-mix(in oklab, currentColor 38%, transparent); }
+      .btn.is-ghost:hover { background: currentColor; color: var(--ink); }
+
+      .loader {
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        display: grid;
+        align-content: end;
+        gap: clamp(16px, 4vw, 28px);
+        padding: clamp(20px, 5vw, 56px);
+        padding-bottom: max(clamp(20px, 5vw, 56px), env(safe-area-inset-bottom));
+        background: var(--ink);
+        color: var(--paper);
+        transition: opacity 420ms ease, visibility 420ms ease;
+      }
+      .loader.is-hidden {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+      }
+      .loader .eyebrow {
+        margin-bottom: clamp(12px, 3vw, 20px);
+        font-size: clamp(10px, 2.6vw, 12px);
+      }
+      .loader strong {
+        display: block;
+        font-family: var(--display);
+        font-size: clamp(44px, 13vw, 96px);
+        line-height: 0.85;
+        font-weight: 900;
+      }
+      .loader strong em {
+        font-family: var(--soft-display);
+        color: var(--mint);
+        font-style: italic;
+        font-weight: 400;
+      }
+      .loader-bar {
+        position: relative;
+        height: 1px;
+        background: rgba(255,255,255,0.18);
+      }
+      .loader-bar::after {
+        content: "";
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: var(--p, 4%);
+        background: var(--mint);
+        transition: width 220ms ease;
+      }
+      .loader-meta {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        font-family: var(--mono);
+        font-size: clamp(10px, 2.4vw, 11px);
+        line-height: 1.2;
+        letter-spacing: 0;
+        text-transform: uppercase;
+        color: rgba(255,255,255,0.62);
+      }
+      .loader-meta span:last-child { font-variant-numeric: tabular-nums; }
+      .loader-escape {
+        margin-top: 18px;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+        opacity: 0;
+        transform: translateY(6px);
+        pointer-events: none;
+        transition: opacity 320ms ease, transform 320ms ease;
+      }
+      .loader-escape.is-visible {
+        opacity: 1;
+        transform: none;
+        pointer-events: auto;
+      }
+      .loader-escape p {
+        margin: 0;
+        color: rgba(255,255,255,0.62);
+        font-family: var(--mono);
+        font-size: clamp(10px, 2.6vw, 12px);
+        line-height: 1.35;
+        letter-spacing: 0;
+        text-transform: uppercase;
+      }
+      .loader-escape button {
+        padding: 10px 16px;
+        border: 1px solid var(--mint);
+        border-radius: 999px;
+        background: var(--mint);
+        color: var(--ink);
+        font-family: var(--mono);
+        font-size: 12px;
+        line-height: 1;
+        letter-spacing: 0;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: background 160ms ease, color 160ms ease;
+      }
+      .loader-escape button:hover { background: var(--paper); border-color: var(--paper); }
+
+      .toast {
+        position: fixed;
+        left: 50%;
+        bottom: max(20px, env(safe-area-inset-bottom));
+        z-index: 95;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        max-width: calc(100% - 24px);
+        padding: 12px 14px 12px 16px;
+        border: 1px solid rgba(255,255,255,0.14);
+        border-radius: 999px;
+        background: rgba(7, 22, 28, 0.92);
+        color: var(--paper);
+        font-family: var(--mono);
+        font-size: 12px;
+        line-height: 1.2;
+        letter-spacing: 0;
+        text-transform: uppercase;
+        box-shadow: 0 18px 40px rgba(0,0,0,0.28);
+        transform: translate(-50%, 16px);
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 280ms ease, transform 320ms ease, visibility 320ms ease;
+      }
+      .toast.is-visible {
+        opacity: 1;
+        visibility: visible;
+        transform: translate(-50%, 0);
+      }
+      .toast-text {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .toast-action,
+      .toast-close {
+        flex: none;
+        padding: 8px 12px;
+        border: 1px solid rgba(255,255,255,0.32);
+        border-radius: 999px;
+        background: transparent;
+        color: var(--paper);
+        font: inherit;
+        cursor: pointer;
+        transition: background 160ms ease, color 160ms ease;
+      }
+      .toast-action { background: var(--mint); color: var(--ink); border-color: var(--mint); }
+      .toast-action:hover { background: var(--paper); border-color: var(--paper); }
+      .toast-close { padding: 8px 10px; opacity: 0.7; }
+      .toast-close:hover { opacity: 1; }
+      @media (max-width: 540px) {
+        .toast {
+          left: 12px;
+          right: 12px;
+          transform: translateY(16px);
+          max-width: none;
+          padding: 10px 10px 10px 14px;
+          font-size: 11px;
+          border-radius: 14px;
+          flex-wrap: wrap;
+        }
+        .toast.is-visible { transform: translateY(0); }
+        .toast-text { white-space: normal; flex: 1 1 100%; }
+      }
+
+      .utility {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 60;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 20px;
+        padding: 8px var(--pad-x);
+        color: var(--paper);
+        font-family: var(--mono);
+        font-size: 12px;
+        line-height: 1.2;
+        letter-spacing: 0;
+        text-transform: uppercase;
+        transition: color 220ms ease;
+      }
+      .utility .dot {
+        display: inline-block;
+        width: 7px;
+        height: 7px;
+        margin-right: 8px;
+        border-radius: 50%;
+        background: var(--mint);
+      }
+      .site-nav {
+        position: fixed;
+        top: 28px;
+        left: 0;
+        right: 0;
+        z-index: 60;
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: center;
+        gap: 32px;
+        padding: 12px var(--pad-x);
+        color: var(--paper);
+        transition: color 220ms ease;
+      }
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 14px;
+      }
+      .brand-mark {
+        width: 42px;
+        height: 42px;
+        border: 1px solid rgba(255,255,255,0.35);
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+      }
+      .brand-mark img {
+        width: 25px;
+        height: 25px;
+        filter: brightness(0) invert(1);
+      }
+      .brand-name {
+        display: block;
+        font-family: var(--soft-display);
+        font-size: 22px;
+        line-height: 0.9;
+      }
+      .brand-name em {
+        color: var(--mint);
+        font-style: italic;
+      }
+      .brand-sub {
+        display: block;
+        margin-top: 6px;
+        font-family: var(--mono);
+        font-size: 10px;
+        line-height: 1.1;
+        letter-spacing: 0;
+        text-transform: uppercase;
+        opacity: 0.72;
+      }
+      .nav-links {
+        justify-self: center;
+        display: flex;
+        gap: 28px;
+        font-family: var(--mono);
+        font-size: 12px;
+        letter-spacing: 0;
+        text-transform: uppercase;
+      }
+      .nav-links a { opacity: 0.78; }
+      .nav-links a:hover { opacity: 1; }
+      .nav-actions {
+        display: flex;
+        gap: 10px;
+      }
+      body.on-light .utility,
+      body.on-light .site-nav { color: var(--ink); }
+      body.on-light .brand-mark { border-color: rgba(7,22,28,0.22); }
+      body.on-light .brand-mark img { filter: none; }
+
+      .hero-door {
+        position: relative;
+        height: 500vh;
+        background: #cfe0ee;
+        color: var(--paper);
+      }
+      .hero-door__sticky {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        height: 100svh;
+        overflow: hidden;
+        isolation: isolate;
+      }
+      .hero-door__bg,
+      .tnl-door,
+      #tnlDoorPlayer {
+        position: absolute;
+        inset: 0;
+      }
+      #tnlDoorPlayer {
+        background: url("assets/door-lottie/images/image_0.webp") center / cover no-repeat;
+      }
+      .hero-door__bg::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        background:
+          linear-gradient(90deg, rgba(7,22,28,0.46) 0%, rgba(7,22,28,0.12) 48%, rgba(7,22,28,0.08) 100%),
+          linear-gradient(180deg, rgba(7,22,28,0.22), rgba(7,22,28,0.08) 50%, rgba(7,22,28,0.24));
+        pointer-events: none;
+      }
+      .hero-door__track {
+        position: absolute;
+        inset: 0;
+        z-index: 3;
+        height: 500vh;
+        pointer-events: none;
+      }
+      .hero-door-panel {
+        min-height: 100vh;
+        min-height: 100svh;
+        display: flex;
+        align-items: center;
+        padding: 144px var(--pad-x) 76px;
+      }
+      .hero-door-panel.is-long {
+        min-height: 200vh;
+        min-height: 200svh;
+        align-items: flex-start;
+      }
+      .hero-door-panel.is-long .hero-copy { margin-top: 50vh; }
+      .hero-door-panel.is-final {
+        min-height: 200vh;
+        min-height: 200svh;
+        align-items: flex-start;
+      }
+      .hero-door-panel.is-final .hero-copy {
+        position: sticky;
+        top: 24vh;
+        margin-top: 22vh;
+        margin-left: 12vw;
+        max-width: 760px;
+      }
+      .hero-copy {
+        width: min(620px, 100%);
+        pointer-events: auto;
+      }
+      .hero-copy h1,
+      .hero-copy h2 {
+        margin: 0;
+        font-family: var(--display);
+        font-size: 112px;
+        line-height: 0.95;
+        font-weight: 900;
+        letter-spacing: 0;
+        text-transform: none;
+      }
+      .hero-copy h1 span { display: block; }
+      .hero-copy em {
+        font-family: var(--soft-display);
+        color: var(--mint);
+        font-style: italic;
+        font-weight: 400;
+      }
+      .hero-copy p {
+        max-width: 520px;
+        margin: 28px 0 0;
+        color: rgba(255,255,255,0.82);
+        font-size: 19px;
+        line-height: 1.55;
+      }
+      .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        margin-top: 32px;
+      }
+      .hero-card {
+        position: sticky;
+        bottom: 28px;
+        z-index: 4;
+        width: 330px;
+        margin: -118px 32px 0 auto;
+        pointer-events: auto;
+      }
+      .hero-card a {
+        display: grid;
+        grid-template-columns: 112px 1fr;
+        min-height: 92px;
+        border: 1px solid rgba(7,22,28,0.18);
+        border-radius: var(--radius);
+        overflow: hidden;
+        background: rgba(255,255,255,0.9);
+        color: var(--ink);
+      }
+      .hero-card img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .hero-card div { padding: 12px; }
+      .hero-card strong {
+        display: block;
+        font-family: var(--display);
+        font-size: 20px;
+        line-height: 0.95;
+      }
+      .hero-card span {
+        display: block;
+        margin-top: 14px;
+        color: rgba(7,22,28,0.58);
+        font-family: var(--mono);
+        font-size: 11px;
+        line-height: 1.3;
+        text-transform: uppercase;
+      }
+      .hero-door__hint {
+        position: fixed;
+        left: 50%;
+        bottom: 22px;
+        z-index: 5;
+        transform: translateX(-50%);
+        color: rgba(255,255,255,0.68);
+        font-family: var(--mono);
+        font-size: 11px;
+        line-height: 1.2;
+        letter-spacing: 0;
+        text-transform: uppercase;
+        pointer-events: none;
+        opacity: calc(1 - var(--door-p, 0) * 1.8);
+      }
+      .hero-door__fade {
+        display: none;
+      }
+
+      .ticker {
+        overflow: hidden;
+        background: var(--ink);
+        color: var(--paper);
+        border-top: 1px solid rgba(255,255,255,0.12);
+        border-bottom: 1px solid rgba(255,255,255,0.12);
+      }
+      .ticker-track {
+        display: flex;
+        width: max-content;
+        animation: ticker 34s linear infinite;
+      }
+      .ticker span {
+        padding: 26px 36px;
+        font-family: var(--display);
+        font-size: 52px;
+        line-height: 0.9;
+        white-space: nowrap;
+      }
+      .ticker em {
+        color: var(--mint);
+        font-family: var(--soft-display);
+        font-style: italic;
+      }
+      @keyframes ticker {
+        to { transform: translateX(-50%); }
+      }
+
+      section:not(.hero-door) {
+        padding: 120px 0;
+      }
+      .section-head {
+        display: grid;
+        grid-template-columns: 0.55fr 1fr;
+        gap: 48px;
+        align-items: end;
+        margin-bottom: 56px;
+      }
+      .section-head h2 {
+        margin: 0;
+        font-family: var(--display);
+        font-size: 72px;
+        line-height: 0.95;
+        font-weight: 900;
+        letter-spacing: 0;
+      }
+      .section-head p {
+        max-width: 620px;
+        margin: 0;
+        color: rgba(7,22,28,0.68);
+        font-size: 19px;
+        line-height: 1.65;
+      }
+      .dark {
+        background: var(--ink);
+        color: var(--paper);
+      }
+      .dark .section-head p { color: rgba(255,255,255,0.7); }
+
+      .world-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+      }
+      .world-card {
+        position: relative;
+        min-height: 420px;
+        overflow: hidden;
+        border-radius: var(--radius);
+        background: var(--ink-2);
+      }
+      .world-card:nth-child(2),
+      .world-card:nth-child(5) { grid-column: span 2; }
+      .world-card img,
+      .world-card video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .world-card::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, transparent 42%, rgba(0,0,0,0.72));
+      }
+      .world-card figcaption {
+        position: absolute;
+        left: 18px;
+        right: 18px;
+        bottom: 18px;
+        z-index: 2;
+      }
+      .world-card strong {
+        display: block;
+        color: var(--white);
+        font-family: var(--display);
+        font-size: 32px;
+        line-height: 0.95;
+      }
+      .world-card span {
+        display: block;
+        margin-top: 10px;
+        color: rgba(255,255,255,0.72);
+        font-family: var(--mono);
+        font-size: 11px;
+        text-transform: uppercase;
+      }
+
+      .latest {
+        background: var(--paper);
+      }
+      .latest-row {
+        display: grid;
+        grid-template-columns: 0.85fr 1.15fr;
+        gap: 42px;
+        align-items: stretch;
+      }
+      .latest-media {
+        min-height: 620px;
+        border-radius: var(--radius);
+        overflow: hidden;
+      }
+      .latest-media video,
+      .latest-media img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .latest-copy {
+        align-self: center;
+      }
+      .latest-copy h2 {
+        margin: 0;
+        font-family: var(--display);
+        font-size: 86px;
+        line-height: 0.94;
+        letter-spacing: 0;
+      }
+      .latest-copy p {
+        max-width: 560px;
+        margin: 28px 0 0;
+        color: rgba(7,22,28,0.7);
+        font-size: 20px;
+        line-height: 1.6;
+      }
+
+      .bold-brand {
+        min-height: 100vh;
+        background: var(--paper);
+        color: var(--ink);
+        display: flex;
+        align-items: center;
+        padding: 98px var(--pad-x) 72px;
+        overflow: hidden;
+      }
+      .bold-brand__inner {
+        width: min(100%, 1560px);
+      }
+      .bold-brand__label,
+      .ordinary-memory__label {
+        margin: 0 0 28px;
+        color: var(--mint);
+        font-family: var(--mono);
+        font-size: 14px;
+        line-height: 1;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .bold-brand h2 {
+        margin: 0;
+        max-width: 1480px;
+        font-family: var(--display);
+        font-size: clamp(40px, 9.8vw, 188px);
+        line-height: 0.95;
+        font-weight: 900;
+        letter-spacing: -0.005em;
+        text-transform: uppercase;
+        text-wrap: balance;
+        word-break: normal;
+        overflow-wrap: break-word;
+        hyphens: auto;
+      }
+      .bold-brand h2 span {
+        display: block;
+      }
+      .bold-brand h2 em {
+        color: #3f8f7b;
+        font-family: var(--soft-display);
+        font-style: italic;
+        font-weight: 400;
+      }
+      .bold-brand p {
+        max-width: 980px;
+        margin: clamp(20px, 4vw, 34px) 0 0;
+        color: rgba(7,22,28,0.64);
+        font-size: clamp(17px, 2.4vw, 34px);
+        line-height: 1.45;
+      }
+
+      .ordinary-memory {
+        position: relative;
+        min-height: 118vh;
+        overflow: hidden;
+        background: var(--ink);
+        color: var(--paper);
+        display: grid;
+        place-items: center;
+        text-align: center;
+      }
+      .ordinary-memory__media {
+        position: absolute;
+        inset: 0;
+      }
+      .ordinary-memory__media video,
+      .ordinary-memory__media img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        filter: saturate(0.9) contrast(0.95);
+      }
+      .ordinary-memory::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: rgba(7, 22, 28, 0.44);
+      }
+      .ordinary-memory__content {
+        position: relative;
+        z-index: 1;
+        width: min(1260px, calc(100% - var(--pad-x) * 2));
+        padding: 140px 0;
+      }
+      .ordinary-memory h2 {
+        margin: 0;
+        font-family: var(--display);
+        font-size: clamp(72px, 12vw, 190px);
+        line-height: 0.88;
+        font-weight: 900;
+        letter-spacing: 0;
+        text-transform: uppercase;
+      }
+      .ordinary-memory h2 em {
+        display: block;
+        color: var(--mint);
+        font-family: var(--soft-display);
+        font-style: italic;
+        font-weight: 400;
+      }
+
+      .line-moment {
+        min-height: 120vh;
+        display: grid;
+        place-items: center;
+        background: var(--paper);
+        color: var(--ink);
+      }
+      .line-moment.dark { background: var(--ink); color: var(--paper); }
+      .line-moment__inner {
+        width: min(920px, calc(100% - var(--pad-x) * 2));
+      }
+      .line-moment h2,
+      .line-moment p {
+        margin: 0;
+        font-family: var(--display);
+        font-size: 78px;
+        line-height: 1.03;
+        font-weight: 900;
+        letter-spacing: 0;
+      }
+      .line-moment em {
+        color: var(--teal);
+        font-family: var(--soft-display);
+        font-style: italic;
+        font-weight: 400;
+      }
+      .line-moment.dark em { color: var(--mint); }
+      .split-lines .line {
+        position: relative;
+        display: block;
+      }
+      .line-mask {
+        position: absolute;
+        inset: 0 0 0 auto;
+        width: 100%;
+        transform: scaleX(1);
+        transform-origin: 100% 50%;
+        background: var(--paper);
+        pointer-events: none;
+        will-change: transform;
+      }
+      .dark .line-mask { background: var(--ink); }
+      .crossed {
+        position: relative;
+        display: inline-block;
+        color: rgba(7,22,28,0.42);
+      }
+      .crossed::after {
+        content: "";
+        position: absolute;
+        left: -4%;
+        right: -4%;
+        top: 54%;
+        height: 3px;
+        background: var(--green);
+      }
+
+      .crisp {
+        position: relative;
+        min-height: 100vh;
+        overflow: hidden;
+        background: var(--ink);
+        color: var(--paper);
+      }
+      .crisp-slide {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        transition: opacity 700ms ease;
+      }
+      .crisp-slide.is-active { opacity: 1; }
+      .crisp-slide video,
+      .crisp-slide img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        filter: saturate(0.92) contrast(0.96);
+      }
+      .crisp::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(90deg, rgba(7,22,28,0.72), rgba(7,22,28,0.12) 58%, rgba(7,22,28,0.52));
+      }
+      .crisp-content {
+        position: relative;
+        z-index: 2;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        padding: 140px var(--pad-x) 72px;
+      }
+      .crisp h2 {
+        max-width: 980px;
+        margin: 0;
+        font-family: var(--display);
+        font-size: 110px;
+        line-height: 0.9;
+        letter-spacing: 0;
+      }
+      .crisp p {
+        max-width: 520px;
+        margin: 28px 0 0;
+        color: rgba(255,255,255,0.78);
+        font-size: 19px;
+      }
+      .crisp-nav {
+        display: flex;
+        gap: 10px;
+        margin-top: 36px;
+      }
+      .crisp-nav button {
+        width: 56px;
+        height: 44px;
+        border: 1px solid rgba(255,255,255,0.42);
+        border-radius: var(--radius);
+        background: transparent;
+        color: var(--paper);
+        font-family: var(--mono);
+        cursor: pointer;
+      }
+      .crisp-nav button.is-active { background: var(--paper); color: var(--ink); }
+
+      .project-feed {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+      }
+      .project {
+        border-top: 1px solid var(--line-dark);
+        padding-top: 18px;
+      }
+      .project-media {
+        aspect-ratio: 4 / 5;
+        overflow: hidden;
+        border-radius: var(--radius);
+        background: var(--mist);
+      }
+      .project-media video,
+      .project-media img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .project h3 {
+        margin: 18px 0 8px;
+        font-family: var(--display);
+        font-size: 34px;
+        line-height: 0.96;
+      }
+      .project p {
+        margin: 0;
+        color: rgba(7,22,28,0.64);
+      }
+
+      .capabilities {
+        background: var(--ink);
+        color: var(--paper);
+      }
+      .cap-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        border-top: 1px solid var(--line-light);
+        border-left: 1px solid var(--line-light);
+      }
+      .cap {
+        min-height: 300px;
+        padding: 26px;
+        border-right: 1px solid var(--line-light);
+        border-bottom: 1px solid var(--line-light);
+      }
+      .cap span {
+        color: var(--mint);
+        font-family: var(--mono);
+        font-size: 12px;
+      }
+      .cap h3 {
+        margin: 80px 0 14px;
+        font-family: var(--display);
+        font-size: 34px;
+        line-height: 0.98;
+      }
+      .cap p {
+        margin: 0;
+        color: rgba(255,255,255,0.68);
+      }
+
+      .how-grid {
+        display: grid;
+        grid-template-columns: 0.8fr 1.2fr;
+        gap: 56px;
+        align-items: start;
+      }
+      .steps {
+        display: grid;
+        gap: 1px;
+        background: var(--line-dark);
+      }
+      .step {
+        display: grid;
+        grid-template-columns: 90px 1fr;
+        gap: 20px;
+        padding: 26px;
+        background: var(--paper);
+      }
+      .step span {
+        color: var(--teal);
+        font-family: var(--mono);
+        font-size: 12px;
+      }
+      .step h3 {
+        margin: 0 0 8px;
+        font-family: var(--display);
+        font-size: 34px;
+        line-height: 0.95;
+      }
+      .step p { margin: 0; color: rgba(7,22,28,0.66); }
+
+      .stories {
+        background: #e8f2ee;
+      }
+      .story-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+      }
+      .story {
+        min-height: 320px;
+        padding: 28px;
+        border: 1px solid var(--line-dark);
+        border-radius: var(--radius);
+        background: rgba(255,255,255,0.52);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+      .story p {
+        margin: 0;
+        font-family: var(--display);
+        font-size: 34px;
+        line-height: 1;
+      }
+      .story span {
+        color: rgba(7,22,28,0.58);
+        font-family: var(--mono);
+        font-size: 12px;
+        text-transform: uppercase;
+      }
+
+      .cta {
+        background: var(--teal);
+        color: var(--white);
+      }
+      .cta-inner {
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 48px;
+        align-items: end;
+      }
+      .cta h2 {
+        margin: 0;
+        font-family: var(--display);
+        font-size: 96px;
+        line-height: 0.9;
+      }
+      .cta p {
+        max-width: 520px;
+        margin: 24px 0 0;
+        color: rgba(255,255,255,0.78);
+        font-size: 20px;
+      }
+
+      .footer {
+        padding: 64px var(--pad-x);
+        background: var(--ink);
+        color: var(--paper);
+      }
+      .footer-grid {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 32px;
+        align-items: end;
+      }
+      .footer h2 {
+        margin: 0;
+        font-family: var(--display);
+        font-size: 72px;
+        line-height: 0.9;
+      }
+      .footer h2 em {
+        color: var(--mint);
+        font-family: var(--soft-display);
+        font-style: italic;
+      }
+      .footer-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 18px;
+        font-family: var(--mono);
+        font-size: 12px;
+        text-transform: uppercase;
+      }
+      .footer-small {
+        margin-top: 44px;
+        border-top: 1px solid var(--line-light);
+        padding-top: 20px;
+        color: rgba(255,255,255,0.54);
+        font-family: var(--mono);
+        font-size: 12px;
+      }
+
+      .modal {
+        position: fixed;
+        inset: 0;
+        z-index: 90;
+        display: none;
+        place-items: center;
+        padding: 20px;
+        background: rgba(7, 22, 28, 0.72);
+      }
+      .modal.is-open { display: grid; }
+      .modal-card {
+        width: min(560px, 100%);
+        border-radius: var(--radius);
+        background: var(--paper);
+        color: var(--ink);
+        padding: 28px;
+      }
+      .modal-card h2 {
+        margin: 0 0 12px;
+        font-family: var(--display);
+        font-size: 44px;
+        line-height: 0.95;
+      }
+      .modal-card p { color: rgba(7,22,28,0.68); }
+      .modal-row { display: flex; gap: 10px; margin-top: 22px; }
+
+      body.lite-mode .hero-door {
+        height: auto;
+        background: var(--ink);
+      }
+      body.lite-mode .hero-door__sticky {
+        position: relative;
+        height: auto;
+        min-height: 100svh;
+        overflow: hidden;
+      }
+      body.lite-mode .hero-door__bg {
+        position: absolute;
+      }
+      body.lite-mode #tnlDoorPlayer {
+        background: url("assets/door-lottie/images/image_286.webp") center / cover no-repeat;
+      }
+      body.lite-mode .hero-door__bg::after {
+        background: linear-gradient(180deg, rgba(7,22,28,0.55), rgba(7,22,28,0.78));
+      }
+      body.lite-mode .hero-door__track {
+        position: relative;
+        height: auto;
+        display: flex;
+        flex-direction: column;
+      }
+      body.lite-mode .hero-door-panel,
+      body.lite-mode .hero-door-panel.is-long,
+      body.lite-mode .hero-door-panel.is-final {
+        min-height: 0;
+        padding: 96px var(--pad-x) 64px;
+        align-items: flex-start;
+      }
+      body.lite-mode .hero-door-panel.is-long .hero-copy,
+      body.lite-mode .hero-door-panel.is-final .hero-copy {
+        position: static;
+        margin: 0;
+        max-width: none;
+      }
+      body.lite-mode .hero-door__hint,
+      body.lite-mode .hero-card { display: none; }
+      body.lite-mode .ticker-track { animation-duration: 60s; }
+
+      @media (max-width: 1080px) {
+        :root { --pad-x: 28px; }
+        .nav-links { display: none; }
+        .hero-copy h1,
+        .hero-copy h2 { font-size: 84px; }
+        .section-head,
+        .latest-row,
+        .how-grid,
+        .cta-inner { grid-template-columns: 1fr; }
+        .world-grid,
+        .project-feed,
+        .cap-grid,
+        .story-grid { grid-template-columns: repeat(2, 1fr); }
+        .world-card:nth-child(2),
+        .world-card:nth-child(5) { grid-column: span 1; }
+      }
+      @media (max-width: 720px) {
+        :root { --pad-x: 16px; }
+        .utility-extra,
+        .nav-actions { display: none; }
+        .site-nav {
+          grid-template-columns: 1fr;
+          top: 38px;
+        }
+        .hero-door-panel {
+          padding-top: 268px;
+          align-items: flex-start;
+        }
+        .hero-door-panel.is-long .hero-copy { margin-top: 22vh; }
+        .hero-door-panel.is-final .hero-copy {
+          top: 28vh;
+          margin-left: 0;
+          margin-top: 18vh;
+        }
+        .hero-copy h1,
+        .hero-copy h2 { font-size: 50px; }
+        .hero-copy p { font-size: 16px; }
+        .hero-card { display: none; }
+        .section-head h2,
+        .ordinary-memory h2,
+        .line-moment h2,
+        .line-moment p,
+        .latest-copy h2,
+        .crisp h2,
+        .cta h2 { font-size: 52px; }
+        .bold-brand {
+          min-height: auto;
+          padding: 72px var(--pad-x) 56px;
+        }
+        .bold-brand h2 {
+          font-size: clamp(34px, 10.5vw, 60px);
+          line-height: 1;
+        }
+        .bold-brand p {
+          font-size: clamp(15px, 4.4vw, 19px);
+          line-height: 1.55;
+          margin-top: 22px;
+        }
+        .bold-brand__label { margin-bottom: 18px; font-size: 12px; }
+        .ordinary-memory { min-height: 92vh; }
+        .ticker span { font-size: 38px; padding-inline: 20px; }
+        .world-grid,
+        .project-feed,
+        .cap-grid,
+        .story-grid { grid-template-columns: 1fr; }
+        .latest-media { min-height: 420px; }
+        .footer-grid { grid-template-columns: 1fr; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+          animation-duration: 0.001ms !important;
+          animation-iteration-count: 1 !important;
+          scroll-behavior: auto !important;
+          transition-duration: 0.001ms !important;
+        }
+        .line-mask { display: none; }
+      }
+    </style>
+  </head>
+  <body class="is-loading">
+    <div class="loader" id="loader" aria-hidden="true" role="status" aria-live="polite">
+      <div>
+        <div class="eyebrow">Spatial AI - loading worlds</div>
+        <strong>preserve <em>my world</em></strong>
+      </div>
+      <div>
+        <div class="loader-bar" id="loaderBar"></div>
+        <div class="loader-meta">
+          <span id="loaderLabel">Caching scene frames</span>
+          <span id="loaderCount">0 / 0</span>
+        </div>
+        <div class="loader-escape" id="loaderEscape" aria-hidden="true">
+          <p>Slow connection? Skip the heavy scene.</p>
+          <button type="button" id="loaderEscapeBtn">Use lite mode</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast" id="liteToast" role="status" aria-live="polite" hidden>
+      <span class="toast-text" id="liteToastText">Animations sluggish? Try the lite version.</span>
+      <button type="button" class="toast-action" id="liteToastAction">Use lite</button>
+      <button type="button" class="toast-close" id="liteToastClose" aria-label="Dismiss">&times;</button>
+    </div>
+
+    <div class="utility">
+      <div><span class="dot"></span>Field footage online - 042 worlds preserved</div>
+      <div class="utility-extra"><a href="#how">How it works</a> - <a href="#stories">Stories</a> - <a href="#submit">Submit a memory</a></div>
+    </div>
+
+    <header class="site-nav">
+      <a class="brand" href="#home" aria-label="preservemy.world home">
+        <span class="brand-mark"><img src="assets/preservethe-world-logo.png" alt="" /></span>
+        <span>
+          <span class="brand-name">preserve <em>my</em> world</span>
+          <span class="brand-sub">Walkable memory - heritage at risk</span>
+        </span>
+      </a>
+      <nav class="nav-links" aria-label="Primary">
+        <a href="#worlds">Worlds</a>
+        <a href="#latest">In action</a>
+        <a href="#how">How it works</a>
+        <a href="#capabilities">Capabilities</a>
+        <a href="#stories">Stories</a>
+      </nav>
+      <div class="nav-actions">
+        <a class="btn is-ghost" href="#crisp">Play now</a>
+        <button class="btn upload-trigger" type="button">Upload a memory</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero-door" id="home" data-theme="dark" aria-label="Opening story">
+        <div class="hero-door__sticky">
+          <div class="hero-door__bg" aria-hidden="true">
+            <div class="tnl-door"><div id="tnlDoorPlayer"></div></div>
+          </div>
+          <div class="hero-door__hint">Scroll to open - keep scrolling to enter</div>
+          <div class="hero-door__fade" id="doorFade"></div>
+        </div>
+        <div class="hero-door__track">
+          <article class="hero-door-panel">
+            <div class="hero-copy">
+              <h1><span>Discover</span><span>the places</span><span>we're trying</span><span>to <em>keep</em>.</span></h1>
+              <p>Walk through a community-built archive of heritage sites, streets, classrooms, homes, and travel memories captured with ordinary phones.</p>
+              <div class="hero-actions">
+                <a class="btn is-ghost" href="#worlds">Start exploring</a>
+                <button class="btn upload-trigger" type="button">Upload a memory</button>
+              </div>
+            </div>
+          </article>
+          <article class="hero-door-panel is-long">
+            <div class="hero-copy">
+              <div class="eyebrow">001 - living archive</div>
+              <h2>A window into places that <em>change fast</em>.</h2>
+              <p>Every upload becomes a timestamped world: a courtyard before repair, a family room before a move, a mountain path before another season changes it.</p>
+            </div>
+          </article>
+          <article class="hero-door-panel is-final">
+            <div class="hero-copy">
+              <div class="eyebrow">002 - made by everyone</div>
+              <h2>Not just saved. <em>Entered</em>.</h2>
+              <p>Photos tell people a place existed. Walkable worlds let them feel where the doorway was, how the light moved, and what deserved to be remembered.</p>
+            </div>
+          </article>
+          <div class="hero-card">
+            <a href="#latest">
+              <img src="assets/worlds/world-03.jpg" alt="" />
+              <div>
+                <strong>New archive drop</strong>
+                <span>Phone footage to walkable world</span>
+              </div>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <div class="ticker" aria-hidden="true">
+        <div class="ticker-track">
+          <span>Lahore - <em>Old streets</em></span>
+          <span>Classrooms - <em>Family rooms</em></span>
+          <span>Shrines - <em>Markets</em></span>
+          <span>Glaciers - <em>Courtyards</em></span>
+          <span>Lahore - <em>Old streets</em></span>
+          <span>Classrooms - <em>Family rooms</em></span>
+          <span>Shrines - <em>Markets</em></span>
+          <span>Glaciers - <em>Courtyards</em></span>
+        </div>
+      </div>
+
+      <section id="worlds">
+        <div class="u-container">
+          <div class="section-head">
+            <div>
+              <div class="eyebrow">Worlds</div>
+              <h2>Places worth walking back into.</h2>
+            </div>
+            <p>Preservation should not only belong to famous monuments. A lane, a room, a small school, or a travel memory can become part of the archive.</p>
+          </div>
+          <div class="world-grid">
+            <figure class="world-card"><video src="assets/worlds/world-01.mp4" poster="assets/worlds/world-01.jpg" muted loop playsinline preload="metadata"></video><figcaption><strong>Courtyard light</strong><span>Heritage - 3D capture</span></figcaption></figure>
+            <figure class="world-card"><video src="assets/worlds/world-03.mp4" poster="assets/worlds/world-03.jpg" muted loop playsinline preload="metadata"></video><figcaption><strong>Sacred geometry</strong><span>Archive sample</span></figcaption></figure>
+            <figure class="world-card"><img src="assets/worlds/world-08.jpg" alt="" /><figcaption><strong>Street memory</strong><span>Community record</span></figcaption></figure>
+            <figure class="world-card"><video src="assets/worlds/world-05.mp4" poster="assets/worlds/world-05.jpg" muted loop playsinline preload="metadata"></video><figcaption><strong>Mountain baseline</strong><span>Climate timestamp</span></figcaption></figure>
+            <figure class="world-card"><video src="assets/worlds/world-07.mp4" poster="assets/worlds/world-07.jpg" muted loop playsinline preload="metadata"></video><figcaption><strong>Room before moving</strong><span>Family memory</span></figcaption></figure>
+            <figure class="world-card"><img src="assets/worlds/world-09.jpg" alt="" /><figcaption><strong>School hall</strong><span>Education copy</span></figcaption></figure>
+          </div>
+        </div>
+      </section>
+
+      <section class="latest" id="latest">
+        <div class="u-container latest-row">
+          <div class="latest-media"><video src="assets/lost-relic-hero-loop.mp4" poster="assets/lost-relic-poster.jpg" muted loop playsinline preload="metadata"></video></div>
+          <div class="latest-copy">
+            <div class="eyebrow">In action</div>
+            <h2>From rough footage to a place you can revisit.</h2>
+            <p>The prototype turns a simple source video into a reconstructed scene that can be explored, taught from, shared, and extended by communities.</p>
+            <div class="hero-actions"><a class="btn" href="#crisp">Play the archive</a><a class="btn is-ghost" href="#how">See the process</a></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="bold-brand" id="boldBrand">
+        <div class="bold-brand__inner">
+          <p class="bold-brand__label">Bold brand</p>
+          <h2>Memory that <em>moves</em> - not just images that disappear.</h2>
+          <p>A nonprofit archive should not feel luxury or loud. It should feel inevitable: calm typography, deliberate motion, and evidence-first storytelling.</p>
+        </div>
+      </section>
+
+      <section class="ordinary-memory" id="ordinaryMemory">
+        <div class="ordinary-memory__media" aria-hidden="true">
+          <video src="assets/worlds/world-05.mp4" poster="assets/worlds/world-05.jpg" muted loop playsinline preload="metadata"></video>
+        </div>
+        <div class="ordinary-memory__content">
+          <p class="ordinary-memory__label">Let's make walkable memory.</p>
+          <h2>We turn ordinary <em>phone footage</em></h2>
+        </div>
+      </section>
+
+      <section class="line-moment dark" id="experiences">
+        <div class="line-moment__inner">
+          <h2 class="split-lines">Special travel experiences on a <em>next level</em> become cultural memory when people can return to them.</h2>
+        </div>
+      </section>
+
+      <section class="crisp" id="crisp">
+        <div class="crisp-slide is-active"><video src="assets/worlds/hero-01.mp4" poster="assets/worlds/hero-01.jpg" muted loop playsinline preload="metadata"></video></div>
+        <div class="crisp-slide"><video src="assets/worlds/hero-02.mp4" poster="assets/worlds/hero-02.jpg" muted loop playsinline preload="metadata"></video></div>
+        <div class="crisp-slide"><video src="assets/worlds/hero-03.mp4" poster="assets/worlds/hero-03.jpg" muted loop playsinline preload="metadata"></video></div>
+        <div class="crisp-content">
+          <div class="eyebrow">Moving worlds</div>
+          <h2>Make the internet feel less flat.</h2>
+          <p>Each world is built for scanning, teaching, remembering, and sharing. The archive can hold personal memory and public heritage in the same place.</p>
+          <div class="crisp-nav" aria-label="World preview navigation">
+            <button type="button" class="is-active" data-slide="0">01</button>
+            <button type="button" data-slide="1">02</button>
+            <button type="button" data-slide="2">03</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="line-moment" id="manifesto">
+        <div class="line-moment__inner">
+          <p class="split-lines">The world is changing faster than we can document it. We already record the world with our phones - we just keep filing it away as <span class="crossed">screenshots</span> <em>walkable memory</em>.</p>
+        </div>
+      </section>
+
+      <section id="feed">
+        <div class="u-container">
+          <div class="section-head">
+            <div>
+              <div class="eyebrow">Project feed</div>
+              <h2>New preservation sessions.</h2>
+            </div>
+            <p>A quieter feed of places being processed, reviewed, cleaned, and prepared for public viewing.</p>
+          </div>
+          <div class="project-feed">
+            <article class="project"><div class="project-media"><video src="assets/lost-relic-wadi-rum-feed.mp4" poster="assets/lost-relic-wadi-rum-poster.jpg" muted loop playsinline preload="metadata"></video></div><h3>Desert archive</h3><p>Video fragments stitched into a navigable memory of a vanishing route.</p></article>
+            <article class="project"><div class="project-media"><video src="assets/lost-relic-meadows-feed.mp4" poster="assets/lost-relic-meadows-poster.jpg" muted loop playsinline preload="metadata"></video></div><h3>Meadow baseline</h3><p>A seasonal landscape preserved as a visual record for future comparison.</p></article>
+            <article class="project"><div class="project-media"><video src="assets/lost-relic-mountain-feed.mp4" poster="assets/lost-relic-mountain-poster.jpg" muted loop playsinline preload="metadata"></video></div><h3>Mountain pass</h3><p>A travel memory rebuilt as a world that can be revisited after the trip ends.</p></article>
+          </div>
+        </div>
+      </section>
+
+      <section class="capabilities" id="capabilities">
+        <div class="u-container">
+          <div class="section-head">
+            <div>
+              <div class="eyebrow">Capabilities</div>
+              <h2>For people, schools, museums, and NGOs.</h2>
+            </div>
+            <p>The system is meant to grow from small memories to public preservation programs without losing the human reason the place mattered.</p>
+          </div>
+          <div class="cap-grid">
+            <article class="cap"><span>01</span><h3>Phone footage intake</h3><p>Clear capture instructions and upload flow for ordinary videos.</p></article>
+            <article class="cap"><span>02</span><h3>Spatial reconstruction</h3><p>Frame extraction, 3D processing, cleanup, and preview generation.</p></article>
+            <article class="cap"><span>03</span><h3>Archive pages</h3><p>Public stories with place context, contributors, date, and memory notes.</p></article>
+            <article class="cap"><span>04</span><h3>Education copies</h3><p>Lightweight views for classrooms, cultural groups, and partners.</p></article>
+          </div>
+        </div>
+      </section>
+
+      <section id="how">
+        <div class="u-container how-grid">
+          <div>
+            <div class="eyebrow">How it works</div>
+            <div class="section-head" style="display:block;margin:0">
+              <h2>Capture, process, preserve.</h2>
+              <p style="margin-top:24px">The workflow is simple on purpose. People should not need expensive scanning gear to keep a meaningful place alive.</p>
+            </div>
+          </div>
+          <div class="steps">
+            <article class="step"><span>001</span><div><h3>Record the place</h3><p>Walk slowly through the space with a phone, capturing corners, surfaces, openings, and details.</p></div></article>
+            <article class="step"><span>002</span><div><h3>Upload the footage</h3><p>Add the place name, memory note, and whether the world should be private, school-only, or public.</p></div></article>
+            <article class="step"><span>003</span><div><h3>Generate the world</h3><p>The system prepares frames, reconstructs the scene, and creates a preview for review.</p></div></article>
+            <article class="step"><span>004</span><div><h3>Share the memory</h3><p>The finished archive page can be sent to family, students, museums, or preservation partners.</p></div></article>
+          </div>
+        </div>
+      </section>
+
+      <section class="stories" id="stories">
+        <div class="u-container">
+          <div class="section-head">
+            <div>
+              <div class="eyebrow">Stories</div>
+              <h2>What belongs in the archive?</h2>
+            </div>
+            <p>The answer is broad: anything people will wish they could step back into later.</p>
+          </div>
+          <div class="story-grid">
+            <article class="story"><p>"My grandparents' room before we packed it away."</p><span>Family memory</span></article>
+            <article class="story"><p>"A shrine courtyard students can visit from another country."</p><span>Heritage education</span></article>
+            <article class="story"><p>"A market street before another building replaces it."</p><span>Community record</span></article>
+          </div>
+        </div>
+      </section>
+
+      <section class="cta" id="submit">
+        <div class="u-container cta-inner">
+          <div>
+            <div class="eyebrow">Submit a memory</div>
+            <h2>Send us a place worth remembering.</h2>
+          </div>
+          <div>
+            <p>Start with a video. We will turn the best submissions into prototype worlds and help shape the archive around the stories behind them.</p>
+            <div class="hero-actions"><button class="btn upload-trigger" type="button">Upload a memory</button><a class="btn is-ghost" href="https://www.instagram.com/preservemy.world/" target="_blank" rel="noopener">Instagram</a></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-grid">
+        <h2>preserve <em>my world</em></h2>
+        <nav class="footer-links" aria-label="Footer">
+          <a href="#worlds">Worlds</a>
+          <a href="#how">How it works</a>
+          <a href="#capabilities">Capabilities</a>
+          <a href="#submit">Submit</a>
+        </nav>
+      </div>
+      <div class="footer-small">preservemy.world - walkable memory, heritage at risk - prototype landing page</div>
+    </footer>
+
+    <div class="modal" id="uploadModal" aria-hidden="true">
+      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="uploadTitle">
+        <h2 id="uploadTitle">Upload a memory</h2>
+        <p>Send a short video of a place worth preserving. Include the place name, why it matters, and whether it can be public.</p>
+        <div class="modal-row">
+          <a class="btn" href="mailto:hello@preservemy.world?subject=Memory%20submission">Email footage</a>
+          <button class="btn is-ghost" id="closeModal" type="button">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lenis@1.2.3/dist/lenis.min.js"></script>
+    <script type="module">
+      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const body = document.body;
+      const loader = document.getElementById("loader");
+      const loaderBar = document.getElementById("loaderBar");
+      const hero = document.querySelector(".hero-door");
+      const doorMount = document.getElementById("tnlDoorPlayer");
+      const doorFade = document.getElementById("doorFade");
+      const clamp01 = (n) => Math.max(0, Math.min(1, n));
+      const smooth = (t) => t * t * (3 - 2 * t);
+
+      let lenis = null;
+      if (window.Lenis && !reduceMotion) {
+        lenis = new Lenis({
+          duration: 1.15,
+          easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+          smoothWheel: true,
+          smoothTouch: false,
+          wheelMultiplier: 0.9
+        });
+        const raf = (time) => {
+          lenis.raf(time);
+          requestAnimationFrame(raf);
+        };
+        requestAnimationFrame(raf);
+      }
+
+      const loaderCount = document.getElementById("loaderCount");
+      const loaderLabel = document.getElementById("loaderLabel");
+      const TOTAL_FRAMES = 287;
+      const FRAME_PATH = (i) => `assets/door-lottie/images/image_${i}.webp`;
+      const MODE_STORAGE_KEY = "pmw-mode";
+      const TOAST_DISMISS_KEY = "pmw-toast-dismissed";
+
+      const search = new URLSearchParams(window.location.search);
+      const storedMode = (() => {
+        try { return localStorage.getItem(MODE_STORAGE_KEY); } catch { return null; }
+      })();
+      const explicitMode = search.get("mode") || storedMode;
+
+      const detectOldDevice = () => {
+        if (explicitMode === "lite") return true;
+        if (explicitMode === "full") return false;
+        if (reduceMotion) return true;
+        const nav = window.navigator || {};
+        if (nav.deviceMemory && nav.deviceMemory < 4) return true;
+        if (nav.hardwareConcurrency && nav.hardwareConcurrency < 4) return true;
+        const conn = nav.connection || nav.mozConnection || nav.webkitConnection;
+        if (conn) {
+          if (conn.saveData) return true;
+          if (["slow-2g", "2g", "3g"].includes(conn.effectiveType)) return true;
+        }
+        const ua = nav.userAgent || "";
+        const iOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+        if (iOS) {
+          const match = ua.match(/OS (\d+)_/);
+          const major = match ? parseInt(match[1], 10) : 0;
+          if (major && major < 14) return true;
+        }
+        if (/Android\s([1-7])\./.test(ua)) return true;
+        if (window.innerWidth <= 380 && window.devicePixelRatio <= 2 && !nav.deviceMemory) {
+          return true;
+        }
+        return false;
+      };
+
+      const liteMode = detectOldDevice();
+      if (liteMode) body.classList.add("lite-mode");
+
+      let loaderDone = false;
+      const finishLoader = () => {
+        if (loaderDone) return;
+        loaderDone = true;
+        loaderBar.style.setProperty("--p", "100%");
+        setTimeout(() => {
+          body.classList.remove("is-loading");
+          loader.classList.add("is-hidden");
+          showLiteToast();
+        }, 240);
+      };
+
+      let doorAnim = null;
+      let doorReady = false;
+      let pendingDoor = 0;
+      const scrubDoor = (p) => {
+        pendingDoor = p;
+        if (liteMode || !doorAnim || !doorReady) return;
+        const frame = smooth(p) * Math.max(0, (doorAnim.totalFrames || 1) - 1);
+        doorAnim.goToAndStop(frame, true);
+      };
+
+      const initLottie = () => {
+        if (!window.lottie || !doorMount) {
+          finishLoader();
+          return;
+        }
+        doorAnim = window.lottie.loadAnimation({
+          container: doorMount,
+          renderer: "canvas",
+          loop: false,
+          autoplay: false,
+          path: "assets/door-lottie/data.json",
+          rendererSettings: {
+            clearCanvas: true,
+            progressiveLoad: false,
+            preserveAspectRatio: "xMidYMid slice"
+          }
+        });
+        doorAnim.addEventListener("DOMLoaded", () => {
+          doorReady = true;
+          scrubDoor(pendingDoor);
+          finishLoader();
+        });
+        doorAnim.addEventListener("data_failed", finishLoader);
+      };
+
+      const preloadFrames = async () => {
+        let loaded = 0;
+        const setProgress = () => {
+          const ratio = loaded / TOTAL_FRAMES;
+          loaderBar.style.setProperty("--p", `${Math.max(4, Math.round(ratio * 92))}%`);
+          if (loaderCount) loaderCount.textContent = `${loaded} / ${TOTAL_FRAMES}`;
+        };
+        setProgress();
+
+        const loadOne = (i) => new Promise((resolve) => {
+          const img = new Image();
+          const done = () => {
+            loaded += 1;
+            setProgress();
+            resolve();
+          };
+          img.onload = done;
+          img.onerror = done;
+          img.decoding = "async";
+          img.src = FRAME_PATH(i);
+        });
+
+        const concurrency = 6;
+        const queue = Array.from({ length: TOTAL_FRAMES }, (_, i) => i);
+        const workers = Array.from({ length: concurrency }, async () => {
+          while (queue.length) {
+            const next = queue.shift();
+            if (next === undefined) return;
+            await loadOne(next);
+          }
+        });
+        await Promise.all(workers);
+        if (loaderLabel) loaderLabel.textContent = "Building scene";
+      };
+
+      const loaderEscape = document.getElementById("loaderEscape");
+      const loaderEscapeBtn = document.getElementById("loaderEscapeBtn");
+      const offerLiteFromLoader = () => {
+        if (!loaderEscape || loaderDone) return;
+        loaderEscape.classList.add("is-visible");
+        loaderEscape.setAttribute("aria-hidden", "false");
+      };
+      if (loaderEscapeBtn) {
+        loaderEscapeBtn.addEventListener("click", () => {
+          try { localStorage.setItem(MODE_STORAGE_KEY, "lite"); } catch {}
+          window.location.reload();
+        });
+      }
+
+      if (liteMode) {
+        if (loaderLabel) loaderLabel.textContent = "Lite mode";
+        if (loaderCount) loaderCount.textContent = "ready";
+        loaderBar.style.setProperty("--p", "100%");
+        setTimeout(finishLoader, 360);
+      } else {
+        const escapeTimer = setTimeout(offerLiteFromLoader, 3000);
+        const fallbackTimer = setTimeout(finishLoader, 28000);
+        preloadFrames()
+          .then(() => initLottie())
+          .catch(() => finishLoader())
+          .finally(() => {
+            clearTimeout(fallbackTimer);
+            clearTimeout(escapeTimer);
+          });
+      }
+
+      const toast = document.getElementById("liteToast");
+      const toastText = document.getElementById("liteToastText");
+      const toastAction = document.getElementById("liteToastAction");
+      const toastClose = document.getElementById("liteToastClose");
+      let toastHideTimer = null;
+      const dismissToast = () => {
+        if (!toast) return;
+        toast.classList.remove("is-visible");
+        clearTimeout(toastHideTimer);
+        setTimeout(() => { toast.hidden = true; }, 320);
+      };
+      const switchMode = (target) => {
+        try { localStorage.setItem(MODE_STORAGE_KEY, target); } catch {}
+        window.location.reload();
+      };
+      function showLiteToast() {
+        if (!toast) return;
+        let dismissed = false;
+        try { dismissed = localStorage.getItem(TOAST_DISMISS_KEY) === "1"; } catch {}
+        if (dismissed && explicitMode) return;
+        if (liteMode) {
+          toastText.textContent = "Lite mode is on for older devices.";
+          toastAction.textContent = "Try full";
+          toastAction.onclick = () => switchMode("full");
+        } else {
+          toastText.textContent = "Animations choppy? Switch to lite mode.";
+          toastAction.textContent = "Use lite";
+          toastAction.onclick = () => switchMode("lite");
+        }
+        toastClose.onclick = () => {
+          try { localStorage.setItem(TOAST_DISMISS_KEY, "1"); } catch {}
+          dismissToast();
+        };
+        toast.hidden = false;
+        requestAnimationFrame(() => toast.classList.add("is-visible"));
+        toastHideTimer = setTimeout(dismissToast, 5200);
+      }
+
+      const updateHero = () => {
+        if (!hero) return;
+        const r = hero.getBoundingClientRect();
+        const total = Math.max(1, hero.offsetHeight - window.innerHeight);
+        const p = clamp01(-r.top / total);
+        hero.style.setProperty("--door-p", p.toFixed(4));
+        scrubDoor(clamp01((p - 0.02) / 0.92));
+      };
+      window.addEventListener("scroll", updateHero, { passive: true });
+      window.addEventListener("resize", updateHero);
+      lenis?.on("scroll", updateHero);
+      updateHero();
+
+      const videos = document.querySelectorAll("video");
+      const videoObserver = "IntersectionObserver" in window ? new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          const v = entry.target;
+          if (entry.isIntersecting) v.play().catch(() => {});
+          else v.pause();
+        });
+      }, { rootMargin: "160px 0px" }) : null;
+      videos.forEach((video) => {
+        video.muted = true;
+        video.playsInline = true;
+        if (videoObserver) videoObserver.observe(video);
+        else video.play().catch(() => {});
+      });
+
+      const themeSections = document.querySelectorAll("[data-theme], .line-moment, section:not(.hero-door), footer");
+      const themeObserver = "IntersectionObserver" in window ? new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          const dark = entry.target.matches(".hero-door, .dark, .ordinary-memory, .capabilities, .crisp, .footer, .cta");
+          body.classList.toggle("on-light", !dark);
+        });
+      }, { threshold: 0.18 }) : null;
+      themeSections.forEach((section) => themeObserver?.observe(section));
+
+      const slides = Array.from(document.querySelectorAll(".crisp-slide"));
+      const slideButtons = Array.from(document.querySelectorAll(".crisp-nav button"));
+      let activeSlide = 0;
+      const setSlide = (idx) => {
+        activeSlide = (idx + slides.length) % slides.length;
+        slides.forEach((slide, i) => slide.classList.toggle("is-active", i === activeSlide));
+        slideButtons.forEach((btn, i) => btn.classList.toggle("is-active", i === activeSlide));
+      };
+      slideButtons.forEach((btn) => btn.addEventListener("click", () => setSlide(Number(btn.dataset.slide))));
+      setInterval(() => setSlide(activeSlide + 1), 6200);
+
+      const SplitType = await import("https://cdn.jsdelivr.net/npm/split-type@0.3.4/+esm").then((m) => m.default).catch(() => null);
+      if (SplitType && !reduceMotion) {
+        const splits = [];
+        document.querySelectorAll(".split-lines").forEach((el) => {
+          const split = new SplitType(el, { types: "lines, words" });
+          splits.push(split);
+          split.lines.forEach((line) => {
+            const mask = document.createElement("span");
+            mask.className = "line-mask";
+            line.appendChild(mask);
+          });
+        });
+        const updateMasks = () => {
+          document.querySelectorAll(".split-lines .line").forEach((line) => {
+            const mask = line.querySelector(".line-mask");
+            if (!mask) return;
+            const r = line.getBoundingClientRect();
+            const start = window.innerHeight * 0.9;
+            const end = window.innerHeight * 0.14;
+            const progress = clamp01((start - r.top) / Math.max(1, start - end));
+            mask.style.transform = `scaleX(${(1 - progress).toFixed(4)})`;
+          });
+        };
+        window.addEventListener("scroll", updateMasks, { passive: true });
+        window.addEventListener("resize", () => {
+          splits.forEach((split) => split.split());
+          updateMasks();
+        });
+        lenis?.on("scroll", updateMasks);
+        updateMasks();
+      }
+
+      const modal = document.getElementById("uploadModal");
+      const openModal = () => {
+        modal.classList.add("is-open");
+        modal.setAttribute("aria-hidden", "false");
+      };
+      const closeModal = () => {
+        modal.classList.remove("is-open");
+        modal.setAttribute("aria-hidden", "true");
+      };
+      document.querySelectorAll(".upload-trigger").forEach((button) => button.addEventListener("click", openModal));
+      document.getElementById("closeModal").addEventListener("click", closeModal);
+      modal.addEventListener("click", (event) => {
+        if (event.target === modal) closeModal();
+      });
+      window.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") closeModal();
+      });
+    </script>
+  </body>
+</html>
