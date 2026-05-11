@@ -1,107 +1,294 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>preservemy.world - Walkable Memory and Heritage Preservation</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>preservemy.world - Walkable memory, heritage at risk</title>
+    <meta
+      name="description"
+      content="preservemy.world turns ordinary phone footage into walkable 3D worlds for culture, family memory, travel, and heritage preservation."
+    />
+    <link rel="icon" href="assets/preservethe-world-logo.png" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lenis@1.2.3/dist/lenis.css" />
     <style>
+      @font-face {
+        font-family: "GT Standard M";
+        src: url("assets/fonts/GTStandardM-NarrowHeavy.otf") format("opentype");
+        font-weight: 900;
+        font-style: normal;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: "Fs R";
+        src: url("assets/fonts/FsR-Regular.otf") format("opentype");
+        font-weight: 400;
+        font-style: normal;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: "Inter";
+        src: url("assets/fonts/Inter-VariableFont.ttf") format("truetype-variations");
+        font-weight: 100 900;
+        font-style: normal;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: "DM Mono";
+        src: url("assets/fonts/DMMono-Regular.ttf") format("truetype");
+        font-weight: 400;
+        font-style: normal;
+        font-display: swap;
+      }
+
       :root {
-        --un-blue: #009edb;
-        --un-blue-dark: #0072bc;
-        --un-blue-deep: #003366;
-        --un-gold: #c8a951;
-        --ink: #1b1b1b;
-        --ink-soft: #3a3a3a;
-        --muted: #65717c;
-        --line: #e3e7eb;
-        --bg: #ffffff;
-        --bg-tint: #f6f8fa;
-        --hero-glass: rgba(0, 51, 102, 0.42);
+        --ink: #07161c;
+        --ink-2: #0e2a31;
+        --paper: #f3f7f7;
+        --white: #ffffff;
+        --mist: #dce9e6;
+        --teal: #217f6f;
+        --mint: #8fdbbb;
+        --green: #58a677;
+        --clay: #b85f45;
+        --line-dark: rgba(7, 22, 28, 0.14);
+        --line-light: rgba(255, 255, 255, 0.18);
+        --display: "GT Standard M", "Fs R", "Inter", sans-serif;
+        --soft-display: "Fs R", "GT Standard M", "Inter", sans-serif;
+        --body: "Inter", sans-serif;
+        --mono: "DM Mono", monospace;
+        --pad-x: 56px;
+        --radius: 8px;
       }
 
-      * {
-        box-sizing: border-box;
+      * { box-sizing: border-box; }
+      html {
+        background: var(--ink);
+        color: var(--paper);
+        scroll-behavior: auto;
       }
-
-      html,
       body {
         margin: 0;
-        min-height: 100%;
-        background: var(--bg);
+        min-width: 320px;
+        background: var(--paper);
         color: var(--ink);
-        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+        font-family: var(--body);
         font-size: 16px;
-        line-height: 1.6;
-      }
-
-      html {
-        scroll-behavior: smooth;
-      }
-
-      body {
+        line-height: 1.5;
         overflow-x: hidden;
       }
+      body.is-loading { overflow: hidden; }
+      a { color: inherit; text-decoration: none; }
+      img, video, canvas { display: block; max-width: 100%; }
+      button { font: inherit; }
 
-      body.is-loading {
-        overflow: hidden;
+      .u-container {
+        width: min(100% - calc(var(--pad-x) * 2), 1320px);
+        margin-inline: auto;
       }
 
-      a {
-        color: var(--un-blue-dark);
-        text-decoration: none;
+      .eyebrow {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 0 0 20px;
+        font-family: var(--mono);
+        font-size: 12px;
+        line-height: 1.2;
+        letter-spacing: 0;
+        text-transform: uppercase;
+      }
+      .eyebrow::before {
+        content: "";
+        width: 32px;
+        height: 1px;
+        background: currentColor;
+        opacity: 0.65;
       }
 
-      a:hover {
-        text-decoration: underline;
+      .btn {
+        min-height: 46px;
+        padding: 14px 22px;
+        border: 1px solid currentColor;
+        border-radius: var(--radius);
+        background: var(--white);
+        color: var(--ink);
+        font-family: var(--mono);
+        font-size: 12px;
+        line-height: 1;
+        letter-spacing: 0;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: background 160ms ease, color 160ms ease, border-color 160ms ease;
       }
-
-      .container {
-        width: min(1180px, calc(100% - 40px));
-        margin: 0 auto;
-      }
+      .btn:hover { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+      .btn.is-ghost { background: transparent; color: inherit; border-color: color-mix(in oklab, currentColor 38%, transparent); }
+      .btn.is-ghost:hover { background: currentColor; color: var(--ink); }
 
       .loader {
         position: fixed;
         inset: 0;
-        z-index: 80;
+        z-index: 100;
         display: grid;
-        place-items: center;
-        background:
-          linear-gradient(180deg, rgba(0, 35, 72, 0.78), rgba(0, 22, 44, 0.94)),
-          url("assets/lost-relic-poster.jpg") center / cover;
-        opacity: 1;
-        visibility: visible;
+        align-content: end;
+        gap: clamp(16px, 4vw, 28px);
+        padding: clamp(20px, 5vw, 56px);
+        padding-bottom: max(clamp(20px, 5vw, 56px), env(safe-area-inset-bottom));
+        background: var(--ink);
+        color: var(--paper);
         transition: opacity 420ms ease, visibility 420ms ease;
       }
-
       .loader.is-hidden {
         opacity: 0;
         visibility: hidden;
         pointer-events: none;
       }
-
-      .loader-panel {
-        width: min(360px, calc(100vw - 48px));
+      .loader .eyebrow {
+        margin-bottom: clamp(12px, 3vw, 20px);
+        font-size: clamp(10px, 2.6vw, 12px);
       }
-
-      .loader-title {
-        margin: 0 0 16px;
-        color: rgba(255, 255, 255, 0.86);
-        font-size: 15px;
-        font-weight: 600;
+      .loader strong {
+        display: block;
+        font-family: var(--display);
+        font-size: clamp(44px, 13vw, 96px);
+        line-height: 0.85;
+        font-weight: 900;
       }
-
-      .loader-track {
-        height: 3px;
-        overflow: hidden;
-        background: rgba(255, 255, 255, 0.22);
+      .loader strong em {
+        font-family: var(--soft-display);
+        color: var(--mint);
+        font-style: italic;
+        font-weight: 400;
       }
-
       .loader-bar {
-        width: 0%;
-        height: 100%;
-        background: linear-gradient(90deg, #ffffff, var(--un-gold));
-        transition: width 180ms ease;
+        position: relative;
+        height: 1px;
+        background: rgba(255,255,255,0.18);
+      }
+      .loader-bar::after {
+        content: "";
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: var(--p, 4%);
+        background: var(--mint);
+        transition: width 220ms ease;
+      }
+      .loader-meta {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        font-family: var(--mono);
+        font-size: clamp(10px, 2.4vw, 11px);
+        line-height: 1.2;
+        letter-spacing: 0;
+        text-transform: uppercase;
+        color: rgba(255,255,255,0.62);
+      }
+      .loader-meta span:last-child { font-variant-numeric: tabular-nums; }
+      .loader-escape {
+        margin-top: 18px;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+        opacity: 0;
+        transform: translateY(6px);
+        pointer-events: none;
+        transition: opacity 320ms ease, transform 320ms ease;
+      }
+      .loader-escape.is-visible {
+        opacity: 1;
+        transform: none;
+        pointer-events: auto;
+      }
+      .loader-escape p {
+        margin: 0;
+        color: rgba(255,255,255,0.62);
+        font-family: var(--mono);
+        font-size: clamp(10px, 2.6vw, 12px);
+        line-height: 1.35;
+        letter-spacing: 0;
+        text-transform: uppercase;
+      }
+      .loader-escape button {
+        padding: 10px 16px;
+        border: 1px solid var(--mint);
+        border-radius: 999px;
+        background: var(--mint);
+        color: var(--ink);
+        font-family: var(--mono);
+        font-size: 12px;
+        line-height: 1;
+        letter-spacing: 0;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: background 160ms ease, color 160ms ease;
+      }
+      .loader-escape button:hover { background: var(--paper); border-color: var(--paper); }
+
+      .toast {
+        position: fixed;
+        left: 50%;
+        bottom: max(20px, env(safe-area-inset-bottom));
+        z-index: 95;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        max-width: calc(100% - 24px);
+        padding: 12px 14px 12px 16px;
+        border: 1px solid rgba(255,255,255,0.14);
+        border-radius: 999px;
+        background: rgba(7, 22, 28, 0.92);
+        color: var(--paper);
+        font-family: var(--mono);
+        font-size: 12px;
+        line-height: 1.2;
+        letter-spacing: 0;
+        text-transform: uppercase;
+        box-shadow: 0 18px 40px rgba(0,0,0,0.28);
+        transform: translate(-50%, 16px);
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 280ms ease, transform 320ms ease, visibility 320ms ease;
+      }
+      .toast.is-visible {
+        opacity: 1;
+        visibility: visible;
+        transform: translate(-50%, 0);
+      }
+      .toast-text {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .toast-action,
+      .toast-close {
+        flex: none;
+        padding: 8px 12px;
+        border: 1px solid rgba(255,255,255,0.32);
+        border-radius: 999px;
+        background: transparent;
+        color: var(--paper);
+        font: inherit;
+        cursor: pointer;
+        transition: background 160ms ease, color 160ms ease;
+      }
+      .toast-action { background: var(--mint); color: var(--ink); border-color: var(--mint); }
+      .toast-action:hover { background: var(--paper); border-color: var(--paper); }
+      .toast-close { padding: 8px 10px; opacity: 0.7; }
+      .toast-close:hover { opacity: 1; }
+      @media (max-width: 540px) {
+        .toast {
+          left: 12px;
+          right: 12px;
+          transform: translateY(16px);
+          max-width: none;
+          padding: 10px 10px 10px 14px;
+          font-size: 11px;
+          border-radius: 14px;
+          flex-wrap: wrap;
+        }
+        .toast.is-visible { transform: translateY(0); }
+        .toast-text { white-space: normal; flex: 1 1 100%; }
       }
 
       .utility {
@@ -109,1764 +296,1580 @@
         top: 0;
         left: 0;
         right: 0;
-        z-index: 50;
-        background: rgba(0, 35, 72, 0.18);
-        color: #d6e8f6;
-        font-size: 12px;
-        backdrop-filter: blur(10px);
-        transition: background 180ms ease, border-color 180ms ease;
-      }
-
-      .utility .container,
-      .header-inner {
+        z-index: 60;
         display: flex;
-        align-items: center;
         justify-content: space-between;
-        gap: 24px;
-      }
-
-      .utility .container {
-        min-height: 34px;
-      }
-
-      .utility-links,
-      .utility-locale,
-      .nav,
-      .header-cta {
-        display: flex;
         align-items: center;
+        gap: 20px;
+        padding: 8px var(--pad-x);
+        color: var(--paper);
+        font-family: var(--mono);
+        font-size: 12px;
+        line-height: 1.2;
+        letter-spacing: 0;
+        text-transform: uppercase;
+        transition: color 220ms ease;
       }
-
-      .utility-links,
-      .utility-locale {
-        gap: 18px;
+      .utility .dot {
+        display: inline-block;
+        width: 7px;
+        height: 7px;
+        margin-right: 8px;
+        border-radius: 50%;
+        background: var(--mint);
       }
-
-      .utility a {
-        color: #d6e8f6;
-      }
-
-      .header {
+      .site-nav {
         position: fixed;
-        top: 34px;
+        top: 28px;
         left: 0;
         right: 0;
-        z-index: 50;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.18);
-        background: rgba(255, 255, 255, 0.04);
-        color: #fff;
-        backdrop-filter: blur(12px);
-        transition: background 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
-      }
-
-      .header-inner {
-        min-height: 64px;
-      }
-
-      .brand {
-        display: flex;
+        z-index: 60;
+        display: grid;
+        grid-template-columns: auto 1fr auto;
         align-items: center;
-        gap: 12px;
-        color: #fff;
+        gap: 32px;
+        padding: 12px var(--pad-x);
+        color: var(--paper);
+        transition: color 220ms ease;
       }
-
-      .brand:hover {
-        text-decoration: none;
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 14px;
       }
-
       .brand-mark {
-        display: block;
         width: 42px;
         height: 42px;
-        flex: 0 0 auto;
+        border: 1px solid rgba(255,255,255,0.35);
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
       }
-
       .brand-mark img {
+        width: 25px;
+        height: 25px;
+        filter: brightness(0) invert(1);
+      }
+      .brand-name {
         display: block;
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
+        font-family: var(--soft-display);
+        font-size: 22px;
+        line-height: 0.9;
       }
-
-      .brand-text {
-        line-height: 1.12;
+      .brand-name em {
+        color: var(--mint);
+        font-style: italic;
       }
-
-      .brand-text strong {
+      .brand-sub {
         display: block;
-        font-size: 14px;
-        font-weight: 700;
-        letter-spacing: 0.02em;
+        margin-top: 6px;
+        font-family: var(--mono);
+        font-size: 10px;
+        line-height: 1.1;
+        letter-spacing: 0;
         text-transform: uppercase;
+        opacity: 0.72;
       }
-
-      .brand-text span {
-        display: none;
-        margin-top: 2px;
-        color: rgba(255, 255, 255, 0.68);
-        font-size: 12px;
-        font-weight: 700;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-      }
-
-      .nav {
+      .nav-links {
+        justify-self: center;
+        display: flex;
         gap: 28px;
-      }
-
-      .nav a {
-        padding: 6px 0;
-        border-bottom: 2px solid transparent;
-        color: rgba(255, 255, 255, 0.86);
-        font-size: 14px;
-        font-weight: 700;
-      }
-
-      .nav a:hover {
-        border-bottom-color: var(--un-blue);
-        color: var(--un-blue-dark);
-        text-decoration: none;
-      }
-
-      .header-cta {
-        gap: 12px;
-      }
-
-      .btn {
-        display: inline-flex;
-        min-height: 44px;
-        align-items: center;
-        justify-content: center;
-        padding: 0 20px;
-        border: 1px solid transparent;
-        color: inherit;
-        font-size: 13px;
-        font-weight: 700;
-        letter-spacing: 0.04em;
+        font-family: var(--mono);
+        font-size: 12px;
+        letter-spacing: 0;
         text-transform: uppercase;
-        text-decoration: none;
       }
-
-      .btn:hover {
-        text-decoration: none;
+      .nav-links a { opacity: 0.78; }
+      .nav-links a:hover { opacity: 1; }
+      .nav-actions {
+        display: flex;
+        gap: 10px;
       }
+      body.on-light .utility,
+      body.on-light .site-nav { color: var(--ink); }
+      body.on-light .brand-mark { border-color: rgba(7,22,28,0.22); }
+      body.on-light .brand-mark img { filter: none; }
 
-      .btn-primary {
-        background: var(--un-blue);
-        color: #fff;
-      }
-
-      .btn-primary:hover {
-        background: var(--un-blue-dark);
-      }
-
-      .btn-ghost {
-        border-color: rgba(255, 255, 255, 0.42);
-        color: #fff;
-      }
-
-      .btn-ghost:hover {
-        border-color: var(--un-blue);
-        color: var(--un-blue-dark);
-      }
-
-      .btn-light {
-        background: #fff;
-        color: var(--un-blue-deep);
-      }
-
-      .btn-outline-light {
-        border-color: rgba(255, 255, 255, 0.62);
-        color: #fff;
-      }
-
-      .hero {
+      .hero-door {
         position: relative;
+        height: 500vh;
+        background: #cfe0ee;
+        color: var(--paper);
+      }
+      .hero-door__sticky {
+        position: sticky;
+        top: 0;
+        height: 100vh;
         height: 100svh;
+        overflow: hidden;
+        isolation: isolate;
+      }
+      .hero-door__bg,
+      .tnl-door,
+      #tnlDoorPlayer {
+        position: absolute;
+        inset: 0;
+      }
+      #tnlDoorPlayer {
+        background: url("assets/door-lottie/images/image_0.webp") center / cover no-repeat;
+      }
+      .hero-door__bg::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        background:
+          linear-gradient(90deg, rgba(7,22,28,0.46) 0%, rgba(7,22,28,0.12) 48%, rgba(7,22,28,0.08) 100%),
+          linear-gradient(180deg, rgba(7,22,28,0.22), rgba(7,22,28,0.08) 50%, rgba(7,22,28,0.24));
+        pointer-events: none;
+      }
+      .hero-door__track {
+        position: absolute;
+        inset: 0;
+        z-index: 3;
+        height: 500vh;
+        pointer-events: none;
+      }
+      .hero-door-panel {
+        min-height: 100vh;
         min-height: 100svh;
         display: flex;
         align-items: center;
-        isolation: isolate;
+        padding: 144px var(--pad-x) 76px;
+      }
+      .hero-door-panel.is-long {
+        min-height: 200vh;
+        min-height: 200svh;
+        align-items: flex-start;
+      }
+      .hero-door-panel.is-long .hero-copy { margin-top: 50vh; }
+      .hero-door-panel.is-final {
+        min-height: 200vh;
+        min-height: 200svh;
+        align-items: flex-start;
+      }
+      .hero-door-panel.is-final .hero-copy {
+        position: sticky;
+        top: 24vh;
+        margin-top: 22vh;
+        margin-left: 12vw;
+        max-width: 760px;
+      }
+      .hero-copy {
+        width: min(620px, 100%);
+        pointer-events: auto;
+      }
+      .hero-copy h1,
+      .hero-copy h2 {
+        margin: 0;
+        font-family: var(--display);
+        font-size: 112px;
+        line-height: 0.95;
+        font-weight: 900;
+        letter-spacing: 0;
+        text-transform: none;
+      }
+      .hero-copy h1 span { display: block; }
+      .hero-copy em {
+        font-family: var(--soft-display);
+        color: var(--mint);
+        font-style: italic;
+        font-weight: 400;
+      }
+      .hero-copy p {
+        max-width: 520px;
+        margin: 28px 0 0;
+        color: rgba(255,255,255,0.82);
+        font-size: 19px;
+        line-height: 1.55;
+      }
+      .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        margin-top: 32px;
+      }
+      .hero-card {
+        position: sticky;
+        bottom: 28px;
+        z-index: 4;
+        width: 330px;
+        margin: -118px 32px 0 auto;
+        pointer-events: auto;
+      }
+      .hero-card a {
+        display: grid;
+        grid-template-columns: 112px 1fr;
+        min-height: 92px;
+        border: 1px solid rgba(7,22,28,0.18);
+        border-radius: var(--radius);
         overflow: hidden;
-        background: var(--un-blue-deep);
-      }
-
-      body.has-scrolled .utility {
-        background: var(--un-blue-deep);
-      }
-
-      body.has-scrolled .header {
-        border-bottom-color: var(--line);
-        background: rgba(255, 255, 255, 0.96);
-        color: var(--ink);
-        box-shadow: 0 8px 24px rgba(0, 35, 72, 0.08);
-      }
-
-      body.has-scrolled .brand {
+        background: rgba(255,255,255,0.9);
         color: var(--ink);
       }
-
-      body.has-scrolled .brand-text span {
-        color: var(--muted);
-      }
-
-      body.has-scrolled .nav a {
-        color: var(--ink);
-      }
-
-      body.has-scrolled .btn-ghost {
-        border-color: var(--line);
-        color: var(--ink);
-      }
-
-      body.is-over-video .utility {
-        background: transparent;
-      }
-
-      body.is-over-video .header {
-        border-bottom-color: rgba(255, 255, 255, 0.18);
-        background: transparent;
-        color: #fff;
-        box-shadow: none;
-      }
-
-      body.is-over-video .brand {
-        color: #fff;
-      }
-
-      body.is-over-video .brand-text span {
-        color: rgba(255, 255, 255, 0.68);
-      }
-
-      body.is-over-video .nav a,
-      body.is-over-video .btn-ghost {
-        color: rgba(255, 255, 255, 0.9);
-      }
-
-      body.is-over-video .btn-ghost {
-        border-color: rgba(255, 255, 255, 0.42);
-      }
-
-      .hero video {
-        position: absolute;
-        inset: 0;
-        z-index: -3;
+      .hero-card img {
         width: 100%;
         height: 100%;
         object-fit: cover;
       }
+      .hero-card div { padding: 12px; }
+      .hero-card strong {
+        display: block;
+        font-family: var(--display);
+        font-size: 20px;
+        line-height: 0.95;
+      }
+      .hero-card span {
+        display: block;
+        margin-top: 14px;
+        color: rgba(7,22,28,0.58);
+        font-family: var(--mono);
+        font-size: 11px;
+        line-height: 1.3;
+        text-transform: uppercase;
+      }
+      .hero-door__hint {
+        position: fixed;
+        left: 50%;
+        bottom: 22px;
+        z-index: 5;
+        transform: translateX(-50%);
+        color: rgba(255,255,255,0.68);
+        font-family: var(--mono);
+        font-size: 11px;
+        line-height: 1.2;
+        letter-spacing: 0;
+        text-transform: uppercase;
+        pointer-events: none;
+        opacity: calc(1 - var(--door-p, 0) * 1.8);
+      }
+      .hero-door__fade {
+        display: none;
+      }
 
-      .hero::before {
+      .ticker {
+        overflow: hidden;
+        background: var(--ink);
+        color: var(--paper);
+        border-top: 1px solid rgba(255,255,255,0.12);
+        border-bottom: 1px solid rgba(255,255,255,0.12);
+      }
+      .ticker-track {
+        display: flex;
+        width: max-content;
+        animation: ticker 34s linear infinite;
+      }
+      .ticker span {
+        padding: 26px 36px;
+        font-family: var(--display);
+        font-size: 52px;
+        line-height: 0.9;
+        white-space: nowrap;
+      }
+      .ticker em {
+        color: var(--mint);
+        font-family: var(--soft-display);
+        font-style: italic;
+      }
+      @keyframes ticker {
+        to { transform: translateX(-50%); }
+      }
+
+      section:not(.hero-door) {
+        padding: 120px 0;
+      }
+      .section-head {
+        display: grid;
+        grid-template-columns: 0.55fr 1fr;
+        gap: 48px;
+        align-items: end;
+        margin-bottom: 56px;
+      }
+      .section-head h2 {
+        margin: 0;
+        font-family: var(--display);
+        font-size: 72px;
+        line-height: 0.95;
+        font-weight: 900;
+        letter-spacing: 0;
+      }
+      .section-head p {
+        max-width: 620px;
+        margin: 0;
+        color: rgba(7,22,28,0.68);
+        font-size: 19px;
+        line-height: 1.65;
+      }
+      .dark {
+        background: var(--ink);
+        color: var(--paper);
+      }
+      .dark .section-head p { color: rgba(255,255,255,0.7); }
+
+      .world-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+      }
+      .world-card {
+        position: relative;
+        min-height: 420px;
+        overflow: hidden;
+        border-radius: var(--radius);
+        background: var(--ink-2);
+      }
+      .world-card:nth-child(2),
+      .world-card:nth-child(5) { grid-column: span 2; }
+      .world-card img,
+      .world-card video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .world-card::after {
         content: "";
         position: absolute;
         inset: 0;
-        z-index: -2;
-        background:
-          linear-gradient(90deg, rgba(0, 22, 44, 0.78) 0%, rgba(0, 45, 82, 0.42) 36%, rgba(0, 18, 36, 0.08) 100%),
-          linear-gradient(180deg, rgba(0, 18, 36, 0.02) 0%, rgba(0, 22, 44, 0.58) 100%);
+        background: linear-gradient(180deg, transparent 42%, rgba(0,0,0,0.72));
       }
-
-      .hero::after {
-        content: "";
+      .world-card figcaption {
         position: absolute;
-        left: 0;
-        right: 0;
-        bottom: 0;
+        left: 18px;
+        right: 18px;
+        bottom: 18px;
         z-index: 2;
-        height: 4px;
-        background: linear-gradient(90deg, var(--un-blue), var(--un-gold));
       }
-
-      .hero-inner {
-        position: relative;
-        width: 100%;
-        padding: 132px clamp(20px, 3vw, 36px) 92px;
+      .world-card strong {
+        display: block;
+        color: var(--white);
+        font-family: var(--display);
+        font-size: 32px;
+        line-height: 0.95;
       }
-
-      .hero-copy {
-        max-width: 460px;
-      }
-
-      .eyebrow {
-        display: inline-flex;
-        align-items: center;
-        gap: 12px;
-        color: var(--un-gold);
-        font-size: 12px;
-        font-weight: 700;
-        letter-spacing: 0.18em;
+      .world-card span {
+        display: block;
+        margin-top: 10px;
+        color: rgba(255,255,255,0.72);
+        font-family: var(--mono);
+        font-size: 11px;
         text-transform: uppercase;
       }
 
-      .eyebrow::before {
-        content: "";
-        width: 28px;
-        height: 2px;
-        background: currentColor;
+      .latest {
+        background: var(--paper);
       }
-
-      .hero h1 {
-        max-width: 430px;
-        margin: 0 0 16px;
-        color: #fff;
-        font-size: clamp(36px, 4.8vw, 62px);
-        font-weight: 500;
-        letter-spacing: 0;
-        line-height: 1.04;
+      .latest-row {
+        display: grid;
+        grid-template-columns: 0.85fr 1.15fr;
+        gap: 42px;
+        align-items: stretch;
       }
-
-      .hero p {
-        max-width: 360px;
-        margin: 0;
-        color: rgba(255, 255, 255, 0.82);
-        font-size: clamp(15px, 1.12vw, 17px);
-        line-height: 1.48;
-      }
-
-      .hero-actions {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 18px;
-        margin-top: 24px;
-      }
-
-      .section-actions {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 14px;
-        margin-top: 28px;
-      }
-
-      .hero-link {
-        color: rgba(255, 255, 255, 0.88);
-        font-size: 12px;
-        font-weight: 700;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-      }
-
-      .hero-link:hover {
-        color: #fff;
-      }
-
-      .text-link {
-        color: var(--un-blue-dark);
-        font-size: 13px;
-        font-weight: 700;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-      }
-
-      .text-link:hover {
-        color: var(--un-blue-deep);
-      }
-
-      body.modal-open {
+      .latest-media {
+        min-height: 620px;
+        border-radius: var(--radius);
         overflow: hidden;
       }
+      .latest-media video,
+      .latest-media img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .latest-copy {
+        align-self: center;
+      }
+      .latest-copy h2 {
+        margin: 0;
+        font-family: var(--display);
+        font-size: 86px;
+        line-height: 0.94;
+        letter-spacing: 0;
+      }
+      .latest-copy p {
+        max-width: 560px;
+        margin: 28px 0 0;
+        color: rgba(7,22,28,0.7);
+        font-size: 20px;
+        line-height: 1.6;
+      }
 
-      .contact-modal {
+      .bold-brand {
+        min-height: 100vh;
+        background: var(--paper);
+        color: var(--ink);
+        display: flex;
+        align-items: center;
+        padding: 98px var(--pad-x) 72px;
+        overflow: hidden;
+      }
+      .bold-brand__inner {
+        width: min(100%, 1560px);
+      }
+      .bold-brand__label,
+      .ordinary-memory__label {
+        margin: 0 0 28px;
+        color: var(--mint);
+        font-family: var(--mono);
+        font-size: 14px;
+        line-height: 1;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .bold-brand h2 {
+        margin: 0;
+        max-width: 1480px;
+        font-family: var(--display);
+        font-size: clamp(40px, 9.8vw, 188px);
+        line-height: 0.95;
+        font-weight: 900;
+        letter-spacing: -0.005em;
+        text-transform: uppercase;
+        text-wrap: balance;
+        word-break: normal;
+        overflow-wrap: break-word;
+        hyphens: auto;
+      }
+      .bold-brand h2 span {
+        display: block;
+      }
+      .bold-brand h2 em {
+        color: #3f8f7b;
+        font-family: var(--soft-display);
+        font-style: italic;
+        font-weight: 400;
+      }
+      .bold-brand p {
+        max-width: 980px;
+        margin: clamp(20px, 4vw, 34px) 0 0;
+        color: rgba(7,22,28,0.64);
+        font-size: clamp(17px, 2.4vw, 34px);
+        line-height: 1.45;
+      }
+
+      .ordinary-memory {
+        position: relative;
+        min-height: 118vh;
+        overflow: hidden;
+        background: var(--ink);
+        color: var(--paper);
+        display: grid;
+        place-items: center;
+        text-align: center;
+      }
+      .ordinary-memory__media {
+        position: absolute;
+        inset: 0;
+      }
+      .ordinary-memory__media video,
+      .ordinary-memory__media img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        filter: saturate(0.9) contrast(0.95);
+      }
+      .ordinary-memory::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: rgba(7, 22, 28, 0.44);
+      }
+      .ordinary-memory__content {
+        position: relative;
+        z-index: 1;
+        width: min(1260px, calc(100% - var(--pad-x) * 2));
+        padding: 140px 0;
+      }
+      .ordinary-memory h2 {
+        margin: 0;
+        font-family: var(--display);
+        font-size: clamp(72px, 12vw, 190px);
+        line-height: 0.88;
+        font-weight: 900;
+        letter-spacing: 0;
+        text-transform: uppercase;
+      }
+      .ordinary-memory h2 em {
+        display: block;
+        color: var(--mint);
+        font-family: var(--soft-display);
+        font-style: italic;
+        font-weight: 400;
+      }
+
+      .line-moment {
+        min-height: 120vh;
+        display: grid;
+        place-items: center;
+        background: var(--paper);
+        color: var(--ink);
+      }
+      .line-moment.dark { background: var(--ink); color: var(--paper); }
+      .line-moment__inner {
+        width: min(920px, calc(100% - var(--pad-x) * 2));
+      }
+      .line-moment h2,
+      .line-moment p {
+        margin: 0;
+        font-family: var(--display);
+        font-size: 78px;
+        line-height: 1.03;
+        font-weight: 900;
+        letter-spacing: 0;
+      }
+      .line-moment em {
+        color: var(--teal);
+        font-family: var(--soft-display);
+        font-style: italic;
+        font-weight: 400;
+      }
+      .line-moment.dark em { color: var(--mint); }
+      .split-lines .line {
+        position: relative;
+        display: block;
+      }
+      .line-mask {
+        position: absolute;
+        inset: 0 0 0 auto;
+        width: 100%;
+        transform: scaleX(1);
+        transform-origin: 100% 50%;
+        background: var(--paper);
+        pointer-events: none;
+        will-change: transform;
+      }
+      .dark .line-mask { background: var(--ink); }
+      .crossed {
+        position: relative;
+        display: inline-block;
+        color: rgba(7,22,28,0.42);
+      }
+      .crossed::after {
+        content: "";
+        position: absolute;
+        left: -4%;
+        right: -4%;
+        top: 54%;
+        height: 3px;
+        background: var(--green);
+      }
+
+      .crisp {
+        position: relative;
+        min-height: 100vh;
+        overflow: hidden;
+        background: var(--ink);
+        color: var(--paper);
+      }
+      .crisp-slide {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        transition: opacity 700ms ease;
+      }
+      .crisp-slide.is-active { opacity: 1; }
+      .crisp-slide video,
+      .crisp-slide img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        filter: saturate(0.92) contrast(0.96);
+      }
+      .crisp::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(90deg, rgba(7,22,28,0.72), rgba(7,22,28,0.12) 58%, rgba(7,22,28,0.52));
+      }
+      .crisp-content {
+        position: relative;
+        z-index: 2;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        padding: 140px var(--pad-x) 72px;
+      }
+      .crisp h2 {
+        max-width: 980px;
+        margin: 0;
+        font-family: var(--display);
+        font-size: 110px;
+        line-height: 0.9;
+        letter-spacing: 0;
+      }
+      .crisp p {
+        max-width: 520px;
+        margin: 28px 0 0;
+        color: rgba(255,255,255,0.78);
+        font-size: 19px;
+      }
+      .crisp-nav {
+        display: flex;
+        gap: 10px;
+        margin-top: 36px;
+      }
+      .crisp-nav button {
+        width: 56px;
+        height: 44px;
+        border: 1px solid rgba(255,255,255,0.42);
+        border-radius: var(--radius);
+        background: transparent;
+        color: var(--paper);
+        font-family: var(--mono);
+        cursor: pointer;
+      }
+      .crisp-nav button.is-active { background: var(--paper); color: var(--ink); }
+
+      .project-feed {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+      }
+      .project {
+        border-top: 1px solid var(--line-dark);
+        padding-top: 18px;
+      }
+      .project-media {
+        aspect-ratio: 4 / 5;
+        overflow: hidden;
+        border-radius: var(--radius);
+        background: var(--mist);
+      }
+      .project-media video,
+      .project-media img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .project h3 {
+        margin: 18px 0 8px;
+        font-family: var(--display);
+        font-size: 34px;
+        line-height: 0.96;
+      }
+      .project p {
+        margin: 0;
+        color: rgba(7,22,28,0.64);
+      }
+
+      .capabilities {
+        background: var(--ink);
+        color: var(--paper);
+      }
+      .cap-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        border-top: 1px solid var(--line-light);
+        border-left: 1px solid var(--line-light);
+      }
+      .cap {
+        min-height: 300px;
+        padding: 26px;
+        border-right: 1px solid var(--line-light);
+        border-bottom: 1px solid var(--line-light);
+      }
+      .cap span {
+        color: var(--mint);
+        font-family: var(--mono);
+        font-size: 12px;
+      }
+      .cap h3 {
+        margin: 80px 0 14px;
+        font-family: var(--display);
+        font-size: 34px;
+        line-height: 0.98;
+      }
+      .cap p {
+        margin: 0;
+        color: rgba(255,255,255,0.68);
+      }
+
+      .how-grid {
+        display: grid;
+        grid-template-columns: 0.8fr 1.2fr;
+        gap: 56px;
+        align-items: start;
+      }
+      .steps {
+        display: grid;
+        gap: 1px;
+        background: var(--line-dark);
+      }
+      .step {
+        display: grid;
+        grid-template-columns: 90px 1fr;
+        gap: 20px;
+        padding: 26px;
+        background: var(--paper);
+      }
+      .step span {
+        color: var(--teal);
+        font-family: var(--mono);
+        font-size: 12px;
+      }
+      .step h3 {
+        margin: 0 0 8px;
+        font-family: var(--display);
+        font-size: 34px;
+        line-height: 0.95;
+      }
+      .step p { margin: 0; color: rgba(7,22,28,0.66); }
+
+      .stories {
+        background: #e8f2ee;
+      }
+      .story-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+      }
+      .story {
+        min-height: 320px;
+        padding: 28px;
+        border: 1px solid var(--line-dark);
+        border-radius: var(--radius);
+        background: rgba(255,255,255,0.52);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+      .story p {
+        margin: 0;
+        font-family: var(--display);
+        font-size: 34px;
+        line-height: 1;
+      }
+      .story span {
+        color: rgba(7,22,28,0.58);
+        font-family: var(--mono);
+        font-size: 12px;
+        text-transform: uppercase;
+      }
+
+      .cta {
+        background: var(--teal);
+        color: var(--white);
+      }
+      .cta-inner {
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 48px;
+        align-items: end;
+      }
+      .cta h2 {
+        margin: 0;
+        font-family: var(--display);
+        font-size: 96px;
+        line-height: 0.9;
+      }
+      .cta p {
+        max-width: 520px;
+        margin: 24px 0 0;
+        color: rgba(255,255,255,0.78);
+        font-size: 20px;
+      }
+
+      .footer {
+        padding: 64px var(--pad-x);
+        background: var(--ink);
+        color: var(--paper);
+      }
+      .footer-grid {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 32px;
+        align-items: end;
+      }
+      .footer h2 {
+        margin: 0;
+        font-family: var(--display);
+        font-size: 72px;
+        line-height: 0.9;
+      }
+      .footer h2 em {
+        color: var(--mint);
+        font-family: var(--soft-display);
+        font-style: italic;
+      }
+      .footer-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 18px;
+        font-family: var(--mono);
+        font-size: 12px;
+        text-transform: uppercase;
+      }
+      .footer-small {
+        margin-top: 44px;
+        border-top: 1px solid var(--line-light);
+        padding-top: 20px;
+        color: rgba(255,255,255,0.54);
+        font-family: var(--mono);
+        font-size: 12px;
+      }
+
+      .modal {
         position: fixed;
         inset: 0;
         z-index: 90;
         display: none;
-        align-items: center;
-        justify-content: center;
-        padding: 24px;
-        background: rgba(0, 18, 36, 0.62);
-      }
-
-      .contact-modal.is-open {
-        display: flex;
-      }
-
-      .contact-dialog {
-        position: relative;
-        width: min(520px, 100%);
-        border: 1px solid var(--line);
-        background: #fff;
-        color: var(--ink);
-        box-shadow: 0 22px 70px rgba(0, 35, 72, 0.28);
-      }
-
-      .contact-close {
-        position: absolute;
-        top: 14px;
-        right: 14px;
-        display: grid;
-        width: 36px;
-        height: 36px;
         place-items: center;
-        border: 1px solid var(--line);
-        background: #fff;
+        padding: 20px;
+        background: rgba(7, 22, 28, 0.72);
+      }
+      .modal.is-open { display: grid; }
+      .modal-card {
+        width: min(560px, 100%);
+        border-radius: var(--radius);
+        background: var(--paper);
         color: var(--ink);
-        cursor: pointer;
-        font-size: 20px;
-        line-height: 1;
-      }
-
-      .contact-body {
-        padding: 42px clamp(22px, 5vw, 44px) 38px;
-      }
-
-      .contact-body h2 {
-        max-width: 360px;
-        margin: 0 0 14px;
-        color: var(--ink);
-        font-size: clamp(28px, 4vw, 38px);
-        line-height: 1.08;
-      }
-
-      .contact-body p {
-        margin: 0;
-        color: var(--ink-soft);
-        font-size: 16px;
-        line-height: 1.62;
-      }
-
-      .contact-links {
-        display: grid;
-        gap: 10px;
-        margin-top: 26px;
-      }
-
-      .contact-link {
-        display: flex;
-        min-height: 54px;
-        align-items: center;
-        gap: 14px;
-        border: 1px solid var(--line);
-        padding: 0 16px;
-        color: var(--ink);
-        font-size: 14px;
-        font-weight: 700;
-      }
-
-      .contact-link:hover {
-        border-color: var(--un-blue);
-        color: var(--un-blue-deep);
-        text-decoration: none;
-      }
-
-      .contact-link svg {
-        width: 22px;
-        height: 22px;
-        flex: 0 0 auto;
-        fill: currentColor;
-      }
-
-      .contact-note {
-        margin-top: 18px;
-        color: var(--muted);
-        font-size: 13px;
-        line-height: 1.5;
-      }
-
-      .hero-controls {
-        position: absolute;
-        right: clamp(20px, 4vw, 44px);
-        bottom: 28px;
-        z-index: 4;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        color: rgba(255, 255, 255, 0.84);
-        font-size: 12px;
-        font-weight: 700;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-      }
-
-      .hero-controls > span {
-        display: none;
-      }
-
-      .play {
-        display: inline-grid;
-        width: 48px;
-        height: 48px;
-        place-items: center;
-        border: 1px solid rgba(255, 255, 255, 0.48);
-        background: var(--hero-glass);
-        color: #fff;
-        cursor: pointer;
-        backdrop-filter: blur(10px);
-      }
-
-      .play:hover {
-        border-color: var(--un-blue);
-        background: rgba(0, 114, 188, 0.72);
-      }
-
-      .play svg {
-        width: 19px;
-        height: 19px;
-        fill: currentColor;
-      }
-
-      .play .pause-icon,
-      .play.is-playing .play-icon {
-        display: none;
-      }
-
-      .play.is-playing .pause-icon {
-        display: block;
-      }
-
-      .stats-wrap {
-        position: relative;
-        z-index: 5;
-        margin-top: 0;
-        padding: clamp(48px, 6vw, 76px) 0 0;
-        background: #fff;
-      }
-
-      .stats {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        border: 1px solid var(--line);
-        border-top: 4px solid var(--un-blue);
-        background: #fff;
-        box-shadow: 0 18px 50px rgba(0, 51, 102, 0.1);
-      }
-
-      .stat {
-        min-height: 144px;
-        padding: 34px 30px;
-        border-right: 1px solid var(--line);
-      }
-
-      .stat:last-child {
-        border-right: 0;
-      }
-
-      .stat-num {
-        color: var(--un-blue-deep);
-        font-size: clamp(34px, 4vw, 48px);
-        font-weight: 700;
-        line-height: 1;
-      }
-
-      .stat-label {
-        margin-top: 12px;
-        color: var(--muted);
-        font-size: 12px;
-        font-weight: 700;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-      }
-
-      section {
-        scroll-margin-top: 112px;
-        padding: clamp(88px, 10vw, 136px) 0;
-      }
-
-      .section-head {
-        max-width: 760px;
-        margin: 0 auto 64px;
-        text-align: center;
-      }
-
-      .section-head .eyebrow {
-        justify-content: center;
-        color: var(--un-blue-dark);
-      }
-
-      .section-head h2,
-      .editorial-body h2,
-      .report-copy h2,
-      .cta h2 {
-        margin: 18px 0;
-        color: var(--ink);
-        font-size: clamp(32px, 4vw, 48px);
-        font-weight: 700;
-        line-height: 1.16;
-      }
-
-      .section-head p,
-      .editorial-body p,
-      .report-copy p,
-      .program p,
-      .timeline p,
-      .cta p {
-        color: var(--ink-soft);
-        font-size: 18px;
-        line-height: 1.7;
-      }
-
-      .mission {
-        padding: 0;
-        background: #fff;
-        border-top: 1px solid var(--line);
-      }
-
-      .mission-grid {
-        display: grid;
-        grid-template-columns: 1fr;
-        align-items: stretch;
-      }
-
-      .mission-text {
-        display: flex;
-        align-items: center;
-        padding:
-          clamp(80px, 10vw, 132px)
-          clamp(20px, 4vw, 56px)
-          clamp(80px, 10vw, 132px)
-          clamp(20px, 7vw, 96px);
-        background: #fff;
-      }
-
-      .mission-text-inner {
-        max-width: 460px;
-      }
-
-      .mission-text-inner h2 {
-        margin: 18px 0 22px;
-        color: var(--ink);
-        font-size: clamp(30px, 3.4vw, 42px);
-        font-weight: 700;
-        line-height: 1.16;
-      }
-
-      .mission-text-inner p {
-        margin: 0 0 20px;
-        color: var(--ink-soft);
-        font-size: 18px;
-        line-height: 1.7;
-      }
-
-      .mission-text-inner p:last-child {
-        margin-bottom: 0;
-      }
-
-      .editorial-label {
-        display: inline-block;
-        padding-top: 10px;
-        border-top: 2px solid var(--un-blue-dark);
-        color: var(--un-blue-dark);
-        font-size: 12px;
-        font-weight: 700;
-        letter-spacing: 0.18em;
-        text-transform: uppercase;
-      }
-
-      .mission-media {
-        position: relative;
-        height: 100svh;
-        min-height: 100svh;
-        overflow: hidden;
-        background:
-          linear-gradient(180deg, rgba(0, 51, 102, 0.04), rgba(0, 35, 72, 0.34)),
-          url("assets/lost-relic-meadows-poster.jpg") center / cover;
-      }
-
-      .mission-media video {
-        position: absolute;
-        inset: 0;
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-      }
-
-      .mission-media::after {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background:
-          linear-gradient(180deg, rgba(0, 18, 36, 0.04) 60%, rgba(0, 22, 44, 0.55)),
-          linear-gradient(90deg, rgba(0, 22, 44, 0.18), transparent 48%);
-        pointer-events: none;
-      }
-
-      .mission-media-caption {
-        position: absolute;
-        left: 24px;
-        right: 24px;
-        bottom: 22px;
-        z-index: 2;
-        display: flex;
-        justify-content: space-between;
-        gap: 18px;
-        color: rgba(255, 255, 255, 0.88);
-        font-size: 12px;
-        font-weight: 700;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-      }
-
-      .mission-media-caption .chapter-tag {
-        color: var(--un-gold);
-      }
-
-      .pull-quote {
-        margin: 28px 0 0;
-        padding-top: 20px;
-        border-top: 1px solid var(--line);
-        color: var(--un-blue-deep);
-        font-size: 18px;
-        font-style: italic;
-        line-height: 1.52;
-      }
-
-      .pull-quote cite {
-        display: block;
-        margin-top: 14px;
-        color: var(--muted);
-        font-size: 13px;
-        font-style: normal;
-        font-weight: 700;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-      }
-
-      .programs {
-        background: var(--bg-tint);
-      }
-
-      .program-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 1px;
-        margin-top: 86px;
-        border: 1px solid var(--line);
-        background: var(--line);
-      }
-
-      .program {
-        min-height: 320px;
-        padding: 32px;
-        background: #fff;
-      }
-
-      .program-number {
-        display: block;
-        margin-bottom: 80px;
-        color: var(--un-blue-dark);
-        font-size: 13px;
-        font-weight: 700;
-        letter-spacing: 0.12em;
-      }
-
-      .program h3 {
-        margin: 0 0 14px;
-        color: var(--ink);
-        font-size: 24px;
-        line-height: 1.18;
-      }
-
-      .program p {
-        margin: 0;
-        font-size: 16px;
-      }
-
-      #report {
-        height: 100svh;
-        min-height: 100svh;
-        padding: 0;
-        scroll-margin-top: 0;
-        overflow: hidden;
-      }
-
-      .report-grid {
-        position: relative;
-        width: 100%;
-        max-width: none;
-        height: 100svh;
-        min-height: 100svh;
-        display: grid;
-        align-items: end;
-        padding: 0;
-      }
-
-      .report-media {
-        position: absolute;
-        inset: 0;
-        z-index: 0;
-        min-height: 100%;
-        overflow: hidden;
-        border: 0;
-        background: #00162c;
-      }
-
-      .report-media video {
-        position: absolute;
-        inset: 0;
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-      }
-
-      .report-media::after {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background:
-          linear-gradient(180deg, rgba(0, 18, 36, 0.08), rgba(0, 24, 54, 0.62)),
-          linear-gradient(90deg, rgba(0, 22, 44, 0.76), rgba(0, 51, 102, 0.36) 46%, rgba(0, 22, 44, 0.08));
-        pointer-events: none;
-      }
-
-      .report-media-caption {
-        position: absolute;
-        left: 22px;
-        right: 22px;
-        bottom: 20px;
-        z-index: 2;
-        display: flex;
-        justify-content: space-between;
-        gap: 18px;
-        color: rgba(255, 255, 255, 0.86);
-        font-size: 12px;
-        font-weight: 700;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-      }
-
-      .report-copy {
-        position: relative;
-        z-index: 2;
-        max-width: 640px;
-        padding: clamp(112px, 13vw, 168px) clamp(20px, 5vw, 72px) clamp(64px, 8vw, 96px);
-        color: #fff;
-      }
-
-      .report-copy .eyebrow,
-      .report-copy h2,
-      .report-copy p {
-        color: #fff;
-      }
-
-      .report-title-mobile {
-        display: none;
-      }
-
-      .report-list {
-        display: grid;
-        gap: 16px;
-        margin-top: 30px;
-      }
-
-      .report-item {
-        padding: 18px 0 18px 22px;
-        border-left: 4px solid var(--un-gold);
-        color: rgba(255, 255, 255, 0.82);
-        font-size: 16px;
-      }
-
-      .timeline {
-        background: var(--un-blue-deep);
-        color: #fff;
-      }
-
-      .timeline .section-head h2,
-      .timeline .section-head p {
-        color: #fff;
-      }
-
-      .timeline .section-head .eyebrow {
-        color: var(--un-gold);
-      }
-
-      .timeline-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 1px;
-        background: rgba(255, 255, 255, 0.22);
-      }
-
-      .timeline-card {
-        min-height: 260px;
         padding: 28px;
-        background: rgba(0, 35, 72, 0.92);
       }
-
-      .timeline-card span {
-        display: block;
-        margin-bottom: 70px;
-        color: var(--un-gold);
-        font-size: 13px;
-        font-weight: 700;
+      .modal-card h2 {
+        margin: 0 0 12px;
+        font-family: var(--display);
+        font-size: 44px;
+        line-height: 0.95;
       }
+      .modal-card p { color: rgba(7,22,28,0.68); }
+      .modal-row { display: flex; gap: 10px; margin-top: 22px; }
 
-      .timeline-card h3 {
-        margin: 0 0 10px;
-        color: #fff;
-        font-size: 21px;
+      body.lite-mode .hero-door {
+        height: auto;
+        background: var(--ink);
       }
-
-      .timeline-card p {
-        margin: 0;
-        color: rgba(255, 255, 255, 0.78);
-        font-size: 15px;
-      }
-
-      .footage {
-        padding: clamp(88px, 10vw, 136px) 0 0;
-        background: var(--bg-tint);
-      }
-
-      .footage .footage-head {
-        max-width: 760px;
-        margin: 0 auto clamp(48px, 6vw, 72px);
-        text-align: left;
-      }
-
-      .footage .footage-head .eyebrow {
-        justify-content: flex-start;
-        color: var(--un-blue-dark);
-      }
-
-      .footage .footage-head h2 {
-        margin: 18px 0;
-        color: var(--ink);
-        font-size: clamp(32px, 4vw, 48px);
-        font-weight: 700;
-        line-height: 1.16;
-      }
-
-      .footage .footage-head p {
-        max-width: 620px;
-        color: var(--ink-soft);
-      }
-
-      .footage-frame {
+      body.lite-mode .hero-door__sticky {
         position: relative;
-        width: 100%;
-        height: 100svh;
+        height: auto;
         min-height: 100svh;
         overflow: hidden;
-        background:
-          linear-gradient(180deg, rgba(0, 51, 102, 0.04), rgba(0, 35, 72, 0.34)),
-          url("assets/lost-relic-wadi-rum-poster.jpg") center / cover;
-        border-top: 4px solid var(--un-gold);
       }
-
-      .footage-frame video {
+      body.lite-mode .hero-door__bg {
         position: absolute;
-        inset: 0;
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
       }
-
-      .footage-frame::after {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background:
-          linear-gradient(180deg, rgba(0, 18, 36, 0.04) 55%, rgba(0, 22, 44, 0.62)),
-          linear-gradient(90deg, rgba(0, 22, 44, 0.22), transparent 52%);
-        pointer-events: none;
+      body.lite-mode #tnlDoorPlayer {
+        background: url("assets/door-lottie/images/image_286.webp") center / cover no-repeat;
       }
-
-      .footage-caption {
-        position: absolute;
-        left: clamp(20px, 4vw, 56px);
-        right: clamp(20px, 4vw, 56px);
-        bottom: clamp(22px, 3vw, 32px);
-        z-index: 2;
+      body.lite-mode .hero-door__bg::after {
+        background: linear-gradient(180deg, rgba(7,22,28,0.55), rgba(7,22,28,0.78));
+      }
+      body.lite-mode .hero-door__track {
+        position: relative;
+        height: auto;
         display: flex;
-        justify-content: space-between;
-        gap: 20px;
-        color: rgba(255, 255, 255, 0.88);
-        font-size: 12px;
-        font-weight: 700;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
+        flex-direction: column;
       }
-
-      .footage-caption .chapter-tag {
-        color: var(--un-gold);
+      body.lite-mode .hero-door-panel,
+      body.lite-mode .hero-door-panel.is-long,
+      body.lite-mode .hero-door-panel.is-final {
+        min-height: 0;
+        padding: 96px var(--pad-x) 64px;
+        align-items: flex-start;
       }
-
-      .cta {
-        background:
-          linear-gradient(90deg, rgba(0, 51, 102, 0.94), rgba(0, 114, 188, 0.8)),
-          url("assets/lost-relic-poster.jpg") center / cover;
-        color: #fff;
+      body.lite-mode .hero-door-panel.is-long .hero-copy,
+      body.lite-mode .hero-door-panel.is-final .hero-copy {
+        position: static;
+        margin: 0;
+        max-width: none;
       }
+      body.lite-mode .hero-door__hint,
+      body.lite-mode .hero-card { display: none; }
+      body.lite-mode .ticker-track { animation-duration: 60s; }
 
-      .cta-inner {
-        display: grid;
-        grid-template-columns: 1fr auto;
-        gap: 42px;
-        align-items: center;
+      @media (max-width: 1080px) {
+        :root { --pad-x: 28px; }
+        .nav-links { display: none; }
+        .hero-copy h1,
+        .hero-copy h2 { font-size: 84px; }
+        .section-head,
+        .latest-row,
+        .how-grid,
+        .cta-inner { grid-template-columns: 1fr; }
+        .world-grid,
+        .project-feed,
+        .cap-grid,
+        .story-grid { grid-template-columns: repeat(2, 1fr); }
+        .world-card:nth-child(2),
+        .world-card:nth-child(5) { grid-column: span 1; }
       }
-
-      .cta h2,
-      .cta p {
-        color: #fff;
-      }
-
-      .cta p {
-        max-width: 640px;
-        margin-bottom: 0;
-      }
-
-      .footer {
-        padding: 34px 0;
-        background: #f2f5f7;
-        color: var(--muted);
-        font-size: 13px;
-      }
-
-      .footer .container {
-        display: flex;
-        justify-content: space-between;
-        gap: 24px;
-      }
-
-      @media (max-width: 980px) {
-        .nav,
-        .header-cta,
-        .utility-links {
-          display: none;
-        }
-
-        .stats,
-        .program-grid,
-        .timeline-grid,
-        .mission-grid,
-        .report-grid,
-        .cta-inner {
+      @media (max-width: 720px) {
+        :root { --pad-x: 16px; }
+        .utility-extra,
+        .nav-actions { display: none; }
+        .site-nav {
           grid-template-columns: 1fr;
+          top: 38px;
         }
-
-        .stat {
-          border-right: 0;
-          border-bottom: 1px solid var(--line);
-        }
-
-        .program-number,
-        .timeline-card span {
-          margin-bottom: 42px;
-        }
-
-        #report .report-media {
-          min-height: 100%;
-        }
-
-        .mission {
-          padding: 0;
-        }
-
-        .mission-grid {
-          min-height: 0;
-        }
-
-        .mission-text {
-          padding: 72px 20px 40px;
-        }
-
-        .mission-text-inner {
-          max-width: none;
-        }
-
-        .mission-media {
-          min-height: 100svh;
-        }
-
-        .footage {
-          padding: clamp(88px, 10vw, 136px) 0 0;
-        }
-
-        .footage-frame {
-          min-height: 100svh;
-        }
-      }
-
-      @media (max-width: 760px) {
-        .container {
-          width: min(100% - 32px, 1180px);
-        }
-
-        .utility {
-          display: none;
-        }
-
-        .header {
-          top: 0;
-        }
-
-        .hero {
-          min-height: 100svh;
-        }
-
-        .hero-inner {
-          padding: 116px 0 92px;
-        }
-
-        .hero-copy {
-          max-width: 280px;
-        }
-
-        .hero h1 {
-          max-width: 280px;
-          font-size: clamp(34px, 9vw, 44px);
-          line-height: 1.04;
-        }
-
-        .hero p {
-          max-width: 260px;
-          font-size: 14px;
-          line-height: 1.48;
-        }
-
-        .hero-actions {
-          gap: 16px;
-          margin-top: 24px;
-        }
-
-        .section-actions {
+        .hero-door-panel {
+          padding-top: 268px;
           align-items: flex-start;
-          flex-direction: column;
         }
-
-        .hero-controls {
-          left: 16px;
-          right: 16px;
-          justify-content: space-between;
+        .hero-door-panel.is-long .hero-copy { margin-top: 22vh; }
+        .hero-door-panel.is-final .hero-copy {
+          top: 28vh;
+          margin-left: 0;
+          margin-top: 18vh;
         }
-
-        .stats-wrap {
-          margin-top: 0;
-        }
-
-        section {
-          padding: 72px 0;
-        }
-
-        .section-head {
-          margin-bottom: 42px;
-          text-align: left;
-        }
-
-        .section-head .eyebrow {
-          justify-content: flex-start;
-        }
-
+        .hero-copy h1,
+        .hero-copy h2 { font-size: 50px; }
+        .hero-copy p { font-size: 16px; }
+        .hero-card { display: none; }
         .section-head h2,
-        .editorial-body h2 {
-          font-size: 30px;
-          line-height: 1.14;
+        .ordinary-memory h2,
+        .line-moment h2,
+        .line-moment p,
+        .latest-copy h2,
+        .crisp h2,
+        .cta h2 { font-size: 52px; }
+        .bold-brand {
+          min-height: auto;
+          padding: 72px var(--pad-x) 56px;
         }
-
-        .section-head p,
-        .editorial-body p,
-        .program p,
-        .timeline p,
-        .cta p {
-          font-size: 16px;
-          line-height: 1.58;
-        }
-
-        .mission-text {
-          padding: 64px 20px 32px;
-        }
-
-        .mission-text-inner h2 {
-          font-size: 28px;
-          line-height: 1.16;
-        }
-
-        .mission-media {
-          min-height: 100svh;
-        }
-
-        .footage {
-          padding: 64px 0 0;
-        }
-
-        .footage .footage-head {
-          margin-bottom: 36px;
-        }
-
-        .footage .footage-head h2 {
-          font-size: 28px;
-          line-height: 1.16;
-        }
-
-        .footage-frame {
-          min-height: 100svh;
-        }
-
-        .mission-media-caption,
-        .footage-caption {
-          left: 16px;
-          right: 16px;
-          bottom: 16px;
-          gap: 12px;
-          font-size: 11px;
-          letter-spacing: 0.1em;
-        }
-
-        #report {
-          min-height: 100svh;
-          margin-top: 0;
-        }
-
-        .report-grid {
-          min-height: 100svh;
-          align-items: center;
-        }
-
-        .report-copy {
-          max-width: none;
-          padding: 52px 20px 46px;
-        }
-
-        .report-copy h2 {
-          max-width: 290px;
-          font-size: clamp(32px, 10vw, 42px);
+        .bold-brand h2 {
+          font-size: clamp(34px, 10.5vw, 60px);
           line-height: 1;
         }
-
-        .report-title-desktop {
-          display: none;
+        .bold-brand p {
+          font-size: clamp(15px, 4.4vw, 19px);
+          line-height: 1.55;
+          margin-top: 22px;
         }
-
-        .report-title-mobile {
-          display: block;
-        }
-
-        .report-copy p {
-          display: none;
-        }
-
-        .report-list {
-          display: none;
-        }
-
-        .report-media-caption {
-          left: 16px;
-          right: 16px;
-          bottom: 14px;
-          gap: 12px;
-          font-size: 10px;
-          letter-spacing: 0.08em;
-        }
-
-        .brand-text span {
-          display: none;
-        }
-
-        .brand-mark {
-          width: 38px;
-          height: 38px;
-        }
-
-        .footage-caption,
-        .footer .container {
-          flex-direction: column;
-        }
+        .bold-brand__label { margin-bottom: 18px; font-size: 12px; }
+        .ordinary-memory { min-height: 92vh; }
+        .ticker span { font-size: 38px; padding-inline: 20px; }
+        .world-grid,
+        .project-feed,
+        .cap-grid,
+        .story-grid { grid-template-columns: 1fr; }
+        .latest-media { min-height: 420px; }
+        .footer-grid { grid-template-columns: 1fr; }
       }
-
-      @media (max-width: 760px) and (max-height: 480px) {
-        .report-copy {
-          padding: 34px 18px 34px;
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+          animation-duration: 0.001ms !important;
+          animation-iteration-count: 1 !important;
+          scroll-behavior: auto !important;
+          transition-duration: 0.001ms !important;
         }
-
-        .report-copy .eyebrow {
-          font-size: 11px;
-          letter-spacing: 0.12em;
-        }
-
-        .report-copy h2 {
-          max-width: 250px;
-          font-size: clamp(28px, 8vw, 36px);
-        }
-
-        .report-media-caption {
-          display: none;
-        }
+        .line-mask { display: none; }
       }
     </style>
   </head>
   <body class="is-loading">
-    <div class="loader" role="status" aria-live="polite" aria-label="Loading video footage">
-      <div class="loader-panel">
-        <p class="loader-title">Loading field footage</p>
-        <div class="loader-track" aria-hidden="true">
-          <div class="loader-bar"></div>
+    <div class="loader" id="loader" aria-hidden="true" role="status" aria-live="polite">
+      <div>
+        <div class="eyebrow">Spatial AI - loading worlds</div>
+        <strong>preserve <em>my world</em></strong>
+      </div>
+      <div>
+        <div class="loader-bar" id="loaderBar"></div>
+        <div class="loader-meta">
+          <span id="loaderLabel">Caching scene frames</span>
+          <span id="loaderCount">0 / 0</span>
+        </div>
+        <div class="loader-escape" id="loaderEscape" aria-hidden="true">
+          <p>Slow connection? Skip the heavy scene.</p>
+          <button type="button" id="loaderEscapeBtn">Use lite mode</button>
         </div>
       </div>
+    </div>
+
+    <div class="toast" id="liteToast" role="status" aria-live="polite" hidden>
+      <span class="toast-text" id="liteToastText">Animations sluggish? Try the lite version.</span>
+      <button type="button" class="toast-action" id="liteToastAction">Use lite</button>
+      <button type="button" class="toast-close" id="liteToastClose" aria-label="Dismiss">&times;</button>
     </div>
 
     <div class="utility">
-      <div class="container">
-        <div class="utility-links">
-          <a href="#">Peace, dignity and heritage on a healthy planet</a>
-          <a href="#">Reports</a>
-          <a href="#">Data</a>
-        </div>
-        <div class="utility-locale">
-          <span>English</span>
-          <span>Search</span>
-        </div>
-      </div>
+      <div><span class="dot"></span>Field footage online - 042 worlds preserved</div>
+      <div class="utility-extra"><a href="#how">How it works</a> - <a href="#stories">Stories</a> - <a href="#submit">Submit a memory</a></div>
     </div>
 
-    <header class="header">
-      <div class="container header-inner">
-        <a class="brand" href="#">
-          <span class="brand-mark">
-            <img src="assets/preservethe-world-logo.png" alt="">
-          </span>
-          <span class="brand-text">
-            <strong>preservemy.world</strong>
-            <span>Heritage at Risk</span>
-          </span>
-        </a>
-
-        <nav class="nav" aria-label="Primary">
-          <a href="#mission">How it works</a>
-          <a href="#programs">Use cases</a>
-          <a href="#timeline">Movement</a>
-          <a href="#footage">Technology</a>
-        </nav>
-
-        <div class="header-cta">
-          <a class="btn btn-ghost upload-memory-trigger" href="#upload-memory">Upload a memory</a>
-          <a class="btn btn-primary" href="demo-game/index.html">Play now</a>
-        </div>
+    <header class="site-nav">
+      <a class="brand" href="#home" aria-label="preservemy.world home">
+        <span class="brand-mark"><img src="assets/preservethe-world-logo.png" alt="" /></span>
+        <span>
+          <span class="brand-name">preserve <em>my</em> world</span>
+          <span class="brand-sub">Walkable memory - heritage at risk</span>
+        </span>
+      </a>
+      <nav class="nav-links" aria-label="Primary">
+        <a href="#worlds">Worlds</a>
+        <a href="#latest">In action</a>
+        <a href="#how">How it works</a>
+        <a href="#capabilities">Capabilities</a>
+        <a href="#stories">Stories</a>
+      </nav>
+      <div class="nav-actions">
+        <a class="btn is-ghost" href="#crisp">Play now</a>
+        <button class="btn upload-trigger" type="button">Upload a memory</button>
       </div>
     </header>
 
     <main>
-      <section class="hero" id="home">
-        <video
-          id="heroVideo"
-          autoplay
-          muted
-          loop
-          playsinline
-          preload="auto"
-          poster="assets/lost-relic-poster.jpg"
-          src="assets/lost-relic-hero-loop.mp4"
-        ></video>
-
-        <div class="container hero-inner">
-          <div class="hero-copy">
-            <h1>Walk through what mattered.</h1>
-            <p>Send us a video. We turn it into a 3D memory.</p>
-            <div class="hero-actions">
-              <a class="btn btn-primary" href="demo-game/index.html">Play now</a>
-              <a class="hero-link upload-memory-trigger" href="#upload-memory">Upload a memory</a>
-            </div>
+      <section class="hero-door" id="home" data-theme="dark" aria-label="Opening story">
+        <div class="hero-door__sticky">
+          <div class="hero-door__bg" aria-hidden="true">
+            <div class="tnl-door"><div id="tnlDoorPlayer"></div></div>
           </div>
+          <div class="hero-door__hint">Scroll to open - keep scrolling to enter</div>
+          <div class="hero-door__fade" id="doorFade"></div>
         </div>
-
-        <div class="hero-controls">
-          <span>Memory capture</span>
-          <button class="play is-playing" type="button" aria-label="Pause hero video" aria-pressed="true">
-            <svg class="play-icon" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M8 5v14l11-7z"></path>
-            </svg>
-            <svg class="pause-icon" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M7 5h4v14H7zM13 5h4v14h-4z"></path>
-            </svg>
-          </button>
+        <div class="hero-door__track">
+          <article class="hero-door-panel">
+            <div class="hero-copy">
+              <h1><span>Discover</span><span>the places</span><span>we're trying</span><span>to <em>keep</em>.</span></h1>
+              <p>Walk through a community-built archive of heritage sites, streets, classrooms, homes, and travel memories captured with ordinary phones.</p>
+              <div class="hero-actions">
+                <a class="btn is-ghost" href="#worlds">Start exploring</a>
+                <button class="btn upload-trigger" type="button">Upload a memory</button>
+              </div>
+            </div>
+          </article>
+          <article class="hero-door-panel is-long">
+            <div class="hero-copy">
+              <div class="eyebrow">001 - living archive</div>
+              <h2>A window into places that <em>change fast</em>.</h2>
+              <p>Every upload becomes a timestamped world: a courtyard before repair, a family room before a move, a mountain path before another season changes it.</p>
+            </div>
+          </article>
+          <article class="hero-door-panel is-final">
+            <div class="hero-copy">
+              <div class="eyebrow">002 - made by everyone</div>
+              <h2>Not just saved. <em>Entered</em>.</h2>
+              <p>Photos tell people a place existed. Walkable worlds let them feel where the doorway was, how the light moved, and what deserved to be remembered.</p>
+            </div>
+          </article>
+          <div class="hero-card">
+            <a href="#latest">
+              <img src="assets/worlds/world-03.jpg" alt="" />
+              <div>
+                <strong>New archive drop</strong>
+                <span>Phone footage to walkable world</span>
+              </div>
+            </a>
+          </div>
         </div>
       </section>
 
-      <div class="stats-wrap">
-        <div class="container">
-          <div class="stats" aria-label="Preservation access points">
-            <div class="stat">
-              <div class="stat-num">Video</div>
-              <div class="stat-label">Start with footage you already have</div>
-            </div>
-            <div class="stat">
-              <div class="stat-num">3D</div>
-              <div class="stat-label">Turn places into walkable worlds</div>
-            </div>
-            <div class="stat">
-              <div class="stat-num">Free</div>
-              <div class="stat-label">No money or equipment required</div>
-            </div>
-            <div class="stat">
-              <div class="stat-num">Spatial AI</div>
-              <div class="stat-label">Video becomes an explorable world</div>
-            </div>
-          </div>
+      <div class="ticker" aria-hidden="true">
+        <div class="ticker-track">
+          <span>Lahore - <em>Old streets</em></span>
+          <span>Classrooms - <em>Family rooms</em></span>
+          <span>Shrines - <em>Markets</em></span>
+          <span>Glaciers - <em>Courtyards</em></span>
+          <span>Lahore - <em>Old streets</em></span>
+          <span>Classrooms - <em>Family rooms</em></span>
+          <span>Shrines - <em>Markets</em></span>
+          <span>Glaciers - <em>Courtyards</em></span>
         </div>
       </div>
 
-      <section class="mission" id="mission">
-        <div class="mission-grid">
-          <div class="mission-text">
-            <div class="mission-text-inner">
-              <span class="editorial-label">How it works</span>
-              <h2>Record a place. We make it walkable.</h2>
-              <p>Send a video from a phone, camera, or archive. Our Spatial AI pipeline turns it into a world that can be explored like a memory you can step inside.</p>
-              <p>You do not need money. You do not need special equipment. If you have footage of a meaningful place, you can help preserve it.</p>
-              <div class="section-actions">
-                <a class="btn btn-primary" href="demo-game/index.html">Play now</a>
-                <a class="text-link upload-memory-trigger" href="#upload-memory">Upload a memory</a>
-              </div>
-            </div>
-          </div>
-          <div class="mission-media">
-            <video class="lazy-video" muted loop playsinline preload="auto" poster="assets/lost-relic-meadows-poster.jpg" data-src="assets/lost-relic-meadows-feed.mp4"></video>
-            <div class="mission-media-caption">
-              <span class="chapter-tag">Simple footage</span>
-              <span>Walkable 3D memory</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="programs" id="programs">
-        <div class="container">
+      <section id="worlds">
+        <div class="u-container">
           <div class="section-head">
-            <span class="eyebrow">What people can preserve</span>
-            <h2>A 3D archive of real places, built by everyone.</h2>
-            <p>preservemy.world is for culture, family memory, education, travel, and emergency documentation. A place does not need to be famous to be worth saving.</p>
-            <div class="section-actions">
-              <a class="btn btn-primary" href="demo-game/index.html">Play now</a>
-              <a class="text-link upload-memory-trigger" href="#upload-memory">Upload a memory</a>
+            <div>
+              <div class="eyebrow">Worlds</div>
+              <h2>Places worth walking back into.</h2>
             </div>
+            <p>Preservation should not only belong to famous monuments. A lane, a room, a small school, or a travel memory can become part of the archive.</p>
           </div>
-
-          <div class="program-grid">
-            <article class="program">
-              <span class="program-number">01</span>
-              <h3>Cultural heritage</h3>
-              <p>Mosques, shrines, temples, churches, forts, museums, old streets, historical buildings, and everyday spaces that carry identity.</p>
-            </article>
-            <article class="program">
-              <span class="program-number">02</span>
-              <h3>Personal memories</h3>
-              <p>Childhood homes, family rooms, grandparents' spaces, schools, favorite cafes, wedding venues, pet memories, and places that shaped us.</p>
-            </article>
-            <article class="program">
-              <span class="program-number">03</span>
-              <h3>Education and play</h3>
-              <p>Students can explore real places instead of only reading about them, and young people can walk through preserved worlds with friends.</p>
-            </article>
+          <div class="world-grid">
+            <figure class="world-card"><video src="assets/worlds/world-01.mp4" poster="assets/worlds/world-01.jpg" muted loop playsinline preload="metadata"></video><figcaption><strong>Courtyard light</strong><span>Heritage - 3D capture</span></figcaption></figure>
+            <figure class="world-card"><video src="assets/worlds/world-03.mp4" poster="assets/worlds/world-03.jpg" muted loop playsinline preload="metadata"></video><figcaption><strong>Sacred geometry</strong><span>Archive sample</span></figcaption></figure>
+            <figure class="world-card"><img src="assets/worlds/world-08.jpg" alt="" /><figcaption><strong>Street memory</strong><span>Community record</span></figcaption></figure>
+            <figure class="world-card"><video src="assets/worlds/world-05.mp4" poster="assets/worlds/world-05.jpg" muted loop playsinline preload="metadata"></video><figcaption><strong>Mountain baseline</strong><span>Climate timestamp</span></figcaption></figure>
+            <figure class="world-card"><video src="assets/worlds/world-07.mp4" poster="assets/worlds/world-07.jpg" muted loop playsinline preload="metadata"></video><figcaption><strong>Room before moving</strong><span>Family memory</span></figcaption></figure>
+            <figure class="world-card"><img src="assets/worlds/world-09.jpg" alt="" /><figcaption><strong>School hall</strong><span>Education copy</span></figcaption></figure>
           </div>
         </div>
       </section>
 
-      <section id="report">
-        <div class="report-grid">
-          <div class="report-media">
-            <video autoplay muted loop playsinline preload="auto" poster="assets/lost-relic-mountain-poster.jpg" src="assets/lost-relic-mountain-feed.mp4"></video>
-            <div class="report-media-caption">
-            <span>Why now</span>
-            <span>Experience over screenshots</span>
-            </div>
-          </div>
-          <div class="report-copy">
-            <span class="eyebrow">Why now</span>
-            <h2 class="report-title-desktop">We already record the world. Now make it walkable.</h2>
-            <h2 class="report-title-mobile">Record the world. Make it walkable.</h2>
-            <p>The world is changing faster than we can document it. Photos and long videos matter, but future generations need a way to experience places, not just look at them.</p>
-            <div class="report-list">
-              <div class="report-item">Phones are everywhere, and people already carry footage of meaningful places.</div>
-              <div class="report-item">3D reconstruction is finally becoming accessible to schools, communities, and families.</div>
-              <div class="report-item">The next generation expects interactive archives, not static folders.</div>
-            </div>
+      <section class="latest" id="latest">
+        <div class="u-container latest-row">
+          <div class="latest-media"><video src="assets/lost-relic-hero-loop.mp4" poster="assets/lost-relic-poster.jpg" muted loop playsinline preload="metadata"></video></div>
+          <div class="latest-copy">
+            <div class="eyebrow">In action</div>
+            <h2>From rough footage to a place you can revisit.</h2>
+            <p>The prototype turns a simple source video into a reconstructed scene that can be explored, taught from, shared, and extended by communities.</p>
+            <div class="hero-actions"><a class="btn" href="#crisp">Play the archive</a><a class="btn is-ghost" href="#how">See the process</a></div>
           </div>
         </div>
       </section>
 
-      <section class="timeline" id="timeline">
-        <div class="container">
+      <section class="bold-brand" id="boldBrand">
+        <div class="bold-brand__inner">
+          <p class="bold-brand__label">Bold brand</p>
+          <h2>Memory that <em>moves</em> - not just images that disappear.</h2>
+          <p>A nonprofit archive should not feel luxury or loud. It should feel inevitable: calm typography, deliberate motion, and evidence-first storytelling.</p>
+        </div>
+      </section>
+
+      <section class="ordinary-memory" id="ordinaryMemory">
+        <div class="ordinary-memory__media" aria-hidden="true">
+          <video src="assets/worlds/world-05.mp4" poster="assets/worlds/world-05.jpg" muted loop playsinline preload="metadata"></video>
+        </div>
+        <div class="ordinary-memory__content">
+          <p class="ordinary-memory__label">Let's make walkable memory.</p>
+          <h2>We turn ordinary <em>phone footage</em></h2>
+        </div>
+      </section>
+
+      <section class="line-moment dark" id="experiences">
+        <div class="line-moment__inner">
+          <h2 class="split-lines">Special travel experiences on a <em>next level</em> become cultural memory when people can return to them.</h2>
+        </div>
+      </section>
+
+      <section class="crisp" id="crisp">
+        <div class="crisp-slide is-active"><video src="assets/worlds/hero-01.mp4" poster="assets/worlds/hero-01.jpg" muted loop playsinline preload="metadata"></video></div>
+        <div class="crisp-slide"><video src="assets/worlds/hero-02.mp4" poster="assets/worlds/hero-02.jpg" muted loop playsinline preload="metadata"></video></div>
+        <div class="crisp-slide"><video src="assets/worlds/hero-03.mp4" poster="assets/worlds/hero-03.jpg" muted loop playsinline preload="metadata"></video></div>
+        <div class="crisp-content">
+          <div class="eyebrow">Moving worlds</div>
+          <h2>Make the internet feel less flat.</h2>
+          <p>Each world is built for scanning, teaching, remembering, and sharing. The archive can hold personal memory and public heritage in the same place.</p>
+          <div class="crisp-nav" aria-label="World preview navigation">
+            <button type="button" class="is-active" data-slide="0">01</button>
+            <button type="button" data-slide="1">02</button>
+            <button type="button" data-slide="2">03</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="line-moment" id="manifesto">
+        <div class="line-moment__inner">
+          <p class="split-lines">The world is changing faster than we can document it. We already record the world with our phones - we just keep filing it away as <span class="crossed">screenshots</span> <em>walkable memory</em>.</p>
+        </div>
+      </section>
+
+      <section id="feed">
+        <div class="u-container">
           <div class="section-head">
-            <span class="eyebrow">Simple process</span>
-            <h2>From phone video to explorable world.</h2>
-            <p>The platform is built around a real Spatial AI flow: create a session, upload footage, track progress, and generate an explorable 3D world.</p>
-            <div class="section-actions">
-              <a class="btn btn-primary" href="demo-game/index.html">Play now</a>
-              <a class="text-link upload-memory-trigger" href="#upload-memory">Upload a memory</a>
+            <div>
+              <div class="eyebrow">Project feed</div>
+              <h2>New preservation sessions.</h2>
             </div>
+            <p>A quieter feed of places being processed, reviewed, cleaned, and prepared for public viewing.</p>
           </div>
-          <div class="timeline-grid">
-            <article class="timeline-card">
-              <span>Phase 01</span>
-              <h3>Record</h3>
-              <p>Capture or find video of a place worth remembering: a room, monument, street, school, shrine, home, or cultural site.</p>
-            </article>
-            <article class="timeline-card">
-              <span>Phase 02</span>
-              <h3>Upload</h3>
-              <p>Send the footage to preservemy.world. The upload starts a 3D preservation session.</p>
-            </article>
-            <article class="timeline-card">
-              <span>Phase 03</span>
-              <h3>Process</h3>
-              <p>The Spatial AI pipeline tracks progress and turns the video into a photorealistic place you can explore.</p>
-            </article>
-            <article class="timeline-card">
-              <span>Phase 04</span>
-              <h3>Explore</h3>
-              <p>The result becomes a walkable 3D world that can be viewed, shared, downloaded, and remembered.</p>
-            </article>
+          <div class="project-feed">
+            <article class="project"><div class="project-media"><video src="assets/lost-relic-wadi-rum-feed.mp4" poster="assets/lost-relic-wadi-rum-poster.jpg" muted loop playsinline preload="metadata"></video></div><h3>Desert archive</h3><p>Video fragments stitched into a navigable memory of a vanishing route.</p></article>
+            <article class="project"><div class="project-media"><video src="assets/lost-relic-meadows-feed.mp4" poster="assets/lost-relic-meadows-poster.jpg" muted loop playsinline preload="metadata"></video></div><h3>Meadow baseline</h3><p>A seasonal landscape preserved as a visual record for future comparison.</p></article>
+            <article class="project"><div class="project-media"><video src="assets/lost-relic-mountain-feed.mp4" poster="assets/lost-relic-mountain-poster.jpg" muted loop playsinline preload="metadata"></video></div><h3>Mountain pass</h3><p>A travel memory rebuilt as a world that can be revisited after the trip ends.</p></article>
           </div>
         </div>
       </section>
 
-      <section class="footage" id="footage">
-        <div class="container">
-          <div class="footage-head">
-            <span class="eyebrow">Community-led preservation</span>
-            <h2>This is a movement, not a database.</h2>
-            <p>Students, schools, universities, NGOs, museums, local historians, travel creators, cultural organizations, and families can all help build a global memory map.</p>
-            <p>Behind the scenes, Spatial AI turns footage into lightweight, photorealistic worlds that can be viewed, shared, and explored.</p>
-            <div class="section-actions">
-              <a class="btn btn-primary" href="demo-game/index.html">Play now</a>
-              <a class="text-link upload-memory-trigger" href="#upload-memory">Upload a memory</a>
+      <section class="capabilities" id="capabilities">
+        <div class="u-container">
+          <div class="section-head">
+            <div>
+              <div class="eyebrow">Capabilities</div>
+              <h2>For people, schools, museums, and NGOs.</h2>
             </div>
+            <p>The system is meant to grow from small memories to public preservation programs without losing the human reason the place mattered.</p>
           </div>
-        </div>
-        <div class="footage-frame">
-          <video class="lazy-video" muted loop playsinline preload="auto" poster="assets/lost-relic-wadi-rum-poster.jpg" data-src="assets/lost-relic-wadi-rum-feed.mp4"></video>
-          <div class="footage-caption">
-            <span class="chapter-tag">Community footage</span>
-            <span>Shared preservation map</span>
+          <div class="cap-grid">
+            <article class="cap"><span>01</span><h3>Phone footage intake</h3><p>Clear capture instructions and upload flow for ordinary videos.</p></article>
+            <article class="cap"><span>02</span><h3>Spatial reconstruction</h3><p>Frame extraction, 3D processing, cleanup, and preview generation.</p></article>
+            <article class="cap"><span>03</span><h3>Archive pages</h3><p>Public stories with place context, contributors, date, and memory notes.</p></article>
+            <article class="cap"><span>04</span><h3>Education copies</h3><p>Lightweight views for classrooms, cultural groups, and partners.</p></article>
           </div>
         </div>
       </section>
 
-      <section class="cta" id="support">
-        <div class="container cta-inner">
+      <section id="how">
+        <div class="u-container how-grid">
           <div>
-            <span class="eyebrow">Preserve your world</span>
-            <h2>Have a video of a place worth remembering?</h2>
-            <p>A memory on your phone could become a world someone walks through years from now. Send us footage, nominate a place, become a student ambassador, or partner with the preservation map.</p>
+            <div class="eyebrow">How it works</div>
+            <div class="section-head" style="display:block;margin:0">
+              <h2>Capture, process, preserve.</h2>
+              <p style="margin-top:24px">The workflow is simple on purpose. People should not need expensive scanning gear to keep a meaningful place alive.</p>
+            </div>
           </div>
-          <div class="section-actions">
-            <a class="btn btn-light" href="demo-game/index.html">Play now</a>
-            <a class="btn btn-outline-light upload-memory-trigger" href="#upload-memory">Upload a memory</a>
+          <div class="steps">
+            <article class="step"><span>001</span><div><h3>Record the place</h3><p>Walk slowly through the space with a phone, capturing corners, surfaces, openings, and details.</p></div></article>
+            <article class="step"><span>002</span><div><h3>Upload the footage</h3><p>Add the place name, memory note, and whether the world should be private, school-only, or public.</p></div></article>
+            <article class="step"><span>003</span><div><h3>Generate the world</h3><p>The system prepares frames, reconstructs the scene, and creates a preview for review.</p></div></article>
+            <article class="step"><span>004</span><div><h3>Share the memory</h3><p>The finished archive page can be sent to family, students, museums, or preservation partners.</p></div></article>
+          </div>
+        </div>
+      </section>
+
+      <section class="stories" id="stories">
+        <div class="u-container">
+          <div class="section-head">
+            <div>
+              <div class="eyebrow">Stories</div>
+              <h2>What belongs in the archive?</h2>
+            </div>
+            <p>The answer is broad: anything people will wish they could step back into later.</p>
+          </div>
+          <div class="story-grid">
+            <article class="story"><p>"My grandparents' room before we packed it away."</p><span>Family memory</span></article>
+            <article class="story"><p>"A shrine courtyard students can visit from another country."</p><span>Heritage education</span></article>
+            <article class="story"><p>"A market street before another building replaces it."</p><span>Community record</span></article>
+          </div>
+        </div>
+      </section>
+
+      <section class="cta" id="submit">
+        <div class="u-container cta-inner">
+          <div>
+            <div class="eyebrow">Submit a memory</div>
+            <h2>Send us a place worth remembering.</h2>
+          </div>
+          <div>
+            <p>Start with a video. We will turn the best submissions into prototype worlds and help shape the archive around the stories behind them.</p>
+            <div class="hero-actions"><button class="btn upload-trigger" type="button">Upload a memory</button><a class="btn is-ghost" href="https://www.instagram.com/preservemy.world/" target="_blank" rel="noopener">Instagram</a></div>
           </div>
         </div>
       </section>
     </main>
 
     <footer class="footer">
-      <div class="container">
-        <span>preservemy.world</span>
-        <span>The future deserves more than screenshots.</span>
+      <div class="footer-grid">
+        <h2>preserve <em>my world</em></h2>
+        <nav class="footer-links" aria-label="Footer">
+          <a href="#worlds">Worlds</a>
+          <a href="#how">How it works</a>
+          <a href="#capabilities">Capabilities</a>
+          <a href="#submit">Submit</a>
+        </nav>
       </div>
+      <div class="footer-small">preservemy.world - walkable memory, heritage at risk - prototype landing page</div>
     </footer>
 
-    <div class="contact-modal" id="uploadMemoryModal" role="dialog" aria-modal="true" aria-labelledby="uploadMemoryTitle" aria-hidden="true">
-      <div class="contact-dialog">
-        <button class="contact-close" type="button" aria-label="Close upload contact options">&times;</button>
-        <div class="contact-body">
-          <h2 id="uploadMemoryTitle">Approach us before sending footage.</h2>
-          <p>Storage and processing resources are limited right now, so coordinate with our team first. We will guide you on what to record, how to send it, and what happens next.</p>
-          <div class="contact-links" aria-label="Contact options">
-            <a class="contact-link" href="https://wa.me/14254729807?text=Hi%2C%20I%E2%80%99m%20interested%20in%20getting%20my%203D%20scene%20created.%20I%20understand%20storage%20resources%20are%20limited%2C%20so%20I%E2%80%99ll%20coordinate%20with%20your%20representative%20before%20sending%20any%20videos.%20Please%20guide%20me%20on%20the%20next%20steps." target="_blank" rel="noopener">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M20.52 3.48A11.82 11.82 0 0 0 12.1 0C5.54 0 .2 5.34.2 11.9c0 2.1.55 4.15 1.6 5.96L0 24l6.3-1.65a11.9 11.9 0 0 0 5.8 1.48h.01c6.56 0 11.9-5.34 11.9-11.9 0-3.18-1.24-6.16-3.49-8.45ZM12.1 21.82a9.86 9.86 0 0 1-5.03-1.38l-.36-.21-3.74.98 1-3.64-.24-.37a9.84 9.84 0 0 1-1.51-5.3c0-5.45 4.43-9.88 9.88-9.88 2.64 0 5.12 1.03 6.99 2.9a9.82 9.82 0 0 1 2.9 7c0 5.45-4.44 9.9-9.89 9.9Zm5.42-7.4c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.17-.17.2-.35.22-.64.07-.3-.15-1.25-.46-2.38-1.47a8.9 8.9 0 0 1-1.64-2.04c-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.07-.15-.67-1.61-.92-2.2-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.22 3.08c.15.2 2.1 3.2 5.08 4.49.71.31 1.27.49 1.7.63.71.23 1.36.2 1.88.12.57-.09 1.76-.72 2-1.42.25-.69.25-1.28.17-1.41-.07-.12-.27-.2-.57-.35Z"/>
-              </svg>
-              WhatsApp
-            </a>
-            <a class="contact-link" href="https://www.instagram.com/preservemy.world/" target="_blank" rel="noopener">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M7.8 2h8.4A5.8 5.8 0 0 1 22 7.8v8.4a5.8 5.8 0 0 1-5.8 5.8H7.8A5.8 5.8 0 0 1 2 16.2V7.8A5.8 5.8 0 0 1 7.8 2Zm0 2A3.8 3.8 0 0 0 4 7.8v8.4A3.8 3.8 0 0 0 7.8 20h8.4a3.8 3.8 0 0 0 3.8-3.8V7.8A3.8 3.8 0 0 0 16.2 4H7.8Zm8.7 1.55a1.35 1.35 0 1 1 0 2.7 1.35 1.35 0 0 1 0-2.7ZM12 7.15A4.85 4.85 0 1 1 12 16.85 4.85 4.85 0 0 1 12 7.15Zm0 2A2.85 2.85 0 1 0 12 14.85 2.85 2.85 0 0 0 12 9.15Z"/>
-              </svg>
-              Instagram
-            </a>
-            <a class="contact-link" href="https://www.linkedin.com/company/techrealm" target="_blank" rel="noopener">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M20.45 20.45h-3.56v-5.58c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.95v5.67H9.34V9h3.42v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.61 0 4.27 2.37 4.27 5.46v6.28ZM5.32 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12Zm1.78 13.02H3.53V9H7.1v11.45ZM22.23 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.46c.98 0 1.77-.77 1.77-1.72V1.72C24 .77 23.21 0 22.23 0Z"/>
-              </svg>
-              LinkedIn
-            </a>
-          </div>
-          <div class="contact-note">Please do not send large videos until a representative confirms the next steps.</div>
+    <div class="modal" id="uploadModal" aria-hidden="true">
+      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="uploadTitle">
+        <h2 id="uploadTitle">Upload a memory</h2>
+        <p>Send a short video of a place worth preserving. Include the place name, why it matters, and whether it can be public.</p>
+        <div class="modal-row">
+          <a class="btn" href="mailto:hello@preservemy.world?subject=Memory%20submission">Email footage</a>
+          <button class="btn is-ghost" id="closeModal" type="button">Close</button>
         </div>
       </div>
     </div>
 
-    <script>
-      const video = document.querySelector("#heroVideo");
-      const playButton = document.querySelector(".play");
-      const loader = document.querySelector(".loader");
-      const loaderBar = document.querySelector(".loader-bar");
-      let hasFinishedLoading = false;
-      const lazyVideos = document.querySelectorAll(".lazy-video");
-      const pageVideos = Array.from(document.querySelectorAll("video"));
-      const videoChapters = document.querySelectorAll(".hero, .mission-media, #report, .footage-frame");
-      const uploadMemoryModal = document.querySelector("#uploadMemoryModal");
-      const uploadMemoryTriggers = document.querySelectorAll(".upload-memory-trigger");
-      const uploadMemoryClose = uploadMemoryModal.querySelector(".contact-close");
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lenis@1.2.3/dist/lenis.min.js"></script>
+    <script type="module">
+      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const body = document.body;
+      const loader = document.getElementById("loader");
+      const loaderBar = document.getElementById("loaderBar");
+      const hero = document.querySelector(".hero-door");
+      const doorMount = document.getElementById("tnlDoorPlayer");
+      const doorFade = document.getElementById("doorFade");
+      const clamp01 = (n) => Math.max(0, Math.min(1, n));
+      const smooth = (t) => t * t * (3 - 2 * t);
 
-      const openUploadMemoryModal = () => {
-        uploadMemoryModal.classList.add("is-open");
-        uploadMemoryModal.setAttribute("aria-hidden", "false");
-        document.body.classList.add("modal-open");
-        uploadMemoryClose.focus();
-      };
-
-      const closeUploadMemoryModal = () => {
-        uploadMemoryModal.classList.remove("is-open");
-        uploadMemoryModal.setAttribute("aria-hidden", "true");
-        document.body.classList.remove("modal-open");
-      };
-
-      uploadMemoryTriggers.forEach((trigger) => {
-        trigger.addEventListener("click", (event) => {
-          event.preventDefault();
-          openUploadMemoryModal();
+      let lenis = null;
+      if (window.Lenis && !reduceMotion) {
+        lenis = new Lenis({
+          duration: 1.15,
+          easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+          smoothWheel: true,
+          smoothTouch: false,
+          wheelMultiplier: 0.9
         });
-      });
-
-      uploadMemoryClose.addEventListener("click", closeUploadMemoryModal);
-
-      uploadMemoryModal.addEventListener("click", (event) => {
-        if (event.target === uploadMemoryModal) {
-          closeUploadMemoryModal();
-        }
-      });
-
-      document.addEventListener("keydown", (event) => {
-        if (event.key === "Escape" && uploadMemoryModal.classList.contains("is-open")) {
-          closeUploadMemoryModal();
-        }
-      });
-
-      const updateHeader = () => {
-        const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
-        const isOverVideo = Array.from(videoChapters).some((chapter) => {
-          const rect = chapter.getBoundingClientRect();
-          const visible = Math.min(rect.bottom, viewportHeight) - Math.max(rect.top, 0);
-          const ratio = visible / Math.min(rect.height, viewportHeight);
-          return visible > 0 && ratio >= 0.42;
-        });
-
-        document.body.classList.toggle("has-scrolled", window.scrollY > 24);
-        document.body.classList.toggle("is-over-video", isOverVideo);
-      };
-
-      updateHeader();
-      window.addEventListener("scroll", updateHeader, { passive: true });
-      window.addEventListener("resize", updateHeader);
-
-      const activateLazyVideo = (lazyVideo) => {
-        if (!lazyVideo.src && lazyVideo.dataset.src) {
-          lazyVideo.src = lazyVideo.dataset.src;
-          lazyVideo.load();
-        }
-
-        if (!lazyVideo.src) {
-          return;
-        }
-
-        lazyVideo.play().catch(() => {});
-      };
-
-      if ("IntersectionObserver" in window) {
-        const lazyObserver = new IntersectionObserver(
-          (entries) => {
-            entries.forEach((entry) => {
-              if (entry.isIntersecting) {
-                activateLazyVideo(entry.target);
-                lazyObserver.unobserve(entry.target);
-              }
-            });
-          },
-          { rootMargin: "240px 0px" }
-        );
-
-        lazyVideos.forEach((lazyVideo) => lazyObserver.observe(lazyVideo));
-      } else {
-        lazyVideos.forEach(activateLazyVideo);
+        const raf = (time) => {
+          lenis.raf(time);
+          requestAnimationFrame(raf);
+        };
+        requestAnimationFrame(raf);
       }
 
-      const prepareVideo = (targetVideo) => new Promise((resolve) => {
-        if (!targetVideo.src && targetVideo.dataset.src) {
-          targetVideo.src = targetVideo.dataset.src;
+      const loaderCount = document.getElementById("loaderCount");
+      const loaderLabel = document.getElementById("loaderLabel");
+      const TOTAL_FRAMES = 287;
+      const FRAME_PATH = (i) => `assets/door-lottie/images/image_${i}.webp`;
+      const MODE_STORAGE_KEY = "pmw-mode";
+      const TOAST_DISMISS_KEY = "pmw-toast-dismissed";
+
+      const search = new URLSearchParams(window.location.search);
+      const storedMode = (() => {
+        try { return localStorage.getItem(MODE_STORAGE_KEY); } catch { return null; }
+      })();
+      const explicitMode = search.get("mode") || storedMode;
+
+      const detectOldDevice = () => {
+        if (explicitMode === "lite") return true;
+        if (explicitMode === "full") return false;
+        if (reduceMotion) return true;
+        const nav = window.navigator || {};
+        if (nav.deviceMemory && nav.deviceMemory < 4) return true;
+        if (nav.hardwareConcurrency && nav.hardwareConcurrency < 4) return true;
+        const conn = nav.connection || nav.mozConnection || nav.webkitConnection;
+        if (conn) {
+          if (conn.saveData) return true;
+          if (["slow-2g", "2g", "3g"].includes(conn.effectiveType)) return true;
         }
+        const ua = nav.userAgent || "";
+        const iOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+        if (iOS) {
+          const match = ua.match(/OS (\d+)_/);
+          const major = match ? parseInt(match[1], 10) : 0;
+          if (major && major < 14) return true;
+        }
+        if (/Android\s([1-7])\./.test(ua)) return true;
+        if (window.innerWidth <= 380 && window.devicePixelRatio <= 2 && !nav.deviceMemory) {
+          return true;
+        }
+        return false;
+      };
 
-        targetVideo.preload = "auto";
+      const liteMode = detectOldDevice();
+      if (liteMode) body.classList.add("lite-mode");
 
-        if (targetVideo.readyState >= 3) {
-          resolve(targetVideo);
+      let loaderDone = false;
+      const finishLoader = () => {
+        if (loaderDone) return;
+        loaderDone = true;
+        loaderBar.style.setProperty("--p", "100%");
+        setTimeout(() => {
+          body.classList.remove("is-loading");
+          loader.classList.add("is-hidden");
+          showLiteToast();
+        }, 240);
+      };
+
+      let doorAnim = null;
+      let doorReady = false;
+      let pendingDoor = 0;
+      const scrubDoor = (p) => {
+        pendingDoor = p;
+        if (liteMode || !doorAnim || !doorReady) return;
+        const frame = smooth(p) * Math.max(0, (doorAnim.totalFrames || 1) - 1);
+        doorAnim.goToAndStop(frame, true);
+      };
+
+      const initLottie = () => {
+        if (!window.lottie || !doorMount) {
+          finishLoader();
           return;
         }
+        doorAnim = window.lottie.loadAnimation({
+          container: doorMount,
+          renderer: "canvas",
+          loop: false,
+          autoplay: false,
+          path: "assets/door-lottie/data.json",
+          rendererSettings: {
+            clearCanvas: true,
+            progressiveLoad: false,
+            preserveAspectRatio: "xMidYMid slice"
+          }
+        });
+        doorAnim.addEventListener("DOMLoaded", () => {
+          doorReady = true;
+          scrubDoor(pendingDoor);
+          finishLoader();
+        });
+        doorAnim.addEventListener("data_failed", finishLoader);
+      };
 
-        const done = () => {
-          targetVideo.removeEventListener("canplay", done);
-          targetVideo.removeEventListener("loadeddata", done);
-          targetVideo.removeEventListener("error", done);
-          resolve(targetVideo);
+      const preloadFrames = async () => {
+        let loaded = 0;
+        const setProgress = () => {
+          const ratio = loaded / TOTAL_FRAMES;
+          loaderBar.style.setProperty("--p", `${Math.max(4, Math.round(ratio * 92))}%`);
+          if (loaderCount) loaderCount.textContent = `${loaded} / ${TOTAL_FRAMES}`;
         };
+        setProgress();
 
-        targetVideo.addEventListener("canplay", done, { once: true });
-        targetVideo.addEventListener("loadeddata", done, { once: true });
-        targetVideo.addEventListener("error", done, { once: true });
-        targetVideo.load();
-        window.setTimeout(done, 6500);
-      });
-
-      const setLoadProgress = () => {
-        const progressItems = pageVideos.map((targetVideo) => {
-          if (targetVideo.readyState >= 3) {
-            return 1;
-          }
-
-          if (!targetVideo.duration || !targetVideo.buffered.length) {
-            return targetVideo.readyState >= 2 ? 0.55 : 0.18;
-          }
-
-          const bufferedEnd = targetVideo.buffered.end(targetVideo.buffered.length - 1);
-          return Math.min(bufferedEnd / targetVideo.duration, 1);
+        const loadOne = (i) => new Promise((resolve) => {
+          const img = new Image();
+          const done = () => {
+            loaded += 1;
+            setProgress();
+            resolve();
+          };
+          img.onload = done;
+          img.onerror = done;
+          img.decoding = "async";
+          img.src = FRAME_PATH(i);
         });
 
-        const progress = progressItems.reduce((sum, item) => sum + item, 0) / Math.max(progressItems.length, 1);
-        loaderBar.style.width = `${Math.min(progress * 100, 98)}%`;
+        const concurrency = 6;
+        const queue = Array.from({ length: TOTAL_FRAMES }, (_, i) => i);
+        const workers = Array.from({ length: concurrency }, async () => {
+          while (queue.length) {
+            const next = queue.shift();
+            if (next === undefined) return;
+            await loadOne(next);
+          }
+        });
+        await Promise.all(workers);
+        if (loaderLabel) loaderLabel.textContent = "Building scene";
       };
 
-      const finishLoading = async () => {
-        if (hasFinishedLoading) {
-          return;
-        }
-
-        hasFinishedLoading = true;
-        loaderBar.style.width = "100%";
-        document.body.classList.remove("is-loading");
-        loader.classList.add("is-hidden");
-
-        try {
-          await video.play();
-        } catch {
-          playButton.classList.remove("is-playing");
-          playButton.setAttribute("aria-pressed", "false");
-          playButton.setAttribute("aria-label", "Play hero video");
-        }
+      const loaderEscape = document.getElementById("loaderEscape");
+      const loaderEscapeBtn = document.getElementById("loaderEscapeBtn");
+      const offerLiteFromLoader = () => {
+        if (!loaderEscape || loaderDone) return;
+        loaderEscape.classList.add("is-visible");
+        loaderEscape.setAttribute("aria-hidden", "false");
       };
+      if (loaderEscapeBtn) {
+        loaderEscapeBtn.addEventListener("click", () => {
+          try { localStorage.setItem(MODE_STORAGE_KEY, "lite"); } catch {}
+          window.location.reload();
+        });
+      }
 
-      video.addEventListener("progress", setLoadProgress);
-      video.addEventListener("loadedmetadata", setLoadProgress);
-      pageVideos.forEach((targetVideo) => {
-        targetVideo.addEventListener("progress", setLoadProgress);
-        targetVideo.addEventListener("loadeddata", setLoadProgress);
-        targetVideo.addEventListener("canplay", setLoadProgress);
-      });
-      Promise.allSettled(pageVideos.map(prepareVideo)).then(finishLoading);
+      if (liteMode) {
+        if (loaderLabel) loaderLabel.textContent = "Lite mode";
+        if (loaderCount) loaderCount.textContent = "ready";
+        loaderBar.style.setProperty("--p", "100%");
+        setTimeout(finishLoader, 360);
+      } else {
+        const escapeTimer = setTimeout(offerLiteFromLoader, 3000);
+        const fallbackTimer = setTimeout(finishLoader, 28000);
+        preloadFrames()
+          .then(() => initLottie())
+          .catch(() => finishLoader())
+          .finally(() => {
+            clearTimeout(fallbackTimer);
+            clearTimeout(escapeTimer);
+          });
+      }
 
-      window.setTimeout(() => {
-        finishLoading();
-      }, 9000);
-
-      playButton.addEventListener("click", async () => {
-        if (video.paused) {
-          await video.play();
+      const toast = document.getElementById("liteToast");
+      const toastText = document.getElementById("liteToastText");
+      const toastAction = document.getElementById("liteToastAction");
+      const toastClose = document.getElementById("liteToastClose");
+      let toastHideTimer = null;
+      const dismissToast = () => {
+        if (!toast) return;
+        toast.classList.remove("is-visible");
+        clearTimeout(toastHideTimer);
+        setTimeout(() => { toast.hidden = true; }, 320);
+      };
+      const switchMode = (target) => {
+        try { localStorage.setItem(MODE_STORAGE_KEY, target); } catch {}
+        window.location.reload();
+      };
+      function showLiteToast() {
+        if (!toast) return;
+        let dismissed = false;
+        try { dismissed = localStorage.getItem(TOAST_DISMISS_KEY) === "1"; } catch {}
+        if (dismissed && explicitMode) return;
+        if (liteMode) {
+          toastText.textContent = "Lite mode is on for older devices.";
+          toastAction.textContent = "Try full";
+          toastAction.onclick = () => switchMode("full");
         } else {
-          video.pause();
+          toastText.textContent = "Animations choppy? Switch to lite mode.";
+          toastAction.textContent = "Use lite";
+          toastAction.onclick = () => switchMode("lite");
         }
+        toastClose.onclick = () => {
+          try { localStorage.setItem(TOAST_DISMISS_KEY, "1"); } catch {}
+          dismissToast();
+        };
+        toast.hidden = false;
+        requestAnimationFrame(() => toast.classList.add("is-visible"));
+        toastHideTimer = setTimeout(dismissToast, 5200);
+      }
 
-        const isPlaying = !video.paused;
-        playButton.classList.toggle("is-playing", isPlaying);
-        playButton.setAttribute("aria-pressed", String(isPlaying));
-        playButton.setAttribute("aria-label", isPlaying ? "Pause hero video" : "Play hero video");
+      const updateHero = () => {
+        if (!hero) return;
+        const r = hero.getBoundingClientRect();
+        const total = Math.max(1, hero.offsetHeight - window.innerHeight);
+        const p = clamp01(-r.top / total);
+        hero.style.setProperty("--door-p", p.toFixed(4));
+        scrubDoor(clamp01((p - 0.02) / 0.92));
+      };
+      window.addEventListener("scroll", updateHero, { passive: true });
+      window.addEventListener("resize", updateHero);
+      lenis?.on("scroll", updateHero);
+      updateHero();
+
+      const videos = document.querySelectorAll("video");
+      const videoObserver = "IntersectionObserver" in window ? new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          const v = entry.target;
+          if (entry.isIntersecting) v.play().catch(() => {});
+          else v.pause();
+        });
+      }, { rootMargin: "160px 0px" }) : null;
+      videos.forEach((video) => {
+        video.muted = true;
+        video.playsInline = true;
+        if (videoObserver) videoObserver.observe(video);
+        else video.play().catch(() => {});
+      });
+
+      const themeSections = document.querySelectorAll("[data-theme], .line-moment, section:not(.hero-door), footer");
+      const themeObserver = "IntersectionObserver" in window ? new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          const dark = entry.target.matches(".hero-door, .dark, .ordinary-memory, .capabilities, .crisp, .footer, .cta");
+          body.classList.toggle("on-light", !dark);
+        });
+      }, { threshold: 0.18 }) : null;
+      themeSections.forEach((section) => themeObserver?.observe(section));
+
+      const slides = Array.from(document.querySelectorAll(".crisp-slide"));
+      const slideButtons = Array.from(document.querySelectorAll(".crisp-nav button"));
+      let activeSlide = 0;
+      const setSlide = (idx) => {
+        activeSlide = (idx + slides.length) % slides.length;
+        slides.forEach((slide, i) => slide.classList.toggle("is-active", i === activeSlide));
+        slideButtons.forEach((btn, i) => btn.classList.toggle("is-active", i === activeSlide));
+      };
+      slideButtons.forEach((btn) => btn.addEventListener("click", () => setSlide(Number(btn.dataset.slide))));
+      setInterval(() => setSlide(activeSlide + 1), 6200);
+
+      const SplitType = await import("https://cdn.jsdelivr.net/npm/split-type@0.3.4/+esm").then((m) => m.default).catch(() => null);
+      if (SplitType && !reduceMotion) {
+        const splits = [];
+        document.querySelectorAll(".split-lines").forEach((el) => {
+          const split = new SplitType(el, { types: "lines, words" });
+          splits.push(split);
+          split.lines.forEach((line) => {
+            const mask = document.createElement("span");
+            mask.className = "line-mask";
+            line.appendChild(mask);
+          });
+        });
+        const updateMasks = () => {
+          document.querySelectorAll(".split-lines .line").forEach((line) => {
+            const mask = line.querySelector(".line-mask");
+            if (!mask) return;
+            const r = line.getBoundingClientRect();
+            const start = window.innerHeight * 0.9;
+            const end = window.innerHeight * 0.14;
+            const progress = clamp01((start - r.top) / Math.max(1, start - end));
+            mask.style.transform = `scaleX(${(1 - progress).toFixed(4)})`;
+          });
+        };
+        window.addEventListener("scroll", updateMasks, { passive: true });
+        window.addEventListener("resize", () => {
+          splits.forEach((split) => split.split());
+          updateMasks();
+        });
+        lenis?.on("scroll", updateMasks);
+        updateMasks();
+      }
+
+      const modal = document.getElementById("uploadModal");
+      const openModal = () => {
+        modal.classList.add("is-open");
+        modal.setAttribute("aria-hidden", "false");
+      };
+      const closeModal = () => {
+        modal.classList.remove("is-open");
+        modal.setAttribute("aria-hidden", "true");
+      };
+      document.querySelectorAll(".upload-trigger").forEach((button) => button.addEventListener("click", openModal));
+      document.getElementById("closeModal").addEventListener("click", closeModal);
+      modal.addEventListener("click", (event) => {
+        if (event.target === modal) closeModal();
+      });
+      window.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") closeModal();
       });
     </script>
   </body>
