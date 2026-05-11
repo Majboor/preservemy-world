@@ -1046,6 +1046,62 @@
         text-transform: uppercase;
       }
 
+      .forms {
+        background: var(--paper);
+      }
+      .forms-grid {
+        display: grid;
+        grid-template-columns: minmax(260px, 0.46fr) minmax(0, 1fr);
+        gap: 32px;
+        align-items: start;
+      }
+      .form-list {
+        display: grid;
+        gap: 1px;
+        background: var(--line-dark);
+        border: 1px solid var(--line-dark);
+      }
+      .form-option {
+        width: 100%;
+        border: 0;
+        padding: 18px;
+        background: var(--paper);
+        color: var(--ink);
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+      }
+      .form-option strong {
+        display: block;
+        font-family: var(--display);
+        font-size: 28px;
+        line-height: 0.98;
+      }
+      .form-option span {
+        display: block;
+        margin-top: 6px;
+        color: rgba(7,22,28,0.62);
+        font-family: var(--mono);
+        font-size: 12px;
+      }
+      .form-option.is-active {
+        background: var(--ink);
+        color: var(--paper);
+      }
+      .form-option.is-active span { color: rgba(255,255,255,0.64); }
+      .form-frame {
+        overflow: hidden;
+        border: 1px solid var(--line-dark);
+        border-radius: var(--radius);
+        background: var(--white);
+      }
+      .form-frame iframe {
+        width: 100%;
+        min-height: 980px;
+        border: 0;
+        display: block;
+      }
+
       .cta {
         background: var(--teal);
         color: var(--white);
@@ -1108,32 +1164,6 @@
         font-size: 12px;
       }
 
-      .modal {
-        position: fixed;
-        inset: 0;
-        z-index: 90;
-        display: none;
-        place-items: center;
-        padding: 20px;
-        background: rgba(7, 22, 28, 0.72);
-      }
-      .modal.is-open { display: grid; }
-      .modal-card {
-        width: min(560px, 100%);
-        border-radius: var(--radius);
-        background: var(--paper);
-        color: var(--ink);
-        padding: 28px;
-      }
-      .modal-card h2 {
-        margin: 0 0 12px;
-        font-family: var(--display);
-        font-size: 44px;
-        line-height: 0.95;
-      }
-      .modal-card p { color: rgba(7,22,28,0.68); }
-      .modal-row { display: flex; gap: 10px; margin-top: 22px; }
-
       body.lite-mode .hero-door {
         height: auto;
         background: var(--ink);
@@ -1184,6 +1214,7 @@
         .section-head,
         .latest-row,
         .how-grid,
+        .forms-grid,
         .cta-inner { grid-template-columns: 1fr; }
         .world-grid,
         .project-feed,
@@ -1221,6 +1252,8 @@
         .latest-copy h2,
         .crisp h2,
         .cta h2 { font-size: 52px; }
+        .form-option strong { font-size: 24px; }
+        .form-frame iframe { min-height: 1040px; }
         .bold-brand {
           min-height: auto;
           padding: 72px var(--pad-x) 56px;
@@ -1282,7 +1315,7 @@
 
     <div class="utility">
       <div><span class="dot"></span>Field footage online - 042 worlds preserved</div>
-      <div class="utility-extra"><a href="#how">How it works</a> - <a href="#stories">Stories</a> - <a href="#submit">Submit a memory</a></div>
+      <div class="utility-extra"><a href="#how">How it works</a> - <a href="#stories">Stories</a> - <a href="#forms">Submit a memory</a></div>
     </div>
 
     <header class="site-nav">
@@ -1299,10 +1332,11 @@
         <a href="#how">How it works</a>
         <a href="#capabilities">Capabilities</a>
         <a href="#stories">Stories</a>
+        <a href="#forms">Forms</a>
       </nav>
       <div class="nav-actions">
-        <a class="btn is-ghost" href="#crisp">Play now</a>
-        <button class="btn upload-trigger" type="button">Upload a memory</button>
+        <a class="btn is-ghost" href="https://game.preservemy.world">Play now</a>
+        <a class="btn form-jump" href="#forms" data-program="creator-access">Upload a memory</a>
       </div>
     </header>
 
@@ -1322,7 +1356,7 @@
               <p>Walk through a community-built archive of heritage sites, streets, classrooms, homes, and travel memories captured with ordinary phones.</p>
               <div class="hero-actions">
                 <a class="btn is-ghost" href="#worlds">Start exploring</a>
-                <button class="btn upload-trigger" type="button">Upload a memory</button>
+                <a class="btn form-jump" href="#forms" data-program="creator-access">Upload a memory</a>
               </div>
             </div>
           </article>
@@ -1392,7 +1426,7 @@
             <div class="eyebrow">In action</div>
             <h2>From rough footage to a place you can revisit.</h2>
             <p>The prototype turns a simple source video into a reconstructed scene that can be explored, taught from, shared, and extended by communities.</p>
-            <div class="hero-actions"><a class="btn" href="#crisp">Play the archive</a><a class="btn is-ghost" href="#how">See the process</a></div>
+            <div class="hero-actions"><a class="btn" href="https://game.preservemy.world">Play the archive</a><a class="btn is-ghost" href="#how">See the process</a></div>
           </div>
         </div>
       </section>
@@ -1513,6 +1547,36 @@
         </div>
       </section>
 
+      <section class="forms" id="forms">
+        <div class="u-container">
+          <div class="section-head">
+            <div>
+              <div class="eyebrow">Forms</div>
+              <h2>Send a video, join the team, or work with us.</h2>
+            </div>
+            <p>Choose the path that fits. Each form opens here and goes into the same preservation intake sheet.</p>
+          </div>
+          <div class="forms-grid">
+            <div class="form-list" aria-label="Program forms">
+              <button class="form-option is-active" type="button" data-program="creator-access"><strong>Submit video</strong><span>Creator access</span></button>
+              <button class="form-option" type="button" data-program="internship"><strong>Internship</strong><span>Student roles</span></button>
+              <button class="form-option" type="button" data-program="campus-ambassador"><strong>Campus ambassador</strong><span>Bring PMW to school</span></button>
+              <button class="form-option" type="button" data-program="partnership"><strong>Company partnership</strong><span>Brand and archive work</span></button>
+              <button class="form-option" type="button" data-program="support"><strong>Support / more info</strong><span>Questions and help</span></button>
+              <button class="form-option" type="button" data-program="webinar"><strong>Virtual webinar</strong><span>Attend a session</span></button>
+            </div>
+            <div class="form-frame">
+              <iframe
+                id="programForm"
+                src="https://script.google.com/macros/s/AKfycbwz0x15zSWKtnwg8Zu2nnojz_qabk_CRkZW6duoT6qXi54V862VhR5hVHCldEzx6OBD/exec?program=creator-access"
+                title="PMW Form"
+                loading="lazy">
+              </iframe>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section class="cta" id="submit">
         <div class="u-container cta-inner">
           <div>
@@ -1521,7 +1585,7 @@
           </div>
           <div>
             <p>Start with a video. We will turn the best submissions into prototype worlds and help shape the archive around the stories behind them.</p>
-            <div class="hero-actions"><button class="btn upload-trigger" type="button">Upload a memory</button><a class="btn is-ghost" href="https://www.instagram.com/preservemy.world/" target="_blank" rel="noopener">Instagram</a></div>
+            <div class="hero-actions"><a class="btn form-jump" href="#forms" data-program="creator-access">Upload a memory</a><a class="btn is-ghost" href="https://www.instagram.com/preservemy.world/" target="_blank" rel="noopener">Instagram</a></div>
           </div>
         </div>
       </section>
@@ -1534,22 +1598,11 @@
           <a href="#worlds">Worlds</a>
           <a href="#how">How it works</a>
           <a href="#capabilities">Capabilities</a>
-          <a href="#submit">Submit</a>
+          <a href="#forms">Forms</a>
         </nav>
       </div>
       <div class="footer-small">preservemy.world - walkable memory, heritage at risk - prototype landing page</div>
     </footer>
-
-    <div class="modal" id="uploadModal" aria-hidden="true">
-      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="uploadTitle">
-        <h2 id="uploadTitle">Upload a memory</h2>
-        <p>Send a short video of a place worth preserving. Include the place name, why it matters, and whether it can be public.</p>
-        <div class="modal-row">
-          <a class="btn" href="mailto:hello@preservemy.world?subject=Memory%20submission">Email footage</a>
-          <button class="btn is-ghost" id="closeModal" type="button">Close</button>
-        </div>
-      </div>
-    </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/lenis@1.2.3/dist/lenis.min.js"></script>
@@ -1854,22 +1907,25 @@
         updateMasks();
       }
 
-      const modal = document.getElementById("uploadModal");
-      const openModal = () => {
-        modal.classList.add("is-open");
-        modal.setAttribute("aria-hidden", "false");
+      const FORM_BASE_URL = "https://script.google.com/macros/s/AKfycbwz0x15zSWKtnwg8Zu2nnojz_qabk_CRkZW6duoT6qXi54V862VhR5hVHCldEzx6OBD/exec";
+      const programForm = document.getElementById("programForm");
+      const formButtons = Array.from(document.querySelectorAll(".form-option"));
+      const formsSection = document.getElementById("forms");
+      const setProgram = (program) => {
+        if (!programForm || !program) return;
+        programForm.src = `${FORM_BASE_URL}?program=${encodeURIComponent(program)}`;
+        formButtons.forEach((button) => {
+          button.classList.toggle("is-active", button.dataset.program === program);
+        });
       };
-      const closeModal = () => {
-        modal.classList.remove("is-open");
-        modal.setAttribute("aria-hidden", "true");
-      };
-      document.querySelectorAll(".upload-trigger").forEach((button) => button.addEventListener("click", openModal));
-      document.getElementById("closeModal").addEventListener("click", closeModal);
-      modal.addEventListener("click", (event) => {
-        if (event.target === modal) closeModal();
+      formButtons.forEach((button) => {
+        button.addEventListener("click", () => setProgram(button.dataset.program));
       });
-      window.addEventListener("keydown", (event) => {
-        if (event.key === "Escape") closeModal();
+      document.querySelectorAll(".form-jump").forEach((link) => {
+        link.addEventListener("click", () => {
+          setProgram(link.dataset.program || "creator-access");
+          requestAnimationFrame(() => formsSection?.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth" }));
+        });
       });
     </script>
   </body>
