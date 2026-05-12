@@ -4,6 +4,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>preservemy.world - Walkable memory, heritage at risk</title>
+    <script>
+      if (window.location.protocol === "file:") {
+        window.location.replace("http://127.0.0.1:4174/");
+      }
+    </script>
     <meta
       name="description"
       content="preservemy.world turns ordinary phone footage into walkable 3D worlds for culture, family memory, travel, and heritage preservation."
@@ -406,12 +411,23 @@
       }
       .hero-door__bg,
       .tnl-door,
-      #tnlDoorPlayer {
+      #tnlDoorPlayer,
+      .hero-carousel,
+      .hero-slide,
+      .hero-slide img,
+      .hero-slide video {
         position: absolute;
         inset: 0;
       }
       #tnlDoorPlayer {
         background: url("assets/door-lottie/images/image_0.webp") center / cover no-repeat;
+      }
+      #tnlDoorPlayer canvas {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        display: block;
       }
       .hero-door__bg::after {
         content: "";
@@ -422,6 +438,70 @@
           linear-gradient(90deg, rgba(7,22,28,0.46) 0%, rgba(7,22,28,0.12) 48%, rgba(7,22,28,0.08) 100%),
           linear-gradient(180deg, rgba(7,22,28,0.22), rgba(7,22,28,0.08) 50%, rgba(7,22,28,0.24));
         pointer-events: none;
+      }
+      .hero-carousel {
+        z-index: 1;
+        display: none;
+      }
+      .hero-slide {
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 420ms ease, visibility 420ms ease;
+      }
+      .hero-slide.is-active {
+        opacity: 1;
+        visibility: visible;
+      }
+      .hero-slide img,
+      .hero-slide video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .hero-slide video {
+        transform: scale(1.02);
+      }
+      .hero-slide::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        background:
+          linear-gradient(90deg, rgba(7,22,28,0.88) 0%, rgba(7,22,28,0.58) 42%, rgba(7,22,28,0.18) 100%),
+          linear-gradient(180deg, rgba(7,22,28,0.16), rgba(7,22,28,0.78));
+        pointer-events: none;
+      }
+      .hero-slide-copy {
+        position: absolute;
+        left: var(--pad-x);
+        right: var(--pad-x);
+        bottom: 112px;
+        z-index: 2;
+        width: min(720px, calc(100% - var(--pad-x) * 2));
+        color: var(--paper);
+      }
+      .hero-slide-copy h1,
+      .hero-slide-copy h2 {
+        margin: 0;
+        font-family: var(--display);
+        font-size: clamp(54px, 8.5vw, 112px);
+        line-height: 0.95;
+        font-weight: 900;
+        letter-spacing: 0;
+      }
+      .hero-slide-copy h1 span { display: block; }
+      .hero-slide-copy em {
+        font-family: var(--soft-display);
+        color: var(--mint);
+        font-style: italic;
+        font-weight: 400;
+      }
+      .hero-slide-copy p {
+        max-width: 520px;
+        margin: 28px 0 0;
+        color: rgba(255,255,255,0.82);
+        font-size: 19px;
+        line-height: 1.55;
       }
       .hero-door__track {
         position: absolute;
@@ -546,6 +626,50 @@
       .hero-door__fade {
         display: none;
       }
+      .hero-carousel-controls {
+        position: absolute;
+        left: var(--pad-x);
+        right: var(--pad-x);
+        bottom: max(28px, env(safe-area-inset-bottom));
+        z-index: 4;
+        display: none;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+      }
+      .hero-arrows {
+        display: flex;
+        gap: 8px;
+      }
+      .hero-arrow {
+        width: 44px;
+        height: 44px;
+        border: 1px solid rgba(255,255,255,0.42);
+        border-radius: var(--radius);
+        background: rgba(7,22,28,0.42);
+        color: var(--paper);
+        cursor: pointer;
+        transition: background 160ms ease, border-color 160ms ease;
+      }
+      .hero-arrow:hover {
+        background: rgba(255,255,255,0.14);
+        border-color: rgba(255,255,255,0.72);
+      }
+      .hero-dots {
+        display: flex;
+        gap: 8px;
+      }
+      .hero-dot {
+        width: 34px;
+        height: 4px;
+        border: 0;
+        border-radius: 0;
+        background: rgba(255,255,255,0.35);
+        cursor: pointer;
+      }
+      .hero-dot.is-active {
+        background: var(--mint);
+      }
 
       .ticker {
         overflow: hidden;
@@ -611,8 +735,12 @@
         grid-template-columns: repeat(4, 1fr);
         gap: 14px;
       }
+      .world-mobile-controls {
+        display: none;
+      }
       .world-card {
         position: relative;
+        margin: 0;
         min-height: 420px;
         overflow: hidden;
         border-radius: var(--radius);
@@ -626,10 +754,36 @@
         height: 100%;
         object-fit: cover;
       }
+      .video-shell {
+        position: relative;
+        overflow: hidden;
+        background: var(--ink-2);
+      }
+      .video-shell::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        background: var(--poster, var(--ink-2)) center / cover no-repeat;
+        transition: opacity 180ms ease;
+      }
+      .video-shell video {
+        position: relative;
+        z-index: 1;
+        opacity: 0;
+        transition: opacity 180ms ease;
+      }
+      .video-shell.is-ready video {
+        opacity: 1;
+      }
+      .video-shell.is-ready::before {
+        opacity: 0;
+      }
       .world-card::after {
         content: "";
         position: absolute;
         inset: 0;
+        z-index: 2;
         background: linear-gradient(180deg, transparent 42%, rgba(0,0,0,0.72));
       }
       .world-card figcaption {
@@ -637,7 +791,7 @@
         left: 18px;
         right: 18px;
         bottom: 18px;
-        z-index: 2;
+        z-index: 3;
       }
       .world-card strong {
         display: block;
@@ -665,6 +819,7 @@
         align-items: stretch;
       }
       .latest-media {
+        position: relative;
         min-height: 620px;
         border-radius: var(--radius);
         overflow: hidden;
@@ -759,6 +914,9 @@
       .ordinary-memory__media {
         position: absolute;
         inset: 0;
+      }
+      .ordinary-memory__media.video-shell {
+        background: var(--ink);
       }
       .ordinary-memory__media video,
       .ordinary-memory__media img {
@@ -866,6 +1024,9 @@
         opacity: 0;
         transition: opacity 700ms ease;
       }
+      .crisp-slide.video-shell {
+        background: var(--ink);
+      }
       .crisp-slide.is-active { opacity: 1; }
       .crisp-slide video,
       .crisp-slide img {
@@ -930,6 +1091,7 @@
         padding-top: 18px;
       }
       .project-media {
+        position: relative;
         aspect-ratio: 4 / 5;
         overflow: hidden;
         border-radius: var(--radius);
@@ -1090,16 +1252,71 @@
       }
       .form-option.is-active span { color: rgba(255,255,255,0.64); }
       .form-frame {
+        position: relative;
         overflow: hidden;
         border: 1px solid var(--line-dark);
         border-radius: var(--radius);
         background: var(--white);
+        min-height: 980px;
       }
       .form-frame iframe {
         width: 100%;
         min-height: 980px;
         border: 0;
         display: block;
+      }
+      .form-loader {
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        display: grid;
+        place-items: start;
+        padding: 24px;
+        background: var(--white);
+        color: var(--ink);
+        transition: opacity 180ms ease, visibility 180ms ease;
+      }
+      .form-loader.is-hidden {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+      }
+      .form-loader-box {
+        width: min(100%, 520px);
+        border: 1px solid var(--line-dark);
+        border-radius: var(--radius);
+        padding: 18px;
+        background: var(--paper);
+      }
+      .form-loader strong {
+        display: block;
+        font-family: var(--display);
+        font-size: 28px;
+        line-height: 1;
+      }
+      .form-loader p {
+        margin: 10px 0 0;
+        color: rgba(7,22,28,0.66);
+        font-size: 14px;
+      }
+      .form-loader-bar {
+        position: relative;
+        height: 2px;
+        margin-top: 18px;
+        overflow: hidden;
+        background: rgba(7,22,28,0.12);
+      }
+      .form-loader-bar::after {
+        content: "";
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 42%;
+        background: var(--teal);
+        animation: formLoad 1.1s ease-in-out infinite;
+      }
+      @keyframes formLoad {
+        0% { transform: translateX(-105%); }
+        100% { transform: translateX(245%); }
       }
 
       .cta {
@@ -1175,26 +1392,25 @@
         overflow: hidden;
       }
       body.lite-mode .hero-door__bg {
-        position: absolute;
+        display: none;
       }
-      body.lite-mode #tnlDoorPlayer {
-        background: url("assets/door-lottie/images/image_286.webp") center / cover no-repeat;
-      }
-      body.lite-mode .hero-door__bg::after {
-        background: linear-gradient(180deg, rgba(7,22,28,0.55), rgba(7,22,28,0.78));
+      body.lite-mode .hero-carousel,
+      body.lite-mode .hero-carousel-controls {
+        display: flex;
       }
       body.lite-mode .hero-door__track {
-        position: relative;
-        height: auto;
-        display: flex;
-        flex-direction: column;
+        display: none;
       }
       body.lite-mode .hero-door-panel,
       body.lite-mode .hero-door-panel.is-long,
       body.lite-mode .hero-door-panel.is-final {
+        display: none;
         min-height: 0;
-        padding: 96px var(--pad-x) 64px;
+        padding: 0;
         align-items: flex-start;
+      }
+      body.lite-mode .hero-door-panel.is-active {
+        display: block;
       }
       body.lite-mode .hero-door-panel.is-long .hero-copy,
       body.lite-mode .hero-door-panel.is-final .hero-copy {
@@ -1209,8 +1425,6 @@
       @media (max-width: 1080px) {
         :root { --pad-x: 28px; }
         .nav-links { display: none; }
-        .hero-copy h1,
-        .hero-copy h2 { font-size: 84px; }
         .section-head,
         .latest-row,
         .how-grid,
@@ -1244,7 +1458,20 @@
         .hero-copy h1,
         .hero-copy h2 { font-size: 50px; }
         .hero-copy p { font-size: 16px; }
+        .hero-slide-copy {
+          bottom: 112px;
+          width: min(100%, calc(100% - var(--pad-x) * 2));
+        }
+        .hero-slide-copy h1,
+        .hero-slide-copy h2 { font-size: 50px; }
+        .hero-slide-copy p { font-size: 16px; }
         .hero-card { display: none; }
+        .hero-carousel-controls {
+          align-items: flex-end;
+        }
+        .hero-dot {
+          width: 24px;
+        }
         .section-head h2,
         .ordinary-memory h2,
         .line-moment h2,
@@ -1270,11 +1497,84 @@
         .bold-brand__label { margin-bottom: 18px; font-size: 12px; }
         .ordinary-memory { min-height: 92vh; }
         .ticker span { font-size: 38px; padding-inline: 20px; }
+        #worlds {
+          height: calc(100svh + 48svh + (var(--world-card-count, 10) - 1) * 48svh);
+          padding: 0;
+        }
+        #worlds .u-container {
+          position: sticky;
+          top: 0;
+          min-height: 100svh;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          padding-block: 54px 20px;
+        }
+        #worlds .section-head {
+          margin-bottom: 14px;
+        }
+        #worlds .section-head h2 {
+          font-size: clamp(34px, 11vw, 44px);
+        }
+        #worlds .section-head p {
+          font-size: 14px;
+          line-height: 1.42;
+        }
         .world-grid,
         .project-feed,
         .cap-grid,
         .story-grid { grid-template-columns: 1fr; }
         .latest-media { min-height: 420px; }
+        .world-grid {
+          display: grid;
+          grid-auto-flow: column;
+          grid-auto-columns: 78vw;
+          grid-template-columns: none;
+          gap: 12px;
+          margin-inline: calc(var(--pad-x) * -1);
+          padding: 0 var(--pad-x) 10px;
+          overflow-x: hidden;
+          overscroll-behavior-inline: contain;
+          scroll-snap-type: none;
+          scroll-padding-inline: var(--pad-x);
+          -webkit-overflow-scrolling: touch;
+        }
+        .world-grid::-webkit-scrollbar {
+          display: none;
+        }
+        .world-card {
+          min-height: min(360px, 42svh);
+          scroll-snap-align: center;
+        }
+        .world-card:nth-child(2),
+        .world-card:nth-child(5) {
+          grid-column: auto;
+        }
+        .world-mobile-controls {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          margin: -2px 0 12px;
+        }
+        .world-mobile-count {
+          font-family: var(--mono);
+          font-size: 12px;
+          color: rgba(7,22,28,0.62);
+        }
+        .world-mobile-buttons {
+          display: flex;
+          gap: 8px;
+        }
+        .world-mobile-buttons button {
+          width: 42px;
+          height: 38px;
+          border: 1px solid var(--line-dark);
+          border-radius: var(--radius);
+          background: var(--paper);
+          color: var(--ink);
+          cursor: pointer;
+        }
         .footer-grid { grid-template-columns: 1fr; }
       }
       @media (prefers-reduced-motion: reduce) {
@@ -1314,7 +1614,6 @@
     </div>
 
     <div class="utility">
-      <div><span class="dot"></span>Field footage online - 042 worlds preserved</div>
       <div class="utility-extra"><a href="#how">How it works</a> - <a href="#stories">Stories</a> - <a href="#forms">Submit a memory</a></div>
     </div>
 
@@ -1332,7 +1631,7 @@
         <a href="#how">How it works</a>
         <a href="#capabilities">Capabilities</a>
         <a href="#stories">Stories</a>
-        <a href="#forms">Forms</a>
+        <a href="#forms">Opportunities</a>
       </nav>
       <div class="nav-actions">
         <a class="btn is-ghost" href="https://game.preservemy.world">Play now</a>
@@ -1346,14 +1645,66 @@
           <div class="hero-door__bg" aria-hidden="true">
             <div class="tnl-door"><div id="tnlDoorPlayer"></div></div>
           </div>
+          <div class="hero-carousel">
+            <div class="hero-slide is-active">
+              <video src="assets/places/videos/mount-fuji.mp4" poster="assets/places/videos/mount-fuji-poster.jpg" muted loop playsinline preload="auto"></video>
+              <div class="hero-slide-copy">
+                <h1><span>Discover</span><span>the places</span><span>we're trying</span><span>to <em>keep</em>.</span></h1>
+                <p>Walk through a community-built archive of heritage sites, streets, classrooms, homes, and travel memories captured by us with ordinary phones. No stock footage.</p>
+                <div class="hero-actions">
+                  <a class="btn is-ghost" href="#worlds">Start exploring</a>
+                  <a class="btn form-jump" href="#forms" data-program="creator-access">Upload a memory</a>
+                </div>
+              </div>
+            </div>
+            <div class="hero-slide">
+              <video src="assets/places/videos/badshahi-masjid.mp4" poster="assets/places/videos/badshahi-masjid-poster.jpg" muted loop playsinline preload="auto"></video>
+              <div class="hero-slide-copy">
+                <div class="eyebrow">001 - living archive</div>
+                <h2>A window into places that <em>change fast</em>.</h2>
+                <p>Every upload becomes a timestamped world: a courtyard before repair, a family room before a move, a mountain path before another season changes it.</p>
+              </div>
+            </div>
+            <div class="hero-slide">
+              <video src="assets/places/videos/wadi-rum.mp4" poster="assets/places/videos/wadi-rum-poster.jpg" muted loop playsinline preload="auto"></video>
+              <div class="hero-slide-copy">
+                <div class="eyebrow">002 - made by everyone</div>
+                <h2>Not just saved. <em>Entered</em>.</h2>
+                <p>Photos tell people a place existed. Walkable worlds let them feel where the doorway was, how the light moved, and what deserved to be remembered.</p>
+              </div>
+            </div>
+            <div class="hero-slide">
+              <video src="assets/places/videos/nanga-parbat-fairy-meadows.mp4" poster="assets/places/videos/nanga-parbat-fairy-meadows-poster.jpg" muted loop playsinline preload="auto"></video>
+              <div class="hero-slide-copy">
+                <h1><span>Discover</span><span>the places</span><span>we're trying</span><span>to <em>keep</em>.</span></h1>
+                <p>Walk through a community-built archive of heritage sites, streets, classrooms, homes, and travel memories captured by us with ordinary phones. No stock footage.</p>
+                <div class="hero-actions">
+                  <a class="btn is-ghost" href="#worlds">Start exploring</a>
+                  <a class="btn form-jump" href="#forms" data-program="creator-access">Upload a memory</a>
+                </div>
+              </div>
+            </div>
+          </div>
           <div class="hero-door__hint">Scroll to open - keep scrolling to enter</div>
           <div class="hero-door__fade" id="doorFade"></div>
+          <div class="hero-carousel-controls" aria-label="Opening story carousel">
+            <div class="hero-dots" role="tablist" aria-label="Hero slides">
+              <button class="hero-dot is-active" type="button" data-hero-slide="0" aria-label="Show discover slide"></button>
+              <button class="hero-dot" type="button" data-hero-slide="1" aria-label="Show window slide"></button>
+              <button class="hero-dot" type="button" data-hero-slide="2" aria-label="Show entered slide"></button>
+              <button class="hero-dot" type="button" data-hero-slide="3" aria-label="Show discover slide again"></button>
+            </div>
+            <div class="hero-arrows">
+              <button class="hero-arrow" type="button" data-hero-prev aria-label="Previous slide">←</button>
+              <button class="hero-arrow" type="button" data-hero-next aria-label="Next slide">→</button>
+            </div>
+          </div>
         </div>
         <div class="hero-door__track">
-          <article class="hero-door-panel">
+          <article class="hero-door-panel is-active">
             <div class="hero-copy">
               <h1><span>Discover</span><span>the places</span><span>we're trying</span><span>to <em>keep</em>.</span></h1>
-              <p>Walk through a community-built archive of heritage sites, streets, classrooms, homes, and travel memories captured with ordinary phones.</p>
+              <p>Walk through a community-built archive of heritage sites, streets, classrooms, homes, and travel memories captured by us with ordinary phones. No stock footage.</p>
               <div class="hero-actions">
                 <a class="btn is-ghost" href="#worlds">Start exploring</a>
                 <a class="btn form-jump" href="#forms" data-program="creator-access">Upload a memory</a>
@@ -1376,10 +1727,10 @@
           </article>
           <div class="hero-card">
             <a href="#latest">
-              <img src="assets/worlds/world-03.jpg" alt="" />
+              <img src="assets/places/videos/badshahi-masjid-poster.jpg" alt="" />
               <div>
-                <strong>New archive drop</strong>
-                <span>Phone footage to walkable world</span>
+                <strong>Badshahi Masjid</strong>
+                <span>New spatial video capture</span>
               </div>
             </a>
           </div>
@@ -1388,14 +1739,14 @@
 
       <div class="ticker" aria-hidden="true">
         <div class="ticker-track">
-          <span>Lahore - <em>Old streets</em></span>
-          <span>Classrooms - <em>Family rooms</em></span>
-          <span>Shrines - <em>Markets</em></span>
-          <span>Glaciers - <em>Courtyards</em></span>
-          <span>Lahore - <em>Old streets</em></span>
-          <span>Classrooms - <em>Family rooms</em></span>
-          <span>Shrines - <em>Markets</em></span>
-          <span>Glaciers - <em>Courtyards</em></span>
+          <span>Mount Fuji - <em>Japan</em></span>
+          <span>Badshahi Masjid - <em>Lahore</em></span>
+          <span>Wadi Rum - <em>Jordan</em></span>
+          <span>Fairy Meadows - <em>Nanga Parbat</em></span>
+          <span>Norrviken - <em>Sweden</em></span>
+          <span>Pont Alexandre III - <em>Paris</em></span>
+          <span>Villa Izyhali - <em>Poland</em></span>
+          <span>Copenhagen Central - <em>Denmark</em></span>
         </div>
       </div>
 
@@ -1408,24 +1759,35 @@
             </div>
             <p>Preservation should not only belong to famous monuments. A lane, a room, a small school, or a travel memory can become part of the archive.</p>
           </div>
+          <div class="world-mobile-controls" aria-label="World carousel controls">
+            <div class="world-mobile-count" id="worldMobileCount">01 / 10</div>
+            <div class="world-mobile-buttons">
+              <button type="button" data-world-prev aria-label="Previous place">←</button>
+              <button type="button" data-world-next aria-label="Next place">→</button>
+            </div>
+          </div>
           <div class="world-grid">
-            <figure class="world-card"><video src="assets/worlds/world-01.mp4" poster="assets/worlds/world-01.jpg" muted loop playsinline preload="metadata"></video><figcaption><strong>Courtyard light</strong><span>Heritage - 3D capture</span></figcaption></figure>
-            <figure class="world-card"><video src="assets/worlds/world-03.mp4" poster="assets/worlds/world-03.jpg" muted loop playsinline preload="metadata"></video><figcaption><strong>Sacred geometry</strong><span>Archive sample</span></figcaption></figure>
-            <figure class="world-card"><img src="assets/worlds/world-08.jpg" alt="" /><figcaption><strong>Street memory</strong><span>Community record</span></figcaption></figure>
-            <figure class="world-card"><video src="assets/worlds/world-05.mp4" poster="assets/worlds/world-05.jpg" muted loop playsinline preload="metadata"></video><figcaption><strong>Mountain baseline</strong><span>Climate timestamp</span></figcaption></figure>
-            <figure class="world-card"><video src="assets/worlds/world-07.mp4" poster="assets/worlds/world-07.jpg" muted loop playsinline preload="metadata"></video><figcaption><strong>Room before moving</strong><span>Family memory</span></figcaption></figure>
-            <figure class="world-card"><img src="assets/worlds/world-09.jpg" alt="" /><figcaption><strong>School hall</strong><span>Education copy</span></figcaption></figure>
+            <figure class="world-card"><img src="assets/places/stills/01_norrviken_gardens_hero_01_695e7f83-e283-4ec9-94b9-8a17765eff37.jpg" alt="" /><figcaption><strong>Norrviken Gardens</strong><span>Båstad, Sweden</span></figcaption></figure>
+            <figure class="world-card"><img src="assets/places/stills/02_copenhagen_central_station_hero_01_67a715b1-f071-4335-9572-a2ea3b1889e8.jpg" alt="" /><figcaption><strong>Copenhagen Central</strong><span>Copenhagen, Denmark</span></figcaption></figure>
+            <figure class="world-card"><img src="assets/places/stills/03_casino_of_torrevieja_hero_01_67ad10bd-9d1e-41a4-9b8d-b0bb454dfbdb.jpg" alt="" /><figcaption><strong>Casino of Torrevieja</strong><span>Torrevieja, Spain</span></figcaption></figure>
+            <figure class="world-card"><img src="assets/places/stills/04_pont_alexandre_iii_hero_01_66e145ef-6846-44bb-800f-4984f6e54a98.jpg" alt="" /><figcaption><strong>Pont Alexandre III</strong><span>Paris, France</span></figcaption></figure>
+            <figure class="world-card"><img src="assets/places/stills/05_theatre_du_renard_hero_01_679892de-4fb1-4ed5-8e91-cb5e9cd66604.jpg" alt="" /><figcaption><strong>Théâtre du Renard</strong><span>Paris, France</span></figcaption></figure>
+            <figure class="world-card"><img src="assets/places/stills/06_lycee_massena_hero_01_68bc6578-568d-43dd-959c-f6029b95e0c4.jpg" alt="" /><figcaption><strong>Lycée Masséna</strong><span>Nice, France</span></figcaption></figure>
+            <figure class="world-card"><img src="assets/places/stills/07_palace_krasinskich_garden_hero_01_68886a0c-7748-4d68-b8b0-250c48a62dad.jpg" alt="" /><figcaption><strong>Krasińskich Garden</strong><span>Warsaw, Poland</span></figcaption></figure>
+            <figure class="world-card"><img src="assets/places/stills/08_villa_izyhali_hero_01_66e0936c-8d97-4b59-a487-1c8ed8310905.jpg" alt="" /><figcaption><strong>Villa Izyhali</strong><span>Konstancin-Jeziorna, Poland</span></figcaption></figure>
+            <figure class="world-card video-shell"><video src="assets/places/videos/mount-fuji.mp4" poster="assets/places/videos/mount-fuji-poster.jpg" muted loop playsinline preload="auto"></video><figcaption><strong>Mount Fuji</strong><span>Japan - video capture</span></figcaption></figure>
+            <figure class="world-card video-shell"><video src="assets/places/videos/badshahi-masjid.mp4" poster="assets/places/videos/badshahi-masjid-poster.jpg" muted loop playsinline preload="auto"></video><figcaption><strong>Badshahi Masjid</strong><span>Lahore - video capture</span></figcaption></figure>
           </div>
         </div>
       </section>
 
       <section class="latest" id="latest">
         <div class="u-container latest-row">
-          <div class="latest-media"><video src="assets/lost-relic-hero-loop.mp4" poster="assets/lost-relic-poster.jpg" muted loop playsinline preload="metadata"></video></div>
+          <div class="latest-media video-shell"><video src="assets/places/videos/mount-fuji.mp4" poster="assets/places/videos/mount-fuji-poster.jpg" muted loop playsinline preload="auto"></video></div>
           <div class="latest-copy">
             <div class="eyebrow">In action</div>
-            <h2>From rough footage to a place you can revisit.</h2>
-            <p>The prototype turns a simple source video into a reconstructed scene that can be explored, taught from, shared, and extended by communities.</p>
+            <h2>From place footage to a world you can revisit.</h2>
+            <p>The new set moves between Mount Fuji, Lahore, Wadi Rum, and Fairy Meadows. All footage was captured by us and turned into memory, with no stock clips in the archive.</p>
             <div class="hero-actions"><a class="btn" href="https://game.preservemy.world">Play the archive</a><a class="btn is-ghost" href="#how">See the process</a></div>
           </div>
         </div>
@@ -1440,12 +1802,12 @@
       </section>
 
       <section class="ordinary-memory" id="ordinaryMemory">
-        <div class="ordinary-memory__media" aria-hidden="true">
-          <video src="assets/worlds/world-05.mp4" poster="assets/worlds/world-05.jpg" muted loop playsinline preload="metadata"></video>
+        <div class="ordinary-memory__media video-shell" aria-hidden="true">
+          <video src="assets/places/videos/badshahi-masjid.mp4" poster="assets/places/videos/badshahi-masjid-poster.jpg" muted loop playsinline preload="auto"></video>
         </div>
         <div class="ordinary-memory__content">
           <p class="ordinary-memory__label">Let's make walkable memory.</p>
-          <h2>We turn ordinary <em>phone footage</em></h2>
+          <h2>We turn real <em>place footage</em></h2>
         </div>
       </section>
 
@@ -1456,17 +1818,19 @@
       </section>
 
       <section class="crisp" id="crisp">
-        <div class="crisp-slide is-active"><video src="assets/worlds/hero-01.mp4" poster="assets/worlds/hero-01.jpg" muted loop playsinline preload="metadata"></video></div>
-        <div class="crisp-slide"><video src="assets/worlds/hero-02.mp4" poster="assets/worlds/hero-02.jpg" muted loop playsinline preload="metadata"></video></div>
-        <div class="crisp-slide"><video src="assets/worlds/hero-03.mp4" poster="assets/worlds/hero-03.jpg" muted loop playsinline preload="metadata"></video></div>
+        <div class="crisp-slide video-shell is-active"><video src="assets/places/videos/wadi-rum.mp4" poster="assets/places/videos/wadi-rum-poster.jpg" muted loop playsinline preload="auto"></video></div>
+        <div class="crisp-slide video-shell"><video src="assets/places/videos/nanga-parbat-fairy-meadows.mp4" poster="assets/places/videos/nanga-parbat-fairy-meadows-poster.jpg" muted loop playsinline preload="auto"></video></div>
+        <div class="crisp-slide video-shell"><video src="assets/places/videos/badshahi-masjid.mp4" poster="assets/places/videos/badshahi-masjid-poster.jpg" muted loop playsinline preload="auto"></video></div>
+        <div class="crisp-slide video-shell"><video src="assets/places/videos/mount-fuji.mp4" poster="assets/places/videos/mount-fuji-poster.jpg" muted loop playsinline preload="auto"></video></div>
         <div class="crisp-content">
           <div class="eyebrow">Moving worlds</div>
           <h2>Make the internet feel less flat.</h2>
-          <p>Each world is built for scanning, teaching, remembering, and sharing. The archive can hold personal memory and public heritage in the same place.</p>
+          <p>Each world is built for scanning, teaching, remembering, and sharing across natural landmarks, sacred architecture, and travel routes.</p>
           <div class="crisp-nav" aria-label="World preview navigation">
             <button type="button" class="is-active" data-slide="0">01</button>
             <button type="button" data-slide="1">02</button>
             <button type="button" data-slide="2">03</button>
+            <button type="button" data-slide="3">04</button>
           </div>
         </div>
       </section>
@@ -1487,9 +1851,9 @@
             <p>A quieter feed of places being processed, reviewed, cleaned, and prepared for public viewing.</p>
           </div>
           <div class="project-feed">
-            <article class="project"><div class="project-media"><video src="assets/lost-relic-wadi-rum-feed.mp4" poster="assets/lost-relic-wadi-rum-poster.jpg" muted loop playsinline preload="metadata"></video></div><h3>Desert archive</h3><p>Video fragments stitched into a navigable memory of a vanishing route.</p></article>
-            <article class="project"><div class="project-media"><video src="assets/lost-relic-meadows-feed.mp4" poster="assets/lost-relic-meadows-poster.jpg" muted loop playsinline preload="metadata"></video></div><h3>Meadow baseline</h3><p>A seasonal landscape preserved as a visual record for future comparison.</p></article>
-            <article class="project"><div class="project-media"><video src="assets/lost-relic-mountain-feed.mp4" poster="assets/lost-relic-mountain-poster.jpg" muted loop playsinline preload="metadata"></video></div><h3>Mountain pass</h3><p>A travel memory rebuilt as a world that can be revisited after the trip ends.</p></article>
+            <article class="project"><div class="project-media video-shell"><video src="assets/places/videos/wadi-rum.mp4" poster="assets/places/videos/wadi-rum-poster.jpg" muted loop playsinline preload="auto"></video></div><h3>Wadi Rum route</h3><p>A desert route rebuilt as a navigable memory of cliffs, horizon, and movement.</p></article>
+            <article class="project"><div class="project-media video-shell"><video src="assets/places/videos/nanga-parbat-fairy-meadows.mp4" poster="assets/places/videos/nanga-parbat-fairy-meadows-poster.jpg" muted loop playsinline preload="auto"></video></div><h3>Fairy Meadows baseline</h3><p>A mountain landscape preserved as a visual record for future comparison.</p></article>
+            <article class="project"><div class="project-media video-shell"><video src="assets/places/videos/badshahi-masjid.mp4" poster="assets/places/videos/badshahi-masjid-poster.jpg" muted loop playsinline preload="auto"></video></div><h3>Badshahi Masjid</h3><p>Heritage architecture captured with enough motion to understand scale and approach.</p></article>
           </div>
         </div>
       </section>
@@ -1551,13 +1915,13 @@
         <div class="u-container">
           <div class="section-head">
             <div>
-              <div class="eyebrow">Forms</div>
+              <div class="eyebrow">Opportunities</div>
               <h2>Send a video, join the team, or work with us.</h2>
             </div>
-            <p>Choose the path that fits. Each form opens here and goes into the same preservation intake sheet.</p>
+            <p>Choose the path that fits. Each opportunity opens here and goes into the same preservation intake sheet.</p>
           </div>
           <div class="forms-grid">
-            <div class="form-list" aria-label="Program forms">
+            <div class="form-list" aria-label="Program opportunities">
               <button class="form-option is-active" type="button" data-program="creator-access"><strong>Submit video</strong><span>Creator access</span></button>
               <button class="form-option" type="button" data-program="internship"><strong>Internship</strong><span>Student roles</span></button>
               <button class="form-option" type="button" data-program="campus-ambassador"><strong>Campus ambassador</strong><span>Bring PMW to school</span></button>
@@ -1566,10 +1930,17 @@
               <button class="form-option" type="button" data-program="webinar"><strong>Virtual webinar</strong><span>Attend a session</span></button>
             </div>
             <div class="form-frame">
+              <div class="form-loader" id="formLoader" role="status" aria-live="polite">
+                <div class="form-loader-box">
+                  <strong>Loading opportunity</strong>
+                  <p id="formLoaderText">Opening Submit video from Google Forms. This can take a few seconds.</p>
+                  <div class="form-loader-bar" aria-hidden="true"></div>
+                </div>
+              </div>
               <iframe
                 id="programForm"
                 src="https://script.google.com/macros/s/AKfycbwz0x15zSWKtnwg8Zu2nnojz_qabk_CRkZW6duoT6qXi54V862VhR5hVHCldEzx6OBD/exec?program=creator-access"
-                title="PMW Form"
+                title="PMW Opportunity"
                 loading="lazy">
               </iframe>
             </div>
@@ -1584,7 +1955,7 @@
             <h2>Send us a place worth remembering.</h2>
           </div>
           <div>
-            <p>Start with a video. We will turn the best submissions into prototype worlds and help shape the archive around the stories behind them.</p>
+            <p>Start with a video. We will turn the best submissions into prototype worlds and help shape the archive around the stories behind them. The footage on this page was captured by us, not pulled from stock.</p>
             <div class="hero-actions"><a class="btn form-jump" href="#forms" data-program="creator-access">Upload a memory</a><a class="btn is-ghost" href="https://www.instagram.com/preservemy.world/" target="_blank" rel="noopener">Instagram</a></div>
           </div>
         </div>
@@ -1598,13 +1969,13 @@
           <a href="#worlds">Worlds</a>
           <a href="#how">How it works</a>
           <a href="#capabilities">Capabilities</a>
-          <a href="#forms">Forms</a>
+          <a href="#forms">Opportunities</a>
         </nav>
       </div>
-      <div class="footer-small">preservemy.world - walkable memory, heritage at risk - prototype landing page</div>
     </footer>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+    <script src="assets/lottie.min.js"></script>
+    <script src="assets/door-lottie/data.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/lenis@1.2.3/dist/lenis.min.js"></script>
     <script type="module">
       const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -1613,7 +1984,6 @@
       const loaderBar = document.getElementById("loaderBar");
       const hero = document.querySelector(".hero-door");
       const doorMount = document.getElementById("tnlDoorPlayer");
-      const doorFade = document.getElementById("doorFade");
       const clamp01 = (n) => Math.max(0, Math.min(1, n));
       const smooth = (t) => t * t * (3 - 2 * t);
 
@@ -1637,38 +2007,16 @@
       const loaderLabel = document.getElementById("loaderLabel");
       const TOTAL_FRAMES = 287;
       const FRAME_PATH = (i) => `assets/door-lottie/images/image_${i}.webp`;
-      const MODE_STORAGE_KEY = "pmw-mode";
+      const MODE_STORAGE_KEY = "pmw-user-mode";
       const TOAST_DISMISS_KEY = "pmw-toast-dismissed";
 
       const search = new URLSearchParams(window.location.search);
-      const storedMode = (() => {
-        try { return localStorage.getItem(MODE_STORAGE_KEY); } catch { return null; }
-      })();
-      const explicitMode = search.get("mode") || storedMode;
+      const requestedMode = search.get("mode");
+      const explicitMode = requestedMode === "lite" || requestedMode === "full" ? requestedMode : null;
+      try { localStorage.removeItem(MODE_STORAGE_KEY); } catch {}
 
       const detectOldDevice = () => {
         if (explicitMode === "lite") return true;
-        if (explicitMode === "full") return false;
-        if (reduceMotion) return true;
-        const nav = window.navigator || {};
-        if (nav.deviceMemory && nav.deviceMemory < 4) return true;
-        if (nav.hardwareConcurrency && nav.hardwareConcurrency < 4) return true;
-        const conn = nav.connection || nav.mozConnection || nav.webkitConnection;
-        if (conn) {
-          if (conn.saveData) return true;
-          if (["slow-2g", "2g", "3g"].includes(conn.effectiveType)) return true;
-        }
-        const ua = nav.userAgent || "";
-        const iOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
-        if (iOS) {
-          const match = ua.match(/OS (\d+)_/);
-          const major = match ? parseInt(match[1], 10) : 0;
-          if (major && major < 14) return true;
-        }
-        if (/Android\s([1-7])\./.test(ua)) return true;
-        if (window.innerWidth <= 380 && window.devicePixelRatio <= 2 && !nav.deviceMemory) {
-          return true;
-        }
         return false;
       };
 
@@ -1707,7 +2055,8 @@
           renderer: "canvas",
           loop: false,
           autoplay: false,
-          path: "assets/door-lottie/data.json",
+          animationData: window.PMW_DOOR_LOTTIE,
+          assetsPath: "assets/door-lottie/images/",
           rendererSettings: {
             clearCanvas: true,
             progressiveLoad: false,
@@ -1766,8 +2115,10 @@
       };
       if (loaderEscapeBtn) {
         loaderEscapeBtn.addEventListener("click", () => {
-          try { localStorage.setItem(MODE_STORAGE_KEY, "lite"); } catch {}
-          window.location.reload();
+          try { localStorage.removeItem(MODE_STORAGE_KEY); } catch {}
+          const url = new URL(window.location.href);
+          url.searchParams.set("mode", "lite");
+          window.location.href = url.toString();
         });
       }
 
@@ -1800,8 +2151,14 @@
         setTimeout(() => { toast.hidden = true; }, 320);
       };
       const switchMode = (target) => {
-        try { localStorage.setItem(MODE_STORAGE_KEY, target); } catch {}
-        window.location.reload();
+        try { localStorage.removeItem(MODE_STORAGE_KEY); } catch {}
+        const url = new URL(window.location.href);
+        if (target === "lite") {
+          url.searchParams.set("mode", "lite");
+        } else {
+          url.searchParams.delete("mode");
+        }
+        window.location.href = url.toString();
       };
       function showLiteToast() {
         if (!toast) return;
@@ -1809,7 +2166,7 @@
         try { dismissed = localStorage.getItem(TOAST_DISMISS_KEY) === "1"; } catch {}
         if (dismissed && explicitMode) return;
         if (liteMode) {
-          toastText.textContent = "Lite mode is on for older devices.";
+          toastText.textContent = "Lite mode is on.";
           toastAction.textContent = "Try full";
           toastAction.onclick = () => switchMode("full");
         } else {
@@ -1839,20 +2196,144 @@
       lenis?.on("scroll", updateHero);
       updateHero();
 
+      const heroPanels = Array.from(document.querySelectorAll(".hero-door-panel"));
+      const heroSlides = Array.from(document.querySelectorAll(".hero-slide"));
+      const heroDots = Array.from(document.querySelectorAll(".hero-dot"));
+      const heroPrev = document.querySelector("[data-hero-prev]");
+      const heroNext = document.querySelector("[data-hero-next]");
+      let activeHero = 0;
+      let heroTimer = null;
+      const setHero = (idx, restart = true) => {
+        if (!liteMode || !heroPanels.length || !heroSlides.length) return;
+        activeHero = (idx + heroPanels.length) % heroPanels.length;
+        heroPanels.forEach((panel, i) => panel.classList.toggle("is-active", i === activeHero));
+        heroSlides.forEach((slide, i) => slide.classList.toggle("is-active", i === activeHero));
+        heroDots.forEach((dot, i) => dot.classList.toggle("is-active", i === activeHero));
+        if (restart) {
+          clearInterval(heroTimer);
+          heroTimer = setInterval(() => setHero(activeHero + 1, false), 3800);
+        }
+      };
+      heroDots.forEach((dot) => {
+        dot.addEventListener("click", () => setHero(Number(dot.dataset.heroSlide || 0)));
+      });
+      heroPrev?.addEventListener("click", () => setHero(activeHero - 1));
+      heroNext?.addEventListener("click", () => setHero(activeHero + 1));
+      setHero(0);
+
       const videos = document.querySelectorAll("video");
+      const prepareVideo = (video) => {
+        const shell = video.closest(".video-shell");
+        const poster = video.getAttribute("poster");
+        if (shell && poster) shell.style.setProperty("--poster", `url("${poster}")`);
+        video.preload = "auto";
+        video.load();
+      };
+      const markVideoReady = (video) => {
+        video.closest(".video-shell")?.classList.add("is-ready");
+      };
+      const playVideo = (video) => {
+        prepareVideo(video);
+        if (video.readyState >= 2) markVideoReady(video);
+        video.play().then(() => markVideoReady(video)).catch(() => {});
+      };
       const videoObserver = "IntersectionObserver" in window ? new IntersectionObserver((entries) => {
         entries.forEach((entry) => {
           const v = entry.target;
-          if (entry.isIntersecting) v.play().catch(() => {});
+          if (entry.isIntersecting) playVideo(v);
           else v.pause();
         });
-      }, { rootMargin: "160px 0px" }) : null;
+      }, { rootMargin: "900px 0px", threshold: 0.01 }) : null;
       videos.forEach((video) => {
         video.muted = true;
         video.playsInline = true;
+        prepareVideo(video);
+        video.addEventListener("loadeddata", () => markVideoReady(video), { once: true });
+        video.addEventListener("canplay", () => markVideoReady(video), { once: true });
         if (videoObserver) videoObserver.observe(video);
-        else video.play().catch(() => {});
+        else playVideo(video);
       });
+
+      const worldGrid = document.querySelector(".world-grid");
+      const worldCards = Array.from(document.querySelectorAll(".world-card"));
+      const worldCount = document.getElementById("worldMobileCount");
+      const worldPrev = document.querySelector("[data-world-prev]");
+      const worldNext = document.querySelector("[data-world-next]");
+      document.getElementById("worlds")?.style.setProperty("--world-card-count", String(worldCards.length || 1));
+      let activeWorld = 0;
+      const isWorldScrollMode = () => window.matchMedia("(max-width: 720px)").matches;
+      const getWorldCardLeft = (idx) => {
+        if (!worldGrid || !worldCards.length) return 0;
+        const card = worldCards[Math.max(0, Math.min(worldCards.length - 1, idx))];
+        const centered = card.offsetLeft - (worldGrid.clientWidth - card.offsetWidth) / 2;
+        return Math.max(0, Math.min(centered, worldGrid.scrollWidth - worldGrid.clientWidth));
+      };
+      const getWorldScrollTop = (idx) => {
+        const worlds = document.getElementById("worlds");
+        if (!worlds || worldCards.length < 2) return worlds?.offsetTop || 0;
+        const introY = Math.min(window.innerHeight * 0.48, 360);
+        const maxY = Math.max(1, worlds.offsetHeight - window.innerHeight - introY);
+        const ratio = Math.max(0, Math.min(worldCards.length - 1, idx)) / (worldCards.length - 1);
+        return worlds.offsetTop + introY + ratio * maxY;
+      };
+      const updateWorldCount = () => {
+        if (!worldCount || !worldCards.length) return;
+        worldCount.textContent = `${String(activeWorld + 1).padStart(2, "0")} / ${String(worldCards.length).padStart(2, "0")}`;
+      };
+      const setWorld = (idx) => {
+        if (!worldGrid || !worldCards.length) return;
+        activeWorld = (idx + worldCards.length) % worldCards.length;
+        const worlds = document.getElementById("worlds");
+        if (isWorldScrollMode() && worlds) {
+          window.scrollTo({ top: getWorldScrollTop(activeWorld), behavior: reduceMotion ? "auto" : "smooth" });
+        } else {
+          worldCards[activeWorld].scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "nearest", inline: "center" });
+        }
+        updateWorldCount();
+      };
+      const syncWorldFromScroll = () => {
+        if (!worldGrid || !worldCards.length) return;
+        const center = worldGrid.scrollLeft + worldGrid.clientWidth / 2;
+        let best = 0;
+        let bestDistance = Infinity;
+        worldCards.forEach((card, i) => {
+          const cardCenter = card.offsetLeft + card.offsetWidth / 2;
+          const distance = Math.abs(cardCenter - center);
+          if (distance < bestDistance) {
+            best = i;
+            bestDistance = distance;
+          }
+        });
+        activeWorld = best;
+        updateWorldCount();
+      };
+      worldPrev?.addEventListener("click", () => setWorld(activeWorld - 1));
+      worldNext?.addEventListener("click", () => setWorld(activeWorld + 1));
+      worldGrid?.addEventListener("scroll", syncWorldFromScroll, { passive: true });
+      const updateWorldScrollCarousel = () => {
+        const worlds = document.getElementById("worlds");
+        if (!worlds || !worldGrid || !worldCards.length || !isWorldScrollMode()) return;
+        const introY = Math.min(window.innerHeight * 0.48, 360);
+        const maxY = Math.max(1, worlds.offsetHeight - window.innerHeight - introY);
+        const progress = clamp01((window.scrollY - worlds.offsetTop - introY) / maxY);
+        const rawIndex = progress * Math.max(0, worldCards.length - 1);
+        const baseIndex = Math.min(worldCards.length - 1, Math.floor(rawIndex));
+        const nextIndex = Math.min(worldCards.length - 1, baseIndex + 1);
+        const phase = rawIndex - baseIndex;
+        const hold = 0.24;
+        const travel = clamp01((phase - hold) / (1 - hold * 2));
+        const easedTravel = travel * travel * (3 - 2 * travel);
+        const from = getWorldCardLeft(baseIndex);
+        const to = getWorldCardLeft(nextIndex);
+        worldGrid.scrollLeft = from + (to - from) * easedTravel;
+        activeWorld = Math.min(worldCards.length - 1, Math.round(baseIndex + easedTravel));
+        updateWorldCount();
+      };
+      window.addEventListener("scroll", updateWorldScrollCarousel, { passive: true });
+      window.addEventListener("resize", updateWorldScrollCarousel);
+      lenis?.on("scroll", updateWorldScrollCarousel);
+      updateWorldCount();
+      updateWorldScrollCarousel();
 
       const themeSections = document.querySelectorAll("[data-theme], .line-moment, section:not(.hero-door), footer");
       const themeObserver = "IntersectionObserver" in window ? new IntersectionObserver((entries) => {
@@ -1909,15 +2390,43 @@
 
       const FORM_BASE_URL = "https://script.google.com/macros/s/AKfycbwz0x15zSWKtnwg8Zu2nnojz_qabk_CRkZW6duoT6qXi54V862VhR5hVHCldEzx6OBD/exec";
       const programForm = document.getElementById("programForm");
+      const formLoader = document.getElementById("formLoader");
+      const formLoaderText = document.getElementById("formLoaderText");
       const formButtons = Array.from(document.querySelectorAll(".form-option"));
       const formsSection = document.getElementById("forms");
+      const formNames = {
+        "creator-access": "Submit video",
+        internship: "Internship",
+        "campus-ambassador": "Campus ambassador",
+        partnership: "Company partnership",
+        support: "Support / more info",
+        webinar: "Virtual webinar"
+      };
+      let formLoadTimer = null;
+      const showFormLoader = (program) => {
+        if (!formLoader) return;
+        clearTimeout(formLoadTimer);
+        formLoader.classList.remove("is-hidden");
+        formLoaderText.textContent = `Opening ${formNames[program] || "the selected opportunity"} from Google Forms. This can take a few seconds.`;
+        formLoadTimer = setTimeout(() => {
+          formLoaderText.textContent = "Still waiting on Google Forms. The opportunity should appear here shortly.";
+        }, 7000);
+      };
+      const hideFormLoader = () => {
+        clearTimeout(formLoadTimer);
+        formLoader?.classList.add("is-hidden");
+      };
       const setProgram = (program) => {
         if (!programForm || !program) return;
+        showFormLoader(program);
         programForm.src = `${FORM_BASE_URL}?program=${encodeURIComponent(program)}`;
         formButtons.forEach((button) => {
           button.classList.toggle("is-active", button.dataset.program === program);
         });
       };
+      programForm?.addEventListener("load", () => {
+        setTimeout(hideFormLoader, 360);
+      });
       formButtons.forEach((button) => {
         button.addEventListener("click", () => setProgram(button.dataset.program));
       });
