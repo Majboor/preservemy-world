@@ -655,6 +655,15 @@
         background: rgba(255,255,255,0.14);
         border-color: rgba(255,255,255,0.72);
       }
+      .hero-arrow:disabled,
+      .hero-dot:disabled {
+        cursor: wait;
+        opacity: 0.42;
+      }
+      .hero-arrow:disabled:hover {
+        background: rgba(7,22,28,0.42);
+        border-color: rgba(255,255,255,0.42);
+      }
       .hero-dots {
         display: flex;
         gap: 8px;
@@ -2122,12 +2131,7 @@
         });
       }
 
-      if (liteMode) {
-        if (loaderLabel) loaderLabel.textContent = "Lite mode";
-        if (loaderCount) loaderCount.textContent = "ready";
-        loaderBar.style.setProperty("--p", "100%");
-        setTimeout(finishLoader, 360);
-      } else {
+      if (!liteMode) {
         const escapeTimer = setTimeout(offerLiteFromLoader, 3000);
         const fallbackTimer = setTimeout(finishLoader, 28000);
         preloadFrames()
@@ -2203,12 +2207,30 @@
       const heroNext = document.querySelector("[data-hero-next]");
       let activeHero = 0;
       let heroTimer = null;
-      const setHero = (idx, restart = true) => {
+      const heroReadySlides = new Set();
+      const getHeroVideo = (idx) => heroSlides[((idx % heroSlides.length) + heroSlides.length) % heroSlides.length]?.querySelector("video");
+      const updateHeroControls = () => {
+        if (!liteMode || !heroSlides.length) return;
+        const nextIdx = (activeHero + 1) % heroSlides.length;
+        const prevIdx = (activeHero - 1 + heroSlides.length) % heroSlides.length;
+        const nextReady = heroReadySlides.has(nextIdx);
+        const prevReady = heroReadySlides.has(prevIdx);
+        if (heroNext) heroNext.disabled = !nextReady;
+        if (heroPrev) heroPrev.disabled = !prevReady;
+        heroDots.forEach((dot, i) => {
+          dot.disabled = i !== activeHero && !heroReadySlides.has(i);
+        });
+      };
+      const setHero = (idx, restart = true, force = false) => {
         if (!liteMode || !heroPanels.length || !heroSlides.length) return;
-        activeHero = (idx + heroPanels.length) % heroPanels.length;
+        const nextHero = (idx + heroPanels.length) % heroPanels.length;
+        if (!force && nextHero !== activeHero && !heroReadySlides.has(nextHero)) return;
+        activeHero = nextHero;
         heroPanels.forEach((panel, i) => panel.classList.toggle("is-active", i === activeHero));
         heroSlides.forEach((slide, i) => slide.classList.toggle("is-active", i === activeHero));
         heroDots.forEach((dot, i) => dot.classList.toggle("is-active", i === activeHero));
+        getHeroVideo(activeHero)?.play().catch(() => {});
+        updateHeroControls();
         if (restart) {
           clearInterval(heroTimer);
           heroTimer = setInterval(() => setHero(activeHero + 1, false), 3800);
@@ -2219,10 +2241,11 @@
       });
       heroPrev?.addEventListener("click", () => setHero(activeHero - 1));
       heroNext?.addEventListener("click", () => setHero(activeHero + 1));
-      setHero(0);
+      setHero(0, false, true);
 
       const videos = document.querySelectorAll("video");
       const prepareVideo = (video) => {
+        if (!video) return;
         const shell = video.closest(".video-shell");
         const poster = video.getAttribute("poster");
         if (shell && poster) shell.style.setProperty("--poster", `url("${poster}")`);
@@ -2231,15 +2254,30 @@
       };
       const markVideoReady = (video) => {
         video.closest(".video-shell")?.classList.add("is-ready");
+        const heroSlide = video.closest(".hero-slide");
+        if (heroSlide) {
+          const index = heroSlides.indexOf(heroSlide);
+          if (index >= 0) {
+            heroReadySlides.add(index);
+            updateHeroControls();
+          }
+        }
       };
       const playVideo = (video) => {
+        if (!video) return;
         prepareVideo(video);
         if (video.readyState >= 2) markVideoReady(video);
         video.play().then(() => markVideoReady(video)).catch(() => {});
       };
+      const warmHeroVideo = (idx) => {
+        const video = getHeroVideo(idx);
+        if (!video || heroReadySlides.has(idx)) return;
+        prepareVideo(video);
+      };
       const videoObserver = "IntersectionObserver" in window ? new IntersectionObserver((entries) => {
         entries.forEach((entry) => {
           const v = entry.target;
+          if (liteMode && v.closest(".hero-slide") && !v.closest(".hero-slide").classList.contains("is-active")) return;
           if (entry.isIntersecting) playVideo(v);
           else v.pause();
         });
@@ -2247,12 +2285,56 @@
       videos.forEach((video) => {
         video.muted = true;
         video.playsInline = true;
-        prepareVideo(video);
+        const heroSlide = video.closest(".hero-slide");
+        if (liteMode && heroSlide && heroSlides.indexOf(heroSlide) !== 0) {
+          video.preload = "metadata";
+        } else {
+          prepareVideo(video);
+        }
         video.addEventListener("loadeddata", () => markVideoReady(video), { once: true });
         video.addEventListener("canplay", () => markVideoReady(video), { once: true });
+        if (liteMode && heroSlide && heroSlides.indexOf(heroSlide) !== 0) return;
         if (videoObserver) videoObserver.observe(video);
         else playVideo(video);
       });
+      const waitForVideoReady = (video, timeout = 9000) => new Promise((resolve) => {
+        if (!video || video.readyState >= 2) {
+          if (video) markVideoReady(video);
+          resolve();
+          return;
+        }
+        let done = false;
+        const finish = () => {
+          if (done) return;
+          done = true;
+          clearTimeout(timer);
+          video.removeEventListener("loadeddata", finish);
+          video.removeEventListener("canplay", finish);
+          markVideoReady(video);
+          resolve();
+        };
+        const timer = setTimeout(finish, timeout);
+        video.addEventListener("loadeddata", finish, { once: true });
+        video.addEventListener("canplay", finish, { once: true });
+        prepareVideo(video);
+      });
+      if (liteMode) {
+        if (loaderLabel) loaderLabel.textContent = "Loading first video";
+        if (loaderCount) loaderCount.textContent = "hero 1 / 4";
+        loaderBar.style.setProperty("--p", "72%");
+        const firstHeroVideo = getHeroVideo(0);
+        playVideo(firstHeroVideo);
+        waitForVideoReady(firstHeroVideo).then(() => {
+          heroReadySlides.add(0);
+          updateHeroControls();
+          if (loaderCount) loaderCount.textContent = "ready";
+          finishLoader();
+          warmHeroVideo(1);
+          warmHeroVideo(heroSlides.length - 1);
+          setTimeout(() => heroSlides.forEach((_, i) => warmHeroVideo(i)), 900);
+          heroTimer = setInterval(() => setHero(activeHero + 1, false), 3800);
+        });
+      }
 
       const worldGrid = document.querySelector(".world-grid");
       const worldCards = Array.from(document.querySelectorAll(".world-card"));
