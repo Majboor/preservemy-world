@@ -1656,7 +1656,7 @@
           </div>
           <div class="hero-carousel">
             <div class="hero-slide is-active">
-              <video src="assets/places/videos/mount-fuji.mp4" poster="assets/places/videos/mount-fuji-poster.jpg" muted loop playsinline preload="auto"></video>
+              <video src="assets/places/videos/mount-fuji.mp4" poster="assets/places/videos/mount-fuji-poster.jpg" muted loop playsinline autoplay preload="auto"></video>
               <div class="hero-slide-copy">
                 <h1><span>Discover</span><span>the places</span><span>we're trying</span><span>to <em>keep</em>.</span></h1>
                 <p>Walk through a community-built archive of heritage sites, streets, classrooms, homes, and travel memories captured by us with ordinary phones. No stock footage.</p>
@@ -2249,8 +2249,11 @@
         const shell = video.closest(".video-shell");
         const poster = video.getAttribute("poster");
         if (shell && poster) shell.style.setProperty("--poster", `url("${poster}")`);
+        if (video.dataset.prepared === "1") return;
         video.preload = "auto";
+        video.autoplay = video.closest(".hero-slide.is-active") ? true : video.autoplay;
         video.load();
+        video.dataset.prepared = "1";
       };
       const markVideoReady = (video) => {
         video.closest(".video-shell")?.classList.add("is-ready");
@@ -2265,9 +2268,20 @@
       };
       const playVideo = (video) => {
         if (!video) return;
+        video.muted = true;
+        video.playsInline = true;
+        if (video.closest(".hero-slide")) video.autoplay = true;
         prepareVideo(video);
         if (video.readyState >= 2) markVideoReady(video);
         video.play().then(() => markVideoReady(video)).catch(() => {});
+      };
+      const keepVideoPlaying = (video, attempts = 6) => {
+        if (!video || attempts <= 0) return;
+        playVideo(video);
+        setTimeout(() => {
+          if (!video.paused && !video.ended) return;
+          keepVideoPlaying(video, attempts - 1);
+        }, 420);
       };
       const warmHeroVideo = (idx) => {
         const video = getHeroVideo(idx);
@@ -2282,7 +2296,7 @@
           else v.pause();
         });
       }, { rootMargin: "900px 0px", threshold: 0.01 }) : null;
-      videos.forEach((video) => {
+      videos.forEach((video, i) => {
         video.muted = true;
         video.playsInline = true;
         const heroSlide = video.closest(".hero-slide");
@@ -2329,6 +2343,7 @@
           updateHeroControls();
           if (loaderCount) loaderCount.textContent = "ready";
           finishLoader();
+          requestAnimationFrame(() => keepVideoPlaying(firstHeroVideo));
           warmHeroVideo(1);
           warmHeroVideo(heroSlides.length - 1);
           setTimeout(() => heroSlides.forEach((_, i) => warmHeroVideo(i)), 900);
