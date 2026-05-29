@@ -1,0 +1,285 @@
+/* =====================================================================
+   preservemy.world - UI polish layer (ui-enhance.css)
+   Additive enhancement: micro-interactions, hover / focus / reveal states.
+   Loaded after the inline stylesheet so these rules refine, never replace.
+   All motion is gated behind prefers-reduced-motion.
+   ===================================================================== */
+
+/* ---- Global refinements ------------------------------------------- */
+
+/* Accessible, on-brand focus ring for keyboard users everywhere. */
+a:focus-visible,
+button:focus-visible,
+.btn:focus-visible,
+.form-option:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--mint);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+/* Don't double up the ring on elements that already draw their own border box. */
+.btn:focus-visible { outline-offset: 3px; }
+
+::selection {
+  background: var(--teal);
+  color: var(--white);
+}
+
+/* Slim, themed scrollbar on the page itself. */
+@supports (scrollbar-width: thin) {
+  html { scrollbar-width: thin; scrollbar-color: var(--teal) transparent; }
+}
+html::-webkit-scrollbar { width: 10px; }
+html::-webkit-scrollbar-thumb {
+  background: color-mix(in oklab, var(--teal) 70%, transparent);
+  border-radius: 20px;
+  border: 2px solid var(--ink);
+}
+html::-webkit-scrollbar-thumb:hover { background: var(--teal); }
+html::-webkit-scrollbar-track { background: transparent; }
+
+/* ---- Buttons: lift, press, and a soft directional glow ------------- */
+.btn {
+  position: relative;
+  transition: background 160ms ease, color 160ms ease, border-color 160ms ease,
+    transform 220ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 220ms ease;
+}
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 26px -14px rgba(7, 22, 28, 0.7);
+}
+.btn:active { transform: translateY(0); box-shadow: none; }
+.btn.is-ghost:hover { box-shadow: 0 10px 26px -16px rgba(0, 0, 0, 0.5); }
+
+/* ---- Nav links: an underline that draws in from the left ---------- */
+.nav-links a {
+  position: relative;
+  transition: color 160ms ease;
+}
+.nav-links a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -4px;
+  height: 1.5px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 260ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.nav-links a:hover::after,
+.nav-links a:focus-visible::after { transform: scaleX(1); }
+
+/* ---- World cards: image zoom + caption reveal + accent ring ------- */
+.world-card {
+  transition: transform 480ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 480ms ease;
+}
+.world-card img,
+.world-card video {
+  transition: transform 720ms cubic-bezier(0.16, 1, 0.3, 1),
+    filter 480ms ease;
+  will-change: transform;
+}
+.world-card figcaption {
+  transition: transform 420ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.world-card strong { transition: color 240ms ease; }
+/* A thin accent line that grows under the place name on hover. */
+.world-card figcaption::after {
+  content: "";
+  display: block;
+  height: 2px;
+  width: 32px;
+  margin-top: 12px;
+  background: var(--mint);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 380ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+@media (hover: hover) {
+  .world-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 24px 48px -24px rgba(7, 22, 28, 0.65);
+  }
+  .world-card:hover img,
+  .world-card:hover video { transform: scale(1.06); }
+  .world-card:hover figcaption { transform: translateY(-4px); }
+  .world-card:hover figcaption::after { transform: scaleX(1); }
+  .world-card:hover strong { color: var(--mint); }
+}
+
+/* ---- Capabilities (dark grid): mint edge + tint on hover ---------- */
+.cap {
+  position: relative;
+  transition: background 320ms ease;
+}
+.cap::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--mint);
+  transform: scaleY(0);
+  transform-origin: top center;
+  transition: transform 380ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.cap span { transition: color 240ms ease, letter-spacing 240ms ease; }
+@media (hover: hover) {
+  .cap:hover { background: rgba(143, 219, 187, 0.06); }
+  .cap:hover::before { transform: scaleY(1); }
+  .cap:hover span { letter-spacing: 1px; color: var(--white); }
+}
+
+/* ---- How-it-works steps: number badge + accent slide -------------- */
+.step {
+  position: relative;
+  transition: background 260ms ease, transform 260ms ease;
+}
+.step span {
+  display: inline-block;
+  transition: transform 320ms cubic-bezier(0.16, 1, 0.3, 1), color 240ms ease;
+}
+@media (hover: hover) {
+  .step:hover { background: #eef5f2; }
+  .step:hover span { transform: translateX(4px); color: var(--clay); }
+}
+
+/* ---- Story cards: lift, deepen, accent bar ------------------------ */
+.story {
+  position: relative;
+  overflow: hidden;
+  transition: transform 360ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 360ms ease, background 360ms ease, border-color 360ms ease;
+}
+.story::after {
+  content: "";
+  position: absolute;
+  left: 28px;
+  right: 28px;
+  bottom: 0;
+  height: 3px;
+  background: var(--teal);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 420ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+@media (hover: hover) {
+  .story:hover {
+    transform: translateY(-6px);
+    background: rgba(255, 255, 255, 0.85);
+    border-color: color-mix(in oklab, var(--teal) 40%, transparent);
+    box-shadow: 0 26px 50px -30px rgba(7, 22, 28, 0.55);
+  }
+  .story:hover::after { transform: scaleX(1); }
+}
+
+/* ---- Form option list: pointer, indicator, active accent bar ------ */
+.form-option {
+  position: relative;
+  transition: background 220ms ease, color 220ms ease, padding-left 260ms ease;
+}
+.form-option::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--teal);
+  transform: scaleY(0);
+  transform-origin: center;
+  transition: transform 300ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+@media (hover: hover) {
+  .form-option:not(.is-active):hover {
+    background: #eef5f2;
+    padding-left: 24px;
+  }
+  .form-option:not(.is-active):hover::before { transform: scaleY(1); }
+}
+.form-option.is-active::before {
+  background: var(--mint);
+  transform: scaleY(1);
+}
+
+/* ---- Footer social: lift + icon nudge ----------------------------- */
+.footer-social a {
+  transition: color 200ms ease, transform 260ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.footer-social img {
+  transition: transform 260ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.footer-links a {
+  position: relative;
+  transition: color 180ms ease;
+}
+.footer-links a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -3px;
+  width: 100%;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 240ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+@media (hover: hover) {
+  .footer-social a:hover { transform: translateY(-2px); color: var(--mint); }
+  .footer-social a:hover img { transform: rotate(-6deg) scale(1.08); }
+  .footer-links a:hover::after { transform: scaleX(1); }
+}
+
+/* ---- Ticker: pause the marquee on hover so it can be read --------- */
+@media (hover: hover) {
+  .ticker:hover .ticker-track { animation-play-state: paused; }
+}
+
+/* ---- Scroll reveal ------------------------------------------------ */
+/* Progressive enhancement: hidden state only applies once JS has marked
+   the document ready, so content is always visible if the script fails. */
+.ui-reveal-ready [data-ui-reveal] {
+  opacity: 0;
+  transform: translateY(22px);
+  transition: opacity 720ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 720ms cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: var(--ui-reveal-delay, 0ms);
+  will-change: opacity, transform;
+}
+.ui-reveal-ready [data-ui-reveal].is-inview {
+  opacity: 1;
+  transform: none;
+}
+
+/* ---- Respect reduced-motion: strip transforms / transitions ------- */
+@media (prefers-reduced-motion: reduce) {
+  .btn,
+  .world-card,
+  .world-card img,
+  .world-card video,
+  .world-card figcaption,
+  .story,
+  .step,
+  .step span,
+  .form-option,
+  .footer-social a,
+  .footer-social img {
+    transition: color 160ms ease, background 160ms ease, border-color 160ms ease !important;
+    transform: none !important;
+  }
+  .world-card:hover img,
+  .world-card:hover video,
+  .world-card:hover,
+  .story:hover,
+  .footer-social a:hover { transform: none !important; }
+  .ui-reveal-ready [data-ui-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
