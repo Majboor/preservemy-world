@@ -29,6 +29,13 @@
 
     <link rel="icon" href="assets/preservethe-world-logo.png" />
     <link rel="apple-touch-icon" href="assets/preservethe-world-logo.png" />
+
+    <!-- Perf: warm up the CDN connection and preload the render-critical display + body fonts to cut layout shift -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
+    <link rel="preload" as="font" type="font/otf" href="assets/fonts/GTStandardM-NarrowHeavy.otf" crossorigin />
+    <link rel="preload" as="font" type="font/ttf" href="assets/fonts/Inter-VariableFont.ttf" crossorigin />
+
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lenis@1.2.3/dist/lenis.css" />
     <link rel="stylesheet" href="assets/studio/studio.css" />
     <link rel="stylesheet" href="assets/ui-enhance.css" />
@@ -1632,9 +1639,56 @@
         }
         .line-mask { display: none; }
       }
+
+      /* A11y: visible keyboard focus (none was defined before) + skip link.
+         Uses :focus-visible so pointer clicks stay clean while keyboard users
+         always get a clear, high-contrast ring on both light and dark sections. */
+      :focus-visible {
+        outline: 3px solid var(--mint);
+        outline-offset: 2px;
+        border-radius: 3px;
+      }
+      a:focus-visible,
+      button:focus-visible,
+      [tabindex]:focus-visible,
+      input:focus-visible,
+      textarea:focus-visible,
+      select:focus-visible {
+        outline: 3px solid var(--mint);
+        outline-offset: 2px;
+        box-shadow: 0 0 0 5px rgba(7, 22, 28, 0.45);
+      }
+      [data-theme="dark"] a:focus-visible,
+      [data-theme="dark"] button:focus-visible,
+      .hero-door a:focus-visible,
+      .hero-door button:focus-visible {
+        box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.35);
+      }
+      .skip-link {
+        position: fixed;
+        top: 12px;
+        left: 12px;
+        z-index: 100000;
+        padding: 12px 18px;
+        background: var(--ink);
+        color: var(--paper);
+        font-family: var(--mono);
+        font-size: 13px;
+        letter-spacing: 0.02em;
+        border-radius: var(--radius);
+        transform: translateY(-160%);
+        transition: transform 0.18s ease;
+      }
+      .skip-link:focus-visible,
+      .skip-link:focus {
+        transform: translateY(0);
+        outline: 3px solid var(--mint);
+        outline-offset: 2px;
+      }
     </style>
   </head>
   <body class="is-loading">
+    <a class="skip-link" href="#worlds">Skip to main content</a>
     <div class="loader" id="loader" aria-hidden="true" role="status" aria-live="polite">
       <div>
         <div class="eyebrow">Spatial AI - loading worlds</div>
@@ -2288,7 +2342,7 @@
         heroPanels.forEach((panel, i) => panel.classList.toggle("is-active", i === activeHero));
         heroSlides.forEach((slide, i) => slide.classList.toggle("is-active", i === activeHero));
         heroDots.forEach((dot, i) => dot.classList.toggle("is-active", i === activeHero));
-        getHeroVideo(activeHero)?.play().catch(() => {});
+        if (!reduceMotion) getHeroVideo(activeHero)?.play().catch(() => {});
         updateHeroControls();
         if (restart) {
           clearInterval(heroTimer);
@@ -2315,7 +2369,7 @@
         if (shell && poster) shell.style.setProperty("--poster", `url("${poster}")`);
         if (video.dataset.prepared === "1") return;
         video.preload = "auto";
-        video.autoplay = video.closest(".hero-slide.is-active") ? true : video.autoplay;
+        video.autoplay = (!reduceMotion && video.closest(".hero-slide.is-active")) ? true : video.autoplay;
         video.load();
         video.dataset.prepared = "1";
       };
@@ -2335,6 +2389,15 @@
         video.muted = true;
         video.playsInline = true;
         if (video.closest(".hero-slide")) video.autoplay = true;
+        // A11y: honour prefers-reduced-motion. Reveal the poster/first frame as a
+        // still image but never start looping playback for motion-sensitive users.
+        if (reduceMotion) {
+          video.autoplay = false;
+          video.removeAttribute("autoplay");
+          try { video.pause(); } catch {}
+          markVideoReady(video);
+          return;
+        }
         prepareVideo(video);
         if (video.readyState >= 2) markVideoReady(video);
         video.play().then(() => markVideoReady(video)).catch(() => {});
@@ -2364,6 +2427,16 @@
         video.muted = true;
         video.playsInline = true;
         const heroSlide = video.closest(".hero-slide");
+        // A11y: prefers-reduced-motion — strip autoplay, keep videos as still
+        // posters, and skip the observer/playback wiring entirely.
+        if (reduceMotion) {
+          video.autoplay = false;
+          video.removeAttribute("autoplay");
+          video.preload = "metadata";
+          try { video.pause(); } catch {}
+          markVideoReady(video);
+          return;
+        }
         if (liteMode && heroSlide && heroSlides.indexOf(heroSlide) !== 0) {
           video.preload = "metadata";
         } else {
