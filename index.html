@@ -39,6 +39,8 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lenis@1.2.3/dist/lenis.css" />
     <link rel="stylesheet" href="assets/studio/studio.css" />
     <link rel="stylesheet" href="assets/ui-enhance.css" />
+    <!-- Hero A/B test (Variant B) - inert unless ?variant=b. See docs/HERO-AB-VARIANT.md -->
+    <link rel="stylesheet" href="assets/variants/hero-variant-b.css" />
     <style>
       @font-face {
         font-family: "GT Standard M";
@@ -2677,5 +2679,8 @@
       });
     </script>
     <script src="assets/studio/studio.js" defer></script>
+    <!-- Hero A/B test controller - runs after the main module so it can re-use
+         existing form-option wiring. Reads ?variant=b (see docs/HERO-AB-VARIANT.md). -->
+    <script src="assets/variants/hero-variant-b.js" defer></script>
   </body>
 </html>
