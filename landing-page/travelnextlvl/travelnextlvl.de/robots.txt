@@ -1,0 +1,14 @@
+User-agent: *
+Disallow: /log-in
+Disallow: /sign-up
+Disallow: /reset-password
+Disallow: /update-password
+Disallow: /access-denied
+Disallow: /user-account
+Disallow: /password
+Disallow: /404
+
+Sitemap: https://travelnextlvl.de/sitemap.xml
+
+
+Sitemap: https://travelnextlvl.de/sitemap.xml

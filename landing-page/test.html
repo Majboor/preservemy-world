@@ -1,0 +1,4461 @@
+<html lang="en" class="lenis"><head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>preservemy.world — A walkable archive of every place worth remembering.</title>
+    <meta name="description" content="preservemy.world turns ordinary phone footage into walkable 3D worlds. A community-built archive of heritage sites, family rooms, schools, and streets that deserve to outlive a screenshot.">
+    <link rel="icon" href="assets/preservethe-world-logo.png">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lenis@1.2.3/dist/lenis.css">
+    <style>
+      /* ──────────────────────────────────────────────────────────
+         FONTS — pulled directly from the reference sites
+         ────────────────────────────────────────────────────────── */
+      @font-face {
+        font-family: "GT Standard M";
+        src: url("assets/fonts/GTStandardM-NarrowHeavy.otf") format("opentype");
+        font-weight: 900;
+        font-style: normal;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: "Inter";
+        src: url("assets/fonts/Inter-VariableFont.ttf") format("truetype-variations");
+        font-weight: 100 900;
+        font-style: normal;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: "DM Mono";
+        src: url("assets/fonts/DMMono-Regular.ttf") format("truetype");
+        font-weight: 400 500;
+        font-style: normal;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: "Fs R";
+        src: url("assets/fonts/FsR-Regular.otf") format("opentype");
+        font-weight: 400;
+        font-style: normal;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: "Epilogue";
+        src: url("assets/fonts/Epilogue-Regular.ttf") format("truetype");
+        font-weight: 400;
+        font-style: normal;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: "Epilogue";
+        src: url("assets/fonts/Epilogue-Bold.ttf") format("truetype");
+        font-weight: 700;
+        font-style: normal;
+        font-display: swap;
+      }
+
+      /* ──────────────────────────────────────────────────────────
+         TOKENS
+         ────────────────────────────────────────────────────────── */
+      :root {
+        /* PreserveThe.world palette (teal/green, nonprofit, UN-like) */
+        --c-dark-900: #07161c;          /* deep blue-black */
+        --c-dark-800: #0b212a;
+        --c-dark-700: #12313c;
+        --c-light-100: #ffffff;
+        --c-light-200: #f3f7f7;          /* clean off-white */
+        --c-bone: #e8f2ee;               /* subtle green-tint surface */
+        /* Keep legacy variable names to avoid touching every rule */
+        --c-gold-500: #217F6F;           /* primary teal */
+        --c-gold-400: #8FDBBB;           /* mint accent */
+        --c-rust-500: #58A677;           /* secondary green */
+
+        --site-min: 20;
+        --site-max: 90;
+        --gutter: 1rem;
+
+        --pad-x: clamp(16px, 4vw, 56px);
+
+        --display: "GT Standard M", "Fs R", "Inter", Arial, sans-serif;
+        --hero-display: "Fs R", "GT Standard M", "Inter", Arial, sans-serif;
+        --body: "Inter", Arial, sans-serif;
+        --mono: "DM Mono", "Inter", monospace;
+
+        /* Type scale (tuned to never spill off-screen) */
+        --fs-display: clamp(44px, 10.2vw, 160px);
+        --fs-h1:      clamp(40px, 9vw, 132px);
+        --fs-h2:      clamp(34px, 7.4vw, 112px);
+        --fs-h3:      clamp(28px, 4.8vw, 72px);
+        --fs-h4:      clamp(26px, 2.6vw, 36px);
+        --fs-h5:      clamp(20px, 1.8vw, 28px);
+        --fs-h6:      clamp(16px, 1.2vw, 20px);
+        --fs-eyebrow: clamp(10px, 0.78vw, 12px);
+        --fs-large:   clamp(20px, 1.5vw, 25.6px);
+        --fs-main:    clamp(15px, 1.1vw, 19px);
+        --fs-small:   clamp(12.6px, 0.95vw, 16px);
+
+        --ls-tight:  -0.045em;
+        --ls-normal: -0.02em;
+        --ls-wide:    0.04em;
+
+        --lh-small:   1.0;
+        --lh-medium:  1.05;
+        --lh-large:   1.18;
+        --lh-huge:    1.45;
+
+        --r-main:  4px;
+        --r-small: 6px;
+        --r-pill:  999px;
+
+        --section-pad: clamp(80px, 9vw, 160px);
+
+        /* Surfaces + depth (kept subtle) */
+        --line-dark: rgba(239, 238, 236, 0.14);
+        --line-light: rgba(7, 22, 28, 0.14);
+        --shadow-soft: 0 18px 60px rgba(0,0,0,0.18);
+        --shadow-crisp: 0 10px 34px rgba(0,0,0,0.16);
+        --glass-dark: rgba(7, 22, 28, 0.46);
+        --glass-light: rgba(255, 255, 255, 0.78);
+      }
+
+      *, *::before, *::after { box-sizing: border-box; }
+
+      html, body {
+        margin: 0;
+        padding: 0;
+        background: var(--c-dark-900);
+        color: var(--c-light-200);
+        font-family: var(--body);
+        font-size: var(--fs-main);
+        line-height: var(--lh-huge);
+        font-weight: 400;
+        letter-spacing: var(--ls-normal);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
+      }
+
+      body {
+        overflow-x: clip;
+      }
+
+      /* Make the page feel more “composed” */
+      section[data-theme] { position: relative; }
+      section[data-theme]::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        height: 1px;
+        background: color-mix(in oklab, currentColor 14%, transparent);
+        opacity: 0.7;
+        pointer-events: none;
+      }
+
+      body.is-loading { overflow: hidden; }
+      body.modal-open { overflow: hidden; }
+
+      a { color: inherit; text-decoration: none; }
+      img, video { display: block; max-width: 100%; }
+
+      ::selection { background: var(--c-gold-500); color: var(--c-light-100); }
+
+      /* lenis scroll smoothing */
+      html.lenis, html.lenis body { height: auto; }
+      .lenis.lenis-smooth { scroll-behavior: auto !important; }
+      .lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+
+      /* ──────────────────────────────────────────────────────────
+         THEME SYSTEM (tom carder pattern)
+         ────────────────────────────────────────────────────────── */
+      .theme-dark {
+        --t-bg: var(--c-dark-900);
+        --t-bg-2: var(--c-dark-800);
+        --t-text: var(--c-light-200);
+        --t-text-soft: rgba(239, 238, 236, 0.6);
+        --t-border: rgba(239, 238, 236, 0.18);
+        --t-accent: var(--c-gold-400);
+        background:
+          radial-gradient(1000px 460px at 20% 10%, rgba(33,127,111,0.12), rgba(7,22,28,0) 58%),
+          radial-gradient(980px 520px at 90% 20%, rgba(143,219,187,0.10), rgba(7,22,28,0) 60%),
+          var(--t-bg);
+        color: var(--t-text);
+      }
+      .theme-light {
+        --t-bg: var(--c-light-200);
+        --t-bg-2: var(--c-light-100);
+        --t-text: var(--c-dark-900);
+        --t-text-soft: rgba(25, 21, 18, 0.62);
+        --t-border: rgba(25, 21, 18, 0.18);
+        --t-accent: var(--c-gold-500);
+        background:
+          radial-gradient(1200px 420px at 20% -10%, rgba(33,127,111,0.10), rgba(255,255,255,0) 60%),
+          radial-gradient(900px 360px at 85% 30%, rgba(143,219,187,0.10), rgba(255,255,255,0) 55%),
+          var(--t-bg);
+        color: var(--t-text);
+      }
+
+      /* ──────────────────────────────────────────────────────────
+         TYPOGRAPHY UTILITIES (mirror tom carder u-text-style-*)
+         ────────────────────────────────────────────────────────── */
+      .t-display, .t-h1, .t-h2, .t-h3, .t-h4, .t-h5, .t-h6 {
+        font-family: var(--display);
+        font-weight: 900;
+        line-height: var(--lh-medium);
+        letter-spacing: var(--ls-tight);
+        margin: 0;
+        text-wrap: balance;
+        text-transform: uppercase;
+        overflow-wrap: anywhere;
+        word-break: normal;
+        hyphens: auto;
+      }
+      .t-display { font-size: var(--fs-display); line-height: var(--lh-small); }
+      .t-h1      { font-size: var(--fs-h1); }
+      .t-h2      { font-size: var(--fs-h2); line-height: var(--lh-medium); }
+      .t-h3      { font-size: var(--fs-h3); line-height: var(--lh-large); letter-spacing: -0.025em; }
+      .t-h4      { font-size: var(--fs-h4); line-height: var(--lh-large); letter-spacing: -0.02em; }
+      .t-h5      { font-size: var(--fs-h5); line-height: var(--lh-large); letter-spacing: -0.015em; text-transform: none; }
+      .t-h6      { font-size: var(--fs-h6); line-height: var(--lh-large); letter-spacing: 0; text-transform: none; }
+
+      /* travelnext display style — softer, light weight, mixed-case (Fs R) */
+      .t-hero {
+        font-family: var(--hero-display);
+        font-weight: 400;
+        font-size: var(--fs-display);
+        line-height: 1.04;
+        letter-spacing: -0.01em;
+        text-transform: none;
+        margin: 0;
+        text-wrap: balance;
+        overflow-wrap: anywhere;
+        word-break: normal;
+        hyphens: auto;
+      }
+      .t-hero em { font-style: italic; color: var(--c-gold-400); font-weight: 400; }
+
+      .t-eyebrow {
+        font-family: var(--mono);
+        font-weight: 500;
+        font-size: var(--fs-eyebrow);
+        line-height: 1.4;
+        letter-spacing: var(--ls-wide);
+        text-transform: uppercase;
+        color: var(--t-accent, var(--c-gold-400));
+      }
+      .t-large { font-size: var(--fs-large); line-height: 1.45; }
+      .t-small { font-size: var(--fs-small); line-height: 1.5; }
+      .t-mono  { font-family: var(--mono); letter-spacing: var(--ls-wide); text-transform: uppercase; font-size: var(--fs-eyebrow); }
+
+      /* ──────────────────────────────────────────────────────────
+         CONTAINER (tom carder u-container)
+         ────────────────────────────────────────────────────────── */
+      .u-container {
+        width: 100%;
+        max-width: 1480px;
+        margin: 0 auto;
+        padding: 0 var(--pad-x);
+      }
+
+      /* ──────────────────────────────────────────────────────────
+         BUTTONS (tom carder btn-icon-link feel)
+         ────────────────────────────────────────────────────────── */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 22px 14px 22px;
+        background: var(--c-light-200);
+        color: var(--c-dark-900);
+        border: 1px solid var(--c-light-200);
+        border-radius: var(--r-main);
+        font-family: var(--mono);
+        font-size: var(--fs-eyebrow);
+        font-weight: 500;
+        letter-spacing: var(--ls-wide);
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: background 320ms cubic-bezier(0.2, 0.8, 0.2, 1), color 320ms ease, border-color 320ms ease, transform 320ms ease;
+        white-space: nowrap;
+      }
+      .btn:hover {
+        background: var(--c-gold-400);
+        border-color: var(--c-gold-400);
+        color: var(--c-dark-900);
+      }
+      .btn-ghost {
+        background: transparent;
+        color: inherit;
+        border-color: var(--t-border, rgba(239, 238, 236, 0.32));
+      }
+      .btn-ghost:hover {
+        background: var(--c-light-200);
+        color: var(--c-dark-900);
+        border-color: var(--c-light-200);
+      }
+      .btn-dark {
+        background: var(--c-dark-900);
+        color: var(--c-light-200);
+        border-color: var(--c-dark-900);
+      }
+      .btn-dark:hover {
+        background: var(--c-gold-500);
+        color: var(--c-light-100);
+        border-color: var(--c-gold-500);
+      }
+
+      .btn-icon-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 16px;
+        padding: 12px 0;
+        font-family: var(--mono);
+        font-size: var(--fs-eyebrow);
+        font-weight: 500;
+        letter-spacing: var(--ls-wide);
+        text-transform: uppercase;
+        cursor: pointer;
+        background: transparent;
+        border: 0;
+        color: inherit;
+        position: relative;
+      }
+      .btn-icon-link .arrow {
+        position: relative;
+        width: 22px;
+        height: 1px;
+        background: currentColor;
+        display: inline-block;
+        transition: width 360ms cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+      .btn-icon-link .arrow::after {
+        content: "";
+        position: absolute;
+        right: -1px;
+        top: -3px;
+        width: 7px;
+        height: 7px;
+        border-top: 1px solid currentColor;
+        border-right: 1px solid currentColor;
+        transform: rotate(45deg);
+      }
+      .btn-icon-link:hover .arrow { width: 36px; }
+      .btn-icon-link::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 38px;
+        bottom: 0;
+        height: 1px;
+        background: currentColor;
+        opacity: 0.32;
+        transition: right 320ms ease, opacity 320ms ease;
+      }
+      .btn-icon-link:hover::after { right: 0; opacity: 1; }
+
+      /* ──────────────────────────────────────────────────────────
+         GRAIN & PAGE PROGRESS
+         ────────────────────────────────────────────────────────── */
+      .grain {
+        position: fixed;
+        inset: 0;
+        z-index: 95;
+        pointer-events: none;
+        opacity: 0.05;
+        mix-blend-mode: overlay;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.95' numOctaves='2' stitchTiles='stitch'/></filter><rect width='160' height='160' filter='url(%23n)' opacity='0.85'/></svg>");
+      }
+
+      .page-progress {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        z-index: 90;
+        background: rgba(239, 238, 236, 0.06);
+      }
+      .page-progress::after {
+        content: "";
+        display: block;
+        height: 100%;
+        width: var(--p, 0%);
+        background: var(--c-gold-400);
+        transition: width 80ms linear;
+      }
+
+      /* ──────────────────────────────────────────────────────────
+         LOADER (tom carder crisp-loader-inspired, simplified)
+         ────────────────────────────────────────────────────────── */
+      .loader {
+        position: fixed;
+        inset: 0;
+        z-index: 200;
+        display: grid;
+        grid-template-rows: 1fr auto;
+        background: var(--c-dark-900);
+        color: var(--c-light-200);
+        transition: opacity 700ms ease, visibility 700ms;
+      }
+      .loader.is-hidden {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+      }
+      .loader-inner {
+        align-self: end;
+        padding: 0 var(--pad-x);
+      }
+      .loader-eyebrow {
+        font-family: var(--mono);
+        font-size: var(--fs-eyebrow);
+        letter-spacing: var(--ls-wide);
+        text-transform: uppercase;
+        color: var(--c-gold-400);
+        margin-bottom: 24px;
+      }
+      .loader-title {
+        font-family: var(--hero-display);
+        font-weight: 400;
+        font-size: clamp(56px, 9.5vw, 168px);
+        line-height: 0.95;
+        letter-spacing: -0.01em;
+        margin: 0;
+      }
+      .loader-title em {
+        font-style: italic;
+        color: var(--c-gold-400);
+      }
+      .loader-foot {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        gap: 24px;
+        align-items: center;
+        padding: 28px var(--pad-x);
+        border-top: 1px solid rgba(239, 238, 236, 0.14);
+        font-family: var(--mono);
+        font-size: var(--fs-eyebrow);
+        letter-spacing: var(--ls-wide);
+        text-transform: uppercase;
+        color: rgba(239, 238, 236, 0.55);
+      }
+      .loader-bar {
+        width: min(420px, 60vw);
+        height: 1px;
+        background: rgba(239, 238, 236, 0.18);
+        position: relative;
+        overflow: hidden;
+      }
+      .loader-bar::after {
+        content: "";
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: var(--p, 8%);
+        background: var(--c-gold-400);
+        transition: width 280ms ease;
+      }
+      .loader-pct { color: var(--c-light-200); font-variant-numeric: tabular-nums; text-align: right; }
+
+      /* ──────────────────────────────────────────────────────────
+         UTILITY + NAV
+         ────────────────────────────────────────────────────────── */
+      .utility {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 60;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 8px var(--pad-x);
+        font-family: var(--mono);
+        font-size: var(--fs-eyebrow);
+        letter-spacing: var(--ls-wide);
+        text-transform: uppercase;
+        color: rgba(243, 247, 247, 0.76);
+        transition: color 300ms ease;
+      }
+      .utility .dot {
+        display: inline-block;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        margin-right: 8px;
+        vertical-align: middle;
+        background: var(--c-gold-400);
+        animation: pulse 2.4s ease-in-out infinite;
+      }
+      @keyframes pulse {
+        0%, 100% { opacity: 0.4; transform: scale(0.85); }
+        50% { opacity: 1; transform: scale(1.12); }
+      }
+
+      .nav {
+        position: fixed;
+        top: 28px;
+        left: 0;
+        right: 0;
+        z-index: 60;
+        padding: 12px var(--pad-x);
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: center;
+        gap: 32px;
+        color: var(--c-light-200);
+        transition: color 300ms ease;
+      }
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 14px;
+      }
+      .brand-mark {
+        width: 40px;
+        height: 40px;
+        border-radius: var(--r-pill);
+        border: 1px solid rgba(239, 238, 236, 0.28);
+        background: rgba(239, 238, 236, 0.06);
+        backdrop-filter: blur(8px);
+        display: grid;
+        place-items: center;
+        transition: border-color 300ms ease, background 300ms ease;
+      }
+      .brand-mark img {
+        width: 24px;
+        height: 24px;
+        object-fit: contain;
+        filter: brightness(0) invert(1);
+        transition: filter 300ms ease;
+      }
+      .brand-text { line-height: 1; }
+      .brand-text strong {
+        display: block;
+        font-family: var(--hero-display);
+        font-weight: 400;
+        font-size: 19px;
+        letter-spacing: -0.01em;
+      }
+      .brand-text strong em { font-style: italic; color: var(--c-gold-400); }
+      .brand-text span {
+        display: block;
+        margin-top: 2px;
+        font-family: var(--mono);
+        font-size: 9.5px;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        opacity: 0.62;
+      }
+
+      .nav-links {
+        justify-self: center;
+        display: flex;
+        gap: 28px;
+        font-family: var(--mono);
+        font-size: var(--fs-eyebrow);
+        letter-spacing: var(--ls-wide);
+        text-transform: uppercase;
+      }
+      .nav-links a {
+        opacity: 0.78;
+        position: relative;
+        padding: 6px 0;
+        transition: opacity 220ms ease;
+      }
+      .nav-links a::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        bottom: -2px;
+        width: 0;
+        height: 1px;
+        background: currentColor;
+        transition: width 320ms cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+      .nav-links a:hover { opacity: 1; }
+      .nav-links a:hover::after { width: 100%; }
+
+      .nav-cta { display: flex; gap: 10px; }
+
+      body.theme-on-dark .nav,
+      body.theme-on-dark .utility {
+        color: var(--c-light-200);
+      }
+      body.theme-on-dark .brand-mark { border-color: rgba(239, 238, 236, 0.28); background: rgba(239, 238, 236, 0.06); }
+      body.theme-on-dark .brand-mark img { filter: brightness(0) invert(1); }
+
+      body.theme-on-light .nav,
+      body.theme-on-light .utility {
+        color: var(--c-dark-900);
+      }
+      body.theme-on-light .brand-mark { border-color: rgba(25, 21, 18, 0.18); background: rgba(25, 21, 18, 0.04); }
+      body.theme-on-light .brand-mark img { filter: none; }
+      body.theme-on-light .btn-ghost { border-color: rgba(25, 21, 18, 0.32); color: var(--c-dark-900); }
+      body.theme-on-light .btn-ghost:hover { background: var(--c-dark-900); color: var(--c-light-200); border-color: var(--c-dark-900); }
+
+      @media (max-width: 960px) {
+        .nav-links { display: none; }
+      }
+      @media (max-width: 720px) {
+        .utility-extra,
+        .nav-cta {
+          display: none;
+        }
+        .utility {
+          justify-content: flex-start;
+          padding-top: 10px;
+        }
+        .nav {
+          grid-template-columns: 1fr;
+          top: 42px;
+          padding-top: 8px;
+        }
+      }
+
+      /* ──────────────────────────────────────────────────────────
+         HERO — TravelNext "threed_story": pinned door lottie behind
+         three stacked text panels (100vh + 200vh + 100vh = 400vh).
+         ────────────────────────────────────────────────────────── */
+      .tnl-hero {
+        position: relative;
+        z-index: 4;
+        background: #0a181d;            /* fallback while lottie loads */
+        isolation: isolate;
+      }
+
+      /* Pinned background. position:sticky + margin-bottom:-100vh removes
+         it from flow so panels start at the section's top. */
+      .tnl-hero__bg {
+        position: sticky;
+        top: 0;
+        width: 100%;
+        height: 100vh;
+        height: 100svh;
+        margin-bottom: -100vh;
+        z-index: 1;
+        overflow: hidden;
+      }
+      .tnl-hero__door {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+      }
+      .tnl-hero__door #tnlDoorPlayer {
+        width: 100%;
+        height: 100%;
+        display: block;
+        background: url("assets/door-lottie/images/image_0.webp") center / cover no-repeat;
+      }
+      .tnl-hero__door #tnlDoorPlayer canvas,
+      .tnl-hero__door #tnlDoorPlayer svg {
+        display: block;
+        width: 100% !important;
+        height: 100% !important;
+      }
+      /* Light tint for headline readability — kept subtle, like reference */
+      .tnl-hero__tint {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        pointer-events: none;
+        background:
+          linear-gradient(180deg, rgba(8,18,22,0.10) 0%, rgba(8,18,22,0.42) 100%),
+          linear-gradient(90deg, rgba(8,18,22,0.46) 0%, rgba(8,18,22,0.10) 60%, rgba(8,18,22,0) 100%);
+      }
+
+      /* Panels stack on top of the pinned bg */
+      .tnl-hero__panels {
+        position: relative;
+        z-index: 5;
+      }
+      .tnl-hero__panel {
+        position: relative;
+        width: 100%;
+        height: 100vh;
+        height: 100svh;
+      }
+      .tnl-hero__panel--two   { height: 200vh; height: 200svh; }
+      .tnl-hero__panel--three { height: 100vh; height: 100svh; }
+
+      .tnl-hero__wrap {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        padding: 148px var(--pad-x) 84px;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+      }
+
+      .tnl-hero__copy {
+        max-width: 720px;
+        color: var(--c-light-200);
+        --o: 0;
+        opacity: var(--o);
+        transform: translateY(calc((1 - var(--o)) * 26px));
+        transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.2,0.7,0.2,1);
+        will-change: opacity, transform;
+      }
+      .tnl-hero__copy .t-hero {
+        margin: 0;
+        font-size: clamp(56px, 7.2vw, 110px);
+        line-height: 1;
+        color: rgba(255,255,255,0.95);
+        letter-spacing: -0.015em;
+      }
+      .tnl-hero__copy--one .t-hero span {
+        display: block;
+        white-space: nowrap;
+      }
+      .tnl-hero__copy p {
+        margin: 22px 0 0;
+        max-width: 52ch;
+        color: rgba(255,255,255,0.78);
+        font-size: var(--fs-large);
+        line-height: 1.5;
+      }
+      .tnl-hero__copy .hero-actions {
+        margin-top: 32px;
+      }
+
+      /* Eyebrow used on panels 2 & 3 */
+      .tnl-hero__eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 22px;
+        color: var(--c-gold-400);
+      }
+      .tnl-hero__eyebrow::before {
+        content: "";
+        width: 36px;
+        height: 1px;
+        background: currentColor;
+        opacity: 0.7;
+      }
+
+      /* Panel 1: bottom block (paragraph + actions) sits at panel bottom */
+      .tnl-hero__bottom {
+        margin-top: auto;
+        max-width: 540px;
+        --o: 0;
+        opacity: var(--o);
+        transform: translateY(calc((1 - var(--o)) * 26px));
+        transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.2,0.7,0.2,1);
+        will-change: opacity, transform;
+      }
+      .tnl-hero__bottom p {
+        margin: 0 0 18px;
+        color: rgba(255,255,255,0.78);
+        font-size: var(--fs-large);
+        line-height: 1.5;
+        max-width: 50ch;
+      }
+
+      /* Panel 2 (200vh) — two stacked moments anchored absolutely within
+         the panel, so their scroll windows line up precisely with the door. */
+      .tnl-hero__panel--two .tnl-hero__wrap {
+        position: relative;
+        padding: 0;
+      }
+      .tnl-hero__copy--two-a,
+      .tnl-hero__copy--two-b {
+        position: absolute;
+        left: var(--pad-x);
+        right: var(--pad-x);
+        max-width: 760px;
+      }
+      .tnl-hero__copy--two-a { top: 32vh; }
+      .tnl-hero__copy--two-b {
+        top: 132vh;
+        margin-left: 18%;
+      }
+
+      /* Panel 3 — final moment, offset right like reference */
+      .tnl-hero__copy--three {
+        margin-top: 18vh;
+        margin-left: 18%;
+        max-width: 760px;
+      }
+
+      .tnl-hero__hint {
+        position: fixed;
+        left: 50%;
+        bottom: 22px;
+        transform: translateX(-50%);
+        z-index: 12;
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: rgba(243,247,247,0.78);
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        opacity: var(--hint-o, 1);
+        pointer-events: none;
+        transition: opacity 0.4s ease;
+      }
+      .tnl-hero__hint i {
+        width: 26px;
+        height: 1px;
+        background: currentColor;
+        opacity: 0.7;
+        position: relative;
+      }
+      .tnl-hero__hint i::after {
+        content: "";
+        position: absolute;
+        right: -1px;
+        top: -3px;
+        width: 7px;
+        height: 7px;
+        border-top: 1px solid currentColor;
+        border-right: 1px solid currentColor;
+        transform: rotate(135deg);
+      }
+
+      /* Final fade to dark for handoff into the next section.
+         Lives in the section's last 100vh so it only paints when in view. */
+      .tnl-hero__fade {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 100vh;
+        height: 100svh;
+        z-index: 6;
+        background: #07161c;
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .tnl-hero__copy, .tnl-hero__bottom { --o: 1 !important; transform: none !important; }
+      }
+
+      @media (max-width: 760px) {
+        .tnl-hero__wrap { padding: 130px var(--pad-x) 64px; }
+        .tnl-hero__copy .t-hero { font-size: clamp(42px, 11vw, 64px); }
+        .tnl-hero__copy--one .t-hero span { white-space: normal; }
+        .tnl-hero__copy--two-b { margin-top: 70vh; margin-left: 0; }
+        .tnl-hero__copy--three { margin-left: 0; margin-top: 22vh; }
+      }
+
+      /* ──────────────────────────────────────────────────────────
+         HERO DOOR — scroll “walk through” moment (TravelNextLevel-inspired)
+         ────────────────────────────────────────────────────────── */
+      .hero-door {
+        position: relative;
+        height: 500vh;
+        overflow: visible;
+        background: #cfe0ee; /* fallback while lottie loads */
+      }
+      .hero-door__sticky {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        height: 100svh;
+        display: grid;
+        place-items: center;
+        isolation: isolate;
+        overflow: hidden;
+      }
+      /* Full-bleed lottie = the entire hero background */
+      .hero-door__bg {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+      }
+      .hero-door__bg::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        /* light readability only, keep minimal like TravelNext */
+        background:
+          linear-gradient(90deg, rgba(10, 24, 34, 0.38) 0%, rgba(10, 24, 34, 0.08) 48%, rgba(10, 24, 34, 0.06) 100%);
+        pointer-events: none;
+      }
+
+      .hero-door__content {
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        display: grid;
+        grid-template-columns: 1fr;
+        align-content: center;
+        padding: 148px var(--pad-x) 84px;
+      }
+      .hero-door__content .hero-tx {
+        max-width: 560px; /* like screenshot left copy block */
+      }
+
+      .hero-door .t-hero {
+        max-width: 560px;
+        font-size: clamp(58px, 7.6vw, 118px);
+        line-height: 0.98;
+        overflow-wrap: normal;
+        hyphens: none;
+        color: rgba(255,255,255,0.92);
+        text-shadow: 0 1px 0 rgba(0,0,0,0.06);
+      }
+      .hero-door .t-hero span {
+        display: block;
+        white-space: nowrap;
+      }
+      .hero-door .hero-tx p {
+        color: rgba(255,255,255,0.78);
+        max-width: 46ch;
+      }
+      .hero-door .hero-tx-eyebrow { color: rgba(255,255,255,0.72); display: none; }
+
+      .hero-door__panels {
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        pointer-events: none;
+      }
+      .hero-door-panel {
+        min-height: 100vh;
+        min-height: 100svh;
+        display: flex;
+        align-items: center;
+        padding: 148px var(--pad-x) 84px;
+      }
+      .hero-door-panel--long {
+        min-height: 200vh;
+        min-height: 200svh;
+        align-items: flex-start;
+      }
+      .hero-door-panel--long .hero-door-copy {
+        margin-top: 86vh;
+      }
+      .hero-door-panel--third {
+        align-items: flex-start;
+      }
+      .hero-door-panel--third .hero-door-copy {
+        margin-top: 22vh;
+        margin-left: 12vw;
+        max-width: 720px;
+      }
+      .hero-door-copy {
+        width: min(560px, 100%);
+        color: var(--c-light-200);
+        pointer-events: auto;
+      }
+      .hero-door-copy .t-hero {
+        margin: 0;
+      }
+      .hero-door-copy p {
+        margin: 28px 0 0;
+        max-width: 46ch;
+        color: rgba(255,255,255,0.8);
+        font-size: var(--fs-large);
+        line-height: 1.5;
+      }
+      .hero-door-copy .hero-actions {
+        margin-top: 34px;
+      }
+
+      .hero-door-seq {
+        opacity: 1;
+        transform: none;
+        will-change: opacity, transform;
+      }
+
+      .hero-door__hint {
+        position: absolute;
+        left: 50%;
+        bottom: 22px;
+        transform: translateX(-50%);
+        z-index: 3;
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: rgba(243,247,247,0.72);
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        opacity: calc(1 - var(--door-p, 0) * 1.6);
+        pointer-events: none;
+      }
+      .hero-door__hint i {
+        width: 26px;
+        height: 1px;
+        background: currentColor;
+        opacity: 0.6;
+        position: relative;
+      }
+      .hero-door__hint i::after {
+        content: "";
+        position: absolute;
+        right: -1px;
+        top: -3px;
+        width: 7px;
+        height: 7px;
+        border-top: 1px solid currentColor;
+        border-right: 1px solid currentColor;
+        transform: rotate(135deg);
+      }
+
+      .tnl-door {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+      }
+      #tnlDoorPlayer {
+        width: 100%;
+        height: 100%;
+        display: block;
+        background: url("assets/door-lottie/images/image_0.webp") center / cover no-repeat;
+      }
+
+      .door-stage {
+        position: relative;
+        z-index: 1;
+        width: min(520px, 44vw);
+        aspect-ratio: 3 / 4;
+        transform:
+          translateY(calc(var(--door-lift, 0) * -10px))
+          scale(calc(1 + var(--door-zoom, 0) * 0.55));
+        transform-origin: 50% 58%;
+        will-change: transform;
+        filter: drop-shadow(0 18px 60px rgba(0,0,0,0.22));
+      }
+      .door-stage::before {
+        content: "";
+        position: absolute;
+        left: 50%;
+        bottom: -14%;
+        width: 78%;
+        height: 20%;
+        transform: translateX(-50%);
+        background: radial-gradient(closest-side, rgba(0,0,0,0.22), rgba(0,0,0,0));
+        opacity: 0.85;
+        filter: blur(1px);
+      }
+
+      /* reflection (water) */
+      .door-stage::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 100%;
+        height: 64%;
+        border-radius: 10px;
+        transform: scaleY(-1);
+        background:
+          linear-gradient(180deg, rgba(255,255,255,0.22), rgba(255,255,255,0)),
+          radial-gradient(420px 140px at 50% 16%, rgba(255,255,255,0.16), rgba(255,255,255,0) 70%);
+        mask-image: linear-gradient(180deg, rgba(0,0,0,0.46), rgba(0,0,0,0));
+        opacity: calc(0.32 * (1 - var(--door-zoom, 0)));
+        pointer-events: none;
+      }
+
+      .door-frame {
+        position: absolute;
+        inset: 0;
+        border-radius: 12px;
+        background:
+          linear-gradient(180deg, rgba(255,255,255,0.98), rgba(241,246,248,0.90));
+        border: 1px solid rgba(255,255,255,0.68);
+        box-shadow:
+          0 10px 28px rgba(0,0,0,0.10),
+          inset 0 0 0 1px rgba(255,255,255,0.55);
+      }
+      .door-frame::after {
+        content: "";
+        position: absolute;
+        inset: 12px;
+        border-radius: 10px;
+        border: 1px solid rgba(0,0,0,0.10);
+      }
+
+      .door-portal {
+        position: absolute;
+        inset: 16px;
+        border-radius: 10px;
+        overflow: hidden;
+        background: linear-gradient(180deg, rgba(255,255,255,0.20), rgba(255,255,255,0.02));
+      }
+      .door-portal video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transform: scale(calc(1.08 + var(--door-p, 0) * 0.08));
+        filter: saturate(0.98) contrast(1.03);
+        opacity: calc(0.86 + var(--door-p, 0) * 0.14);
+      }
+      .door-portal::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(180deg, rgba(255,255,255,0.06), rgba(0,0,0,0.26));
+      }
+
+      .door-wrap {
+        position: absolute;
+        inset: 16px;
+        border-radius: 10px;
+        perspective: 1200px;
+        transform-style: preserve-3d;
+      }
+      .door {
+        position: absolute;
+        inset: 0;
+        transform-origin: 0% 50%;
+        transform:
+          rotateY(calc(var(--door-open, 0deg)))
+          translateZ(1px);
+        border-radius: 10px;
+        background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(242,247,248,0.88));
+        border: 1px solid rgba(255,255,255,0.70);
+        box-shadow:
+          0 12px 34px rgba(0,0,0,0.14),
+          inset -1px 0 0 rgba(0,0,0,0.06);
+        will-change: transform;
+      }
+      .door::before {
+        content: "";
+        position: absolute;
+        inset: 9%;
+        border-radius: 8px;
+        border: 1px solid rgba(0,0,0,0.10);
+      }
+      .door::after {
+        content: "";
+        position: absolute;
+        left: 14%;
+        top: 48%;
+        width: 18px;
+        height: 6px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, rgba(231,191,95,0.0), rgba(231,191,95,0.0));
+      }
+      .door-handle {
+        position: absolute;
+        left: 82%;
+        top: 52%;
+        width: 28px;
+        height: 10px;
+        transform: translate(-50%, -50%);
+        border-radius: 999px;
+        background: linear-gradient(180deg, rgba(231,191,95,0.0), rgba(231,191,95,0.0));
+      }
+      .door-handle::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 999px;
+        background: linear-gradient(180deg, rgba(198,165,98,0.60), rgba(231,191,95,0.34));
+        opacity: 0.92;
+      }
+      .door-edge {
+        position: absolute;
+        right: -12px;
+        top: 0;
+        bottom: 0;
+        width: 12px;
+        background: linear-gradient(180deg, rgba(255,255,255,0.74), rgba(220,232,232,0.62));
+        transform: rotateY(90deg);
+        transform-origin: left;
+        opacity: 0.92;
+      }
+
+      .hero-door__fade {
+        position: absolute;
+        inset: 0;
+        z-index: 4;
+        background: #07161c;
+        opacity: var(--door-fade, 0);
+        pointer-events: none;
+      }
+
+      @media (max-width: 720px) {
+        .door-stage { width: min(360px, 74vw); }
+        .hero-door__content {
+          align-content: start;
+          padding: 270px var(--pad-x) 64px;
+        }
+        .hero-door .t-hero {
+          max-width: min(358px, 100%);
+          font-size: clamp(42px, 12vw, 58px);
+        }
+        .hero-door .t-hero span { white-space: nowrap; }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .door-stage, .door, .door-portal video { transition: none !important; transform: none !important; }
+        .hero-door-seq {
+          opacity: 1 !important;
+          transform: none !important;
+        }
+      }
+
+      .hero-frame {
+        position: relative;
+        z-index: 2;
+        height: 100%;
+        padding: 132px var(--pad-x) 64px;
+        display: flex;
+        flex-direction: column;
+      }
+      .hero-pane.is-tall .hero-frame {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        height: 100svh;
+      }
+
+      .hero-tx {
+        margin-top: auto;
+        max-width: 920px;
+      }
+
+      .hero-tx .t-hero {
+        max-width: 16ch;
+      }
+
+      .hero-1 .hero-tx .t-hero { max-width: 14ch; }
+      .hero-2 .hero-tx { max-width: 1080px; }
+      .hero-2 .hero-tx .t-hero { max-width: 22ch; }
+      .hero-3 .hero-tx { max-width: 1180px; }
+      .hero-3 .hero-tx .t-hero { max-width: 24ch; }
+
+      .hero-tx-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 24px;
+        color: var(--c-gold-400);
+      }
+      .hero-tx-eyebrow::before {
+        content: "";
+        width: 36px;
+        height: 1px;
+        background: currentColor;
+        opacity: 0.7;
+      }
+
+      .hero-tx p {
+        max-width: 480px;
+        margin: 28px 0 0;
+        color: rgba(239, 238, 236, 0.82);
+        font-size: var(--fs-large);
+        line-height: 1.5;
+        font-weight: 400;
+      }
+
+      .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 18px;
+        margin-top: 36px;
+      }
+
+      .hero-foot {
+        margin-top: 56px;
+        padding-top: 24px;
+        border-top: 1px solid rgba(239, 238, 236, 0.16);
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 24px;
+        font-family: var(--mono);
+        font-size: var(--fs-eyebrow);
+        letter-spacing: var(--ls-wide);
+        text-transform: uppercase;
+        color: rgba(239, 238, 236, 0.58);
+      }
+      .hero-foot strong {
+        display: block;
+        margin-top: 8px;
+        font-family: var(--hero-display);
+        font-style: italic;
+        font-weight: 400;
+        font-size: 15px;
+        letter-spacing: 0;
+        color: var(--c-light-200);
+        text-transform: none;
+      }
+
+      /* tall pane: two stacked text blocks driven by scroll */
+      .hero-stack {
+        position: relative;
+        height: 100%;
+        width: 100%;
+      }
+      .hero-stack .hero-tx {
+        position: absolute;
+        bottom: 64px;
+        left: 0;
+        right: 0;
+        max-width: none;
+        opacity: 0;
+        transform: translateY(40px);
+        transition: opacity 700ms ease, transform 700ms cubic-bezier(0.2, 0.8, 0.2, 1);
+        padding: 0 var(--pad-x);
+      }
+      .hero-stack .hero-tx.is-on {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .hero-corners {
+        position: absolute;
+        inset: 100px var(--pad-x) 60px;
+        pointer-events: none;
+        z-index: 1;
+      }
+      .hero-corners .c {
+        position: absolute;
+        width: 14px;
+        height: 14px;
+        border: 1px solid rgba(239, 238, 236, 0.55);
+      }
+      .hero-corners .tl { top: 0; left: 0; border-right: 0; border-bottom: 0; }
+      .hero-corners .tr { top: 0; right: 0; border-left: 0; border-bottom: 0; }
+      .hero-corners .bl { bottom: 0; left: 0; border-right: 0; border-top: 0; }
+      .hero-corners .br { bottom: 0; right: 0; border-left: 0; border-top: 0; }
+
+      /* travelnext-style 'recent_destination' card pinned bottom of pane 1 */
+      .hero-card {
+        position: absolute;
+        right: var(--pad-x);
+        bottom: 64px;
+        z-index: 4;
+        width: clamp(280px, 26vw, 360px);
+        padding: 18px 20px 20px;
+        border: 1px solid rgba(239, 238, 236, 0.18);
+        background: rgba(25, 21, 18, 0.46);
+        backdrop-filter: blur(12px);
+      }
+      .hero-card-img {
+        position: relative;
+        aspect-ratio: 16 / 10;
+        background: var(--c-dark-800);
+        margin: 0 0 14px;
+        overflow: hidden;
+      }
+      .hero-card-img video, .hero-card-img img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .hero-card-title {
+        font-family: var(--hero-display);
+        font-weight: 400;
+        font-size: 19px;
+        line-height: 1.18;
+        letter-spacing: -0.01em;
+      }
+      .hero-card-foot {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 12px;
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: rgba(239, 238, 236, 0.62);
+      }
+      .hero-card-foot span:last-child { color: var(--c-light-200); }
+
+      /* travelnext location ticker */
+      .location-ticker {
+        position: relative;
+        background: var(--c-dark-900);
+        color: var(--c-light-200);
+        border-top: 1px solid rgba(239, 238, 236, 0.14);
+        border-bottom: 1px solid rgba(239, 238, 236, 0.14);
+        overflow: hidden;
+      }
+      .location-ticker-track {
+        display: flex;
+        gap: clamp(40px, 4vw, 80px);
+        padding: 28px 0;
+        white-space: nowrap;
+        animation: ticker 40s linear infinite;
+        will-change: transform;
+      }
+      .location-ticker a {
+        font-family: var(--hero-display);
+        font-weight: 400;
+        font-size: clamp(40px, 5vw, 80px);
+        line-height: 1;
+        letter-spacing: -0.01em;
+        color: var(--c-light-200);
+        text-transform: uppercase;
+        opacity: 0.92;
+        transition: color 260ms ease, opacity 260ms ease;
+      }
+      .location-ticker a span {
+        color: var(--c-gold-400);
+        font-style: italic;
+      }
+      .location-ticker a:hover { color: var(--c-gold-400); opacity: 1; }
+      @keyframes ticker {
+        0%   { transform: translateX(0); }
+        100% { transform: translateX(-50%); }
+      }
+
+      @media (max-width: 1100px) {
+        .hero-card { display: none; }
+      }
+      @media (max-width: 800px) {
+        .hero-foot { grid-template-columns: 1fr 1fr; }
+      }
+
+      /* ──────────────────────────────────────────────────────────
+         TRAVELNEXT SECTIONS (picked parts) — destinations / articles / voyages
+         ────────────────────────────────────────────────────────── */
+      .travel-section {
+        padding: var(--section-pad) 0;
+        position: relative;
+      }
+      .travel-head {
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: clamp(24px, 4vw, 72px);
+        align-items: end;
+        margin-bottom: clamp(28px, 3.5vw, 60px);
+      }
+      .travel-head p {
+        margin: 0;
+        color: color-mix(in oklab, currentColor 72%, transparent);
+        font-size: var(--fs-large);
+        line-height: 1.5;
+        max-width: 48ch;
+      }
+      @media (max-width: 980px) {
+        .travel-head { grid-template-columns: 1fr; align-items: start; }
+      }
+
+      /* ──────────────────────────────────────────────────────────
+         TravelNext-style “editorial strip” (Latest articles + Walkable)
+         ────────────────────────────────────────────────────────── */
+      .tnl-editorial {
+        padding: clamp(56px, 7vw, 110px) 0;
+      }
+      .tnl-editorial .u-container { max-width: 1600px; }
+      .tnl-editorial__top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 24px;
+        margin-bottom: clamp(22px, 3vw, 44px);
+      }
+      .tnl-editorial__title {
+        font-family: var(--display);
+        font-weight: 900;
+        letter-spacing: -0.03em;
+        text-transform: uppercase;
+        font-size: clamp(56px, 7.6vw, 140px);
+        line-height: 0.9;
+        margin: 0;
+        color: var(--c-dark-900);
+        max-width: 16ch;
+      }
+      .tnl-editorial__title span { display: block; }
+      .tnl-editorial__meta {
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: rgba(7, 22, 28, 0.62);
+        padding-top: 14px;
+        white-space: nowrap;
+      }
+      .tnl-strip {
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: minmax(320px, 1fr);
+        gap: 18px;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        padding: 4px 2px 16px;
+      }
+      .tnl-strip::-webkit-scrollbar { height: 8px; }
+      .tnl-strip::-webkit-scrollbar-thumb { background: rgba(7, 22, 28, 0.16); border-radius: 999px; }
+      .tnl-strip::-webkit-scrollbar-track { background: transparent; }
+      .tnl-post {
+        scroll-snap-align: start;
+        background: rgba(255,255,255,0.78);
+        border: 1px solid rgba(7, 22, 28, 0.10);
+        border-radius: 10px;
+        overflow: hidden;
+        display: grid;
+        grid-template-columns: 1fr;
+        min-height: 280px;
+        transition: transform 260ms ease, border-color 260ms ease;
+      }
+      .tnl-post:hover { transform: translateY(-2px); border-color: rgba(33, 127, 111, 0.28); }
+      .tnl-post__img {
+        aspect-ratio: 16 / 10;
+        background: rgba(7, 22, 28, 0.08);
+        overflow: hidden;
+      }
+      .tnl-post__img img,
+      .tnl-post__img video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transform: scale(1.02);
+        transition: transform 700ms cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+      .tnl-post:hover .tnl-post__img img,
+      .tnl-post:hover .tnl-post__img video { transform: scale(1); }
+      .tnl-post__body {
+        padding: 14px 14px 16px;
+        display: grid;
+        gap: 10px;
+      }
+      .tnl-post__kicker {
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: rgba(7, 22, 28, 0.58);
+      }
+      .tnl-post__h {
+        margin: 0;
+        font-family: var(--hero-display);
+        font-weight: 400;
+        letter-spacing: -0.01em;
+        line-height: 1.12;
+        font-size: 18px;
+        color: var(--c-dark-900);
+      }
+      .tnl-post__a {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: rgba(7, 22, 28, 0.86);
+      }
+      .tnl-post__a i {
+        width: 22px;
+        height: 1px;
+        background: currentColor;
+        position: relative;
+        opacity: 0.7;
+      }
+      .tnl-post__a i::after {
+        content: "";
+        position: absolute;
+        right: -1px;
+        top: -3px;
+        width: 7px;
+        height: 7px;
+        border-top: 1px solid currentColor;
+        border-right: 1px solid currentColor;
+        transform: rotate(45deg);
+      }
+      .tnl-post__date {
+        margin-top: 4px;
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: rgba(7, 22, 28, 0.58);
+      }
+      @media (max-width: 820px) {
+        .tnl-editorial__top { flex-direction: column; }
+        .tnl-editorial__meta { padding-top: 0; }
+        .tnl-editorial__title { max-width: none; }
+      }
+
+      /* ──────────────────────────────────────────────────────────
+         TravelNext-style “destinations beyond imagination” carousel
+         ────────────────────────────────────────────────────────── */
+      .tnl-destinations {
+        padding: var(--section-pad) 0;
+      }
+      .tnl-destinations__head {
+        display: grid;
+        grid-template-columns: 0.9fr 1.1fr;
+        gap: clamp(22px, 4vw, 72px);
+        align-items: end;
+        margin-bottom: clamp(18px, 2.6vw, 40px);
+      }
+      .tnl-destinations__head p {
+        margin: 0;
+        max-width: 48ch;
+        color: rgba(7, 22, 28, 0.72);
+        font-size: var(--fs-large);
+      }
+      .tnl-destinations__head .big {
+        font-family: var(--hero-display);
+        font-weight: 400;
+        letter-spacing: -0.02em;
+        line-height: 0.98;
+        font-size: clamp(44px, 6.2vw, 92px);
+        margin: 0;
+        color: var(--c-dark-900);
+      }
+      .tnl-destinations__head .big em { font-style: italic; color: var(--c-gold-500); }
+      .tnl-destinations__sub {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 10px;
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: rgba(7, 22, 28, 0.58);
+      }
+      .tnl-cards {
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: minmax(340px, 1fr);
+        gap: 18px;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        padding: 6px 2px 16px;
+      }
+      .tnl-card {
+        scroll-snap-align: start;
+        position: relative;
+        border-radius: 12px;
+        overflow: hidden;
+        min-height: 440px;
+        background: rgba(7,22,28,0.08);
+        border: 1px solid rgba(7,22,28,0.10);
+      }
+      .tnl-card video,
+      .tnl-card img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        filter: saturate(0.98) contrast(1.03);
+        transform: scale(1.02);
+        transition: transform 900ms cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+      .tnl-card:hover video,
+      .tnl-card:hover img { transform: scale(1); }
+      .tnl-card::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(7,22,28,0.74) 100%);
+      }
+      .tnl-card__cap {
+        position: absolute;
+        left: 16px;
+        right: 16px;
+        bottom: 14px;
+        z-index: 2;
+        display: grid;
+        gap: 10px;
+        color: rgba(255,255,255,0.92);
+      }
+      .tnl-card__cap h3 {
+        margin: 0;
+        font-family: var(--hero-display);
+        font-weight: 400;
+        letter-spacing: -0.01em;
+        line-height: 1.1;
+        font-size: 20px;
+      }
+      .tnl-card__cap .meta {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: rgba(255,255,255,0.72);
+      }
+      @media (max-width: 980px) {
+        .tnl-destinations__head { grid-template-columns: 1fr; }
+        .tnl-destinations__sub { justify-content: flex-start; }
+      }
+
+      .rail {
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: minmax(300px, 1fr);
+        gap: 20px;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        padding: 6px 2px 14px;
+        -webkit-overflow-scrolling: touch;
+      }
+      .rail::-webkit-scrollbar { height: 8px; }
+      .rail::-webkit-scrollbar-thumb { background: color-mix(in oklab, currentColor 18%, transparent); border-radius: 999px; }
+      .rail::-webkit-scrollbar-track { background: transparent; }
+
+      .rail-card {
+        scroll-snap-align: start;
+        border: 1px solid color-mix(in oklab, currentColor 18%, transparent);
+        background: color-mix(in oklab, currentColor 7%, transparent);
+        border-radius: var(--r-main);
+        overflow: hidden;
+        position: relative;
+        min-height: 380px;
+        display: grid;
+        align-content: end;
+        isolation: isolate;
+        transition: transform 360ms cubic-bezier(0.2, 0.8, 0.2, 1), border-color 360ms ease;
+      }
+      .rail-card:hover {
+        transform: translateY(-2px);
+        border-color: color-mix(in oklab, var(--c-gold-400) 44%, transparent);
+      }
+      .rail-card__media {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+      }
+      .rail-card__media video,
+      .rail-card__media img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        filter: saturate(0.98) contrast(1.03);
+        transform: scale(1.03);
+        transition: transform 1200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+      .rail-card:hover .rail-card__media video,
+      .rail-card:hover .rail-card__media img { transform: scale(1.0); }
+      .rail-card::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        background:
+          linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(7,22,28,0.78) 68%, rgba(7,22,28,0.94) 100%);
+      }
+      .rail-card__content {
+        position: relative;
+        z-index: 2;
+        padding: 18px 18px 18px;
+        display: grid;
+        gap: 12px;
+      }
+      .rail-card__title {
+        font-family: var(--hero-display);
+        font-weight: 400;
+        font-size: 23px;
+        line-height: 1.15;
+        letter-spacing: -0.01em;
+        margin: 0;
+      }
+      .rail-card__meta {
+        display: flex;
+        gap: 14px;
+        flex-wrap: wrap;
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: color-mix(in oklab, currentColor 70%, transparent);
+      }
+      .rail-card__meta b { color: var(--c-gold-400); font-weight: 600; }
+
+      .voyages {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: clamp(20px, 4vw, 72px);
+        align-items: start;
+      }
+      .voyages .t-h3 { margin: 0; }
+      .voyages p {
+        margin: 0;
+        color: color-mix(in oklab, currentColor 72%, transparent);
+        font-size: var(--fs-large);
+      }
+      .voyages-list {
+        margin-top: 24px;
+        border-top: 1px solid color-mix(in oklab, currentColor 18%, transparent);
+      }
+      .voyages-item {
+        display: grid;
+        grid-template-columns: 90px 1fr;
+        gap: 16px;
+        padding: 18px 0;
+        border-bottom: 1px solid color-mix(in oklab, currentColor 14%, transparent);
+      }
+      .voyages-item .k {
+        font-family: var(--mono);
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        font-size: 10px;
+        color: color-mix(in oklab, currentColor 70%, transparent);
+      }
+      .voyages-item .v { margin: 0; }
+      @media (max-width: 980px) {
+        .voyages { grid-template-columns: 1fr; }
+      }
+
+      /* ──────────────────────────────────────────────────────────
+         Next Level Experiences — scroll text reveal (TravelNext vibe)
+         ────────────────────────────────────────────────────────── */
+      .tnl-experiences {
+        background: var(--c-dark-900);
+        color: var(--c-light-200);
+        padding: clamp(96px, 10vw, 180px) 0;
+        overflow: hidden;
+      }
+      .tnl-experiences__inner {
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: clamp(24px, 4vw, 72px);
+        align-items: end;
+      }
+      .tnl-experiences__inner p {
+        margin: 0;
+        max-width: 52ch;
+        color: rgba(243,247,247,0.72);
+        font-size: var(--fs-large);
+      }
+      .tnl-experiences__big {
+        margin: 0;
+        font-family: var(--hero-display);
+        font-weight: 400;
+        letter-spacing: -0.02em;
+        line-height: 0.96;
+        font-size: clamp(44px, 6.6vw, 110px);
+        text-transform: none;
+      }
+      .tnl-experiences__big em { font-style: italic; color: var(--c-gold-400); }
+
+      /* TravelNext-style line masks (SplitType + scroll scrub via Lenis) */
+      .split-lines .line {
+        position: relative;
+        display: block;
+      }
+      .split-lines .line-mask {
+        position: absolute;
+        top: 0;
+        right: 0;
+        height: 100%;
+        width: 100%;
+        z-index: 2;
+        transform: scaleX(1);
+        transform-origin: 100% 50%;
+        will-change: transform;
+        pointer-events: none;
+      }
+      .tnl-experiences .split-lines .line-mask {
+        background-color: var(--c-dark-900);
+      }
+      .content-intro .split-lines .line-mask {
+        background-color: var(--c-light-200);
+      }
+      @media (max-width: 980px) {
+        .tnl-experiences__inner { grid-template-columns: 1fr; }
+      }
+
+      /* ──────────────────────────────────────────────────────────
+         CRISP HEADER (tom carder "Let's make moving pictures" port)
+         ────────────────────────────────────────────────────────── */
+      .crisp-header {
+        position: relative;
+        background: var(--c-dark-900);
+        color: var(--c-light-200);
+        overflow: hidden;
+        isolation: isolate;
+      }
+
+      .crisp-header__slider {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+      }
+      .crisp-header__slider-list {
+        display: grid;
+        grid-template-columns: 100%;
+        grid-template-rows: 100%;
+        height: 100%;
+        width: 100%;
+      }
+      .crisp-header__slide {
+        grid-area: 1 / 1 / -1 / -1;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 1100ms ease;
+        position: relative;
+        overflow: hidden;
+      }
+      .crisp-header__slide.is-active {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .crisp-header__slide video,
+      .crisp-header__slide img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transform: scale(1.06);
+        transition: transform 9000ms linear;
+      }
+      .crisp-header__slide.is-active video,
+      .crisp-header__slide.is-active img {
+        transform: scale(1);
+      }
+      .crisp-header__slide::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(ellipse at center, rgba(25, 21, 18, 0.18) 0%, rgba(25, 21, 18, 0.7) 100%);
+      }
+
+      .crisp-header__content {
+        position: relative;
+        z-index: 1;
+        min-height: 100vh;
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        align-items: center;
+        text-align: center;
+        padding: 132px var(--pad-x) 56px;
+      }
+
+      .crisp-header__text {
+        margin: auto 0;
+        width: 100%;
+        max-width: min(60%, 1080px);
+        display: flex;
+        flex-direction: column;
+        gap: 28px;
+        align-items: center;
+      }
+      @media (max-width: 1024px) {
+        .crisp-header__text { max-width: 92%; }
+      }
+
+      .crisp-header__text .t-display {
+        margin: 0;
+      }
+      .crisp-header__text .t-display em {
+        font-style: italic;
+        color: var(--c-gold-400);
+        font-weight: 900;
+      }
+      .crisp-header__text p {
+        margin: 0;
+        max-width: 64ch;
+        font-size: var(--fs-large);
+        color: rgba(239, 238, 236, 0.84);
+        line-height: 1.45;
+      }
+
+      .crisp-header__bottom {
+        margin-top: clamp(48px, 6vw, 88px);
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+        align-items: center;
+      }
+
+      .crisp-header__nav {
+        display: flex;
+        gap: 14px;
+        align-items: center;
+        position: relative;
+        overflow: hidden;
+      }
+      .crisp-header__nav-btn {
+        position: relative;
+        width: 56px;
+        height: 56px;
+        border: 1px solid rgba(239, 238, 236, 0.32);
+        border-radius: var(--r-main);
+        background: transparent;
+        color: var(--c-light-200);
+        cursor: pointer;
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.18em;
+        transition: border-color 260ms ease, color 260ms ease;
+      }
+      .crisp-header__nav-btn::before {
+        content: "";
+        position: absolute;
+        inset: 4px;
+        border-radius: 2px;
+        background: rgba(239, 238, 236, 0.06);
+        opacity: 0;
+        transition: opacity 260ms ease;
+      }
+      .crisp-header__nav-btn.is-active::before {
+        opacity: 1;
+      }
+      .crisp-header__nav-btn span {
+        position: relative;
+      }
+      .crisp-header__nav-btn:hover { border-color: var(--c-gold-400); color: var(--c-gold-400); }
+      .crisp-header__nav-btn.is-active { border-color: var(--c-light-200); color: var(--c-light-200); }
+      .crisp-header__nav-progress {
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        height: 1px;
+        width: var(--w, 0%);
+        background: var(--c-gold-400);
+        transition: width 80ms linear;
+      }
+
+      .crisp-header__cta {
+        display: flex;
+        gap: 12px;
+        margin-top: 4px;
+      }
+
+      /* ──────────────────────────────────────────────────────────
+         CONTENT INTRO  (tom carder)
+         ────────────────────────────────────────────────────────── */
+      .content-intro {
+        background: var(--c-light-200);
+        color: var(--c-dark-900);
+        padding: var(--section-pad) 0;
+        position: relative;
+      }
+      .content-intro__grid {
+        display: grid;
+        grid-template-columns: 0.6fr 1.6fr;
+        gap: clamp(32px, 5vw, 96px);
+        align-items: end;
+      }
+      .content-intro__meta {
+        display: grid;
+        gap: 16px;
+        font-family: var(--mono);
+        font-size: var(--fs-eyebrow);
+        letter-spacing: var(--ls-wide);
+        text-transform: uppercase;
+        color: rgba(25, 21, 18, 0.55);
+      }
+      .content-intro__meta div {
+        display: grid;
+        grid-template-columns: 28px 1fr;
+        gap: 10px;
+        align-items: baseline;
+      }
+      .content-intro__meta div span:first-child { color: var(--c-gold-500); }
+      .content-intro__lede {
+        font-family: var(--hero-display);
+        font-weight: 400;
+        font-size: clamp(28px, 3.6vw, 52px);
+        line-height: 1.18;
+        letter-spacing: -0.01em;
+        color: var(--c-dark-900);
+        text-wrap: balance;
+        max-width: 22ch;
+      }
+      .content-intro__lede em {
+        font-style: italic;
+        color: var(--c-gold-500);
+      }
+      .content-intro__lede .crossed {
+        position: relative;
+        display: inline-block;
+        color: rgba(25, 21, 18, 0.4);
+      }
+      .content-intro__lede .crossed::after {
+        content: "";
+        position: absolute;
+        left: -3%;
+        right: -3%;
+        top: 53%;
+        height: 2px;
+        background: var(--c-rust-500);
+        transform: rotate(-1deg);
+      }
+      .content-intro__after {
+        margin-top: 44px;
+        display: flex;
+        gap: 24px;
+        align-items: center;
+      }
+      @media (max-width: 880px) {
+        .content-intro__grid { grid-template-columns: 1fr; }
+        .content-intro__lede { max-width: none; }
+      }
+
+      /* ──────────────────────────────────────────────────────────
+         BOLD BRAND — exploded type moment (tom carder-inspired)
+         ────────────────────────────────────────────────────────── */
+      .bold-brand {
+        background: var(--c-light-200);
+        color: var(--c-dark-900);
+        padding: 0;
+      }
+      .bold-brand__spacer {
+        height: 240vh;
+        position: relative;
+      }
+      .bold-brand__sticky {
+        position: sticky;
+        top: 0;
+        min-height: 100vh;
+        min-height: 100dvh;
+        display: grid;
+        align-items: center;
+        overflow: hidden;
+        border-top: 1px solid rgba(25, 21, 18, 0.14);
+        border-bottom: 1px solid rgba(25, 21, 18, 0.14);
+      }
+      .bold-brand__inner {
+        padding: clamp(72px, 9vw, 140px) 0;
+      }
+      .bold-brand__title {
+        position: relative;
+        margin: 0;
+        font-family: var(--display);
+        font-weight: 900;
+        letter-spacing: var(--ls-tight);
+        text-transform: uppercase;
+        font-size: clamp(44px, 8.8vw, 136px);
+        line-height: 0.95;
+        max-width: 14ch;
+      }
+      .bold-brand__title em { font-style: italic; color: var(--c-gold-500); }
+      .bold-brand__deck {
+        margin-top: 18px;
+        max-width: 56ch;
+        font-size: var(--fs-large);
+        color: rgba(25, 21, 18, 0.72);
+      }
+      .bold-brand__frags {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
+      .frag {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform:
+          translate(-50%, -50%)
+          translate(var(--tx, 0px), var(--ty, 0px))
+          rotate(var(--r, 0deg))
+          scale(var(--s, 1));
+        transform-origin: center;
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        padding: 10px 12px;
+        border: 1px solid rgba(7, 22, 28, 0.14);
+        background: rgba(255, 255, 255, 0.82);
+        backdrop-filter: blur(10px);
+        color: rgba(7, 22, 28, 0.92);
+        border-radius: 2px;
+        opacity: var(--o, 0);
+        transition: opacity 220ms ease;
+        white-space: nowrap;
+      }
+      .frag b { color: var(--c-gold-500); font-weight: 700; }
+
+      /* ──────────────────────────────────────────────────────────
+         DISCIPLINES — photography / video / graphics / drone (tom carder-inspired)
+         ────────────────────────────────────────────────────────── */
+      .disciplines {
+        background: var(--c-dark-900);
+        color: var(--c-light-200);
+        padding: var(--section-pad) 0;
+      }
+      .disciplines__grid {
+        display: grid;
+        grid-template-columns: 0.9fr 1.1fr;
+        gap: clamp(28px, 4vw, 72px);
+        align-items: start;
+      }
+      .disciplines__list {
+        display: grid;
+        gap: 10px;
+        margin-top: 22px;
+      }
+      .disc-btn {
+        display: grid;
+        grid-template-columns: 22px 1fr;
+        gap: 14px;
+        align-items: baseline;
+        padding: 14px 0;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        text-align: left;
+        cursor: pointer;
+        border-bottom: 1px solid rgba(239, 238, 236, 0.14);
+      }
+      .disc-btn .n {
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: rgba(239, 238, 236, 0.64);
+      }
+      .disc-btn .t {
+        font-family: var(--display);
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: -0.02em;
+        font-size: clamp(22px, 2.4vw, 34px);
+        line-height: 1.05;
+      }
+      .disc-btn.is-active .n { color: var(--c-gold-400); }
+      .disc-btn.is-active .t { color: var(--c-light-100); }
+      .disc-btn .d {
+        grid-column: 2;
+        margin: 10px 0 0;
+        color: rgba(239, 238, 236, 0.72);
+        max-width: 52ch;
+      }
+
+      .disciplines__media {
+        position: sticky;
+        top: 110px;
+        border: 1px solid rgba(239, 238, 236, 0.16);
+        background: rgba(11, 33, 42, 0.5);
+        overflow: hidden;
+        border-radius: var(--r-main);
+        min-height: min(64vh, 620px);
+        display: grid;
+        align-content: end;
+      }
+      .disciplines__media video,
+      .disciplines__media img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        position: absolute;
+        inset: 0;
+      }
+      .disciplines__media::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, rgba(7,22,28,0.08), rgba(7,22,28,0.74));
+      }
+      .disciplines__cap {
+        position: relative;
+        z-index: 1;
+        padding: 18px 18px 16px;
+        display: grid;
+        gap: 10px;
+      }
+      .disciplines__cap strong {
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: rgba(239, 238, 236, 0.72);
+      }
+      .disciplines__cap p { margin: 0; max-width: 54ch; }
+      @media (max-width: 980px) {
+        .disciplines__grid { grid-template-columns: 1fr; }
+        .disciplines__media { position: relative; top: 0; min-height: 48vh; }
+      }
+
+      /* ──────────────────────────────────────────────────────────
+         PROJECT FEED — tom carder "See it in action" port
+         scroll-driven crop marks via --on / --off custom prop
+         ────────────────────────────────────────────────────────── */
+      .project-feed {
+        background: var(--c-dark-900);
+        color: var(--c-light-200);
+        padding: var(--section-pad) 0;
+        position: relative;
+      }
+      .project-feed__header {
+        text-align: center;
+        max-width: 60ch;
+        margin: 0 auto clamp(48px, 6vw, 96px);
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        align-items: center;
+      }
+      .project-feed__header .t-h2 em {
+        font-style: italic;
+        color: var(--c-gold-400);
+      }
+      .project-feed__header p {
+        margin: 0;
+        max-width: 48ch;
+        color: rgba(239, 238, 236, 0.66);
+        font-size: var(--fs-large);
+      }
+      .project-feed__list {
+        display: flex;
+        flex-direction: column;
+        gap: clamp(48px, 5vw, 88px);
+      }
+
+      .pf-item {
+        --on: 0; /* 0 → off, 1 → in view (driven by JS) */
+        --off: calc(1 - var(--on));
+        position: relative;
+        will-change: transform;
+        padding: calc(2rem * var(--off) + 0.8rem * var(--on));
+        transition: padding 600ms cubic-bezier(0.22, 1, 0.36, 1);
+      }
+      .pf-item__crop {
+        position: relative;
+      }
+      .pf-item__corner {
+        position: absolute;
+        width: 16px;
+        height: 18px;
+        z-index: 3;
+        opacity: 1;
+      }
+      .pf-item__corner svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+      .pf-item__corner path {
+        stroke: var(--c-gold-400);
+        stroke-width: 1.5;
+        fill: none;
+      }
+      .pf-item__corner.tl { top: -1px; left: -1px; }
+      .pf-item__corner.tr { top: -1px; right: -1px; transform: rotate(90deg); }
+      .pf-item__corner.bl { bottom: -1px; left: -1px; transform: rotate(-90deg); }
+      .pf-item__corner.br { bottom: -1px; right: -1px; transform: rotate(180deg); }
+
+      .pf-item__media {
+        position: relative;
+        aspect-ratio: 16 / 9;
+        overflow: hidden;
+        border-radius: var(--r-small);
+        background: var(--c-dark-800);
+      }
+      .pf-item__media video, .pf-item__media img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .pf-item__media::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: var(--c-dark-900);
+        mix-blend-mode: color;
+        opacity: calc(1 * var(--off));
+        pointer-events: none;
+        transition: opacity 600ms cubic-bezier(0.22, 1, 0.36, 1);
+      }
+
+      .pf-item__inner {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: flex-start;
+        gap: 16px;
+        padding: 1rem 0.4rem 0.4rem;
+      }
+      .pf-item__title {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .pf-item__title .t-eyebrow { color: var(--c-gold-400); }
+      .pf-item__title h3 {
+        font-family: var(--display);
+        font-weight: 900;
+        font-size: var(--fs-h5);
+        letter-spacing: -0.025em;
+        line-height: 1.04;
+        text-transform: uppercase;
+        margin: 0;
+      }
+      .pf-item__title h3 em { font-style: italic; color: var(--c-gold-400); }
+
+      .pf-item__cta {
+        align-self: end;
+        font-family: var(--mono);
+        font-size: var(--fs-eyebrow);
+        letter-spacing: var(--ls-wide);
+        text-transform: uppercase;
+        color: var(--c-light-200);
+        padding: 14px 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .pf-item__cta .arrow {
+        position: relative;
+        width: 22px;
+        height: 1px;
+        background: currentColor;
+        display: inline-block;
+        transition: width 300ms ease;
+      }
+      .pf-item__cta .arrow::after {
+        content: "";
+        position: absolute;
+        right: 0;
+        top: -3px;
+        width: 7px;
+        height: 7px;
+        border-top: 1px solid currentColor;
+        border-right: 1px solid currentColor;
+        transform: rotate(45deg);
+      }
+      .pf-item:hover .pf-item__cta .arrow { width: 36px; color: var(--c-gold-400); }
+
+      .project-feed__cta {
+        margin-top: clamp(64px, 7vw, 110px);
+        display: flex;
+        justify-content: center;
+      }
+
+      /* ──────────────────────────────────────────────────────────
+         CLIENT  ("In good company.")
+         ────────────────────────────────────────────────────────── */
+      .content-client {
+        background: var(--c-light-200);
+        color: var(--c-dark-900);
+        padding: var(--section-pad) 0;
+        text-align: center;
+      }
+      .content-client__title {
+        max-width: 18ch;
+        margin: 0 auto;
+      }
+      .content-client__title em { font-style: italic; color: var(--c-gold-500); }
+      .content-client__lead {
+        max-width: 56ch;
+        margin: 32px auto 0;
+        color: rgba(25, 21, 18, 0.72);
+        font-size: var(--fs-large);
+      }
+      .content-client__logos {
+        margin-top: clamp(48px, 6vw, 88px);
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 24px 48px;
+        align-items: center;
+        justify-items: center;
+        opacity: 0.78;
+      }
+      .content-client__logos span {
+        font-family: var(--hero-display);
+        font-weight: 400;
+        font-size: clamp(20px, 1.6vw, 28px);
+        letter-spacing: -0.01em;
+        color: var(--c-dark-900);
+      }
+      .content-client__logos span em { font-style: italic; color: var(--c-gold-500); }
+
+      /* ──────────────────────────────────────────────────────────
+         TOM CARDER-STYLE COLLAB COLLAGE (big type + inline media)
+         ────────────────────────────────────────────────────────── */
+      .tcm-collage {
+        background: var(--c-light-200);
+        color: var(--c-dark-900);
+        padding: clamp(72px, 9vw, 140px) 0;
+        overflow: hidden;
+      }
+      .tcm-collage__wrap {
+        max-width: 1600px;
+      }
+      .tcm-collage__grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 22px;
+        align-items: start;
+      }
+      .tcm-collage__stamp {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: rgba(7, 22, 28, 0.62);
+      }
+      .tcm-collage__stamp .pill {
+        border: 1px solid rgba(33, 127, 111, 0.28);
+        padding: 8px 10px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.62);
+      }
+      .tcm-collage__title {
+        margin: 0;
+        font-family: var(--display);
+        font-weight: 900;
+        letter-spacing: -0.035em;
+        text-transform: uppercase;
+        line-height: 0.92;
+        font-size: clamp(48px, 7.2vw, 138px);
+        max-width: 22ch;
+      }
+      .tcm-collage__title .soft { opacity: 0.92; }
+      .tcm-collage__title em { font-style: italic; color: var(--c-gold-500); }
+
+      .tcm-inline {
+        display: inline-flex;
+        vertical-align: baseline;
+        width: clamp(120px, 16vw, 260px);
+        height: clamp(38px, 4.8vw, 64px);
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid rgba(7, 22, 28, 0.10);
+        box-shadow: 0 10px 24px rgba(0,0,0,0.10);
+        transform: translateY(8px);
+      }
+      .tcm-inline img,
+      .tcm-inline video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transform: scale(1.06);
+        transition: transform 900ms cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+      .tcm-collage:hover .tcm-inline img,
+      .tcm-collage:hover .tcm-inline video { transform: scale(1.0); }
+
+      .tcm-collage__lede {
+        margin: 0;
+        max-width: 70ch;
+        color: rgba(7, 22, 28, 0.72);
+        font-size: var(--fs-large);
+      }
+
+      @media (max-width: 820px) {
+        .tcm-collage__title { max-width: none; }
+        .tcm-inline { width: clamp(110px, 32vw, 220px); }
+      }
+      @media (max-width: 880px) {
+        .content-client__logos { grid-template-columns: repeat(2, 1fr); }
+      }
+
+      /* ──────────────────────────────────────────────────────────
+         JOURNEY  ("Let Tom's vision drive yours" port)
+         ────────────────────────────────────────────────────────── */
+      .content-journey {
+        background: var(--c-light-200);
+        color: var(--c-dark-900);
+        padding: var(--section-pad) 0;
+        position: relative;
+        overflow: hidden;
+      }
+      .content-journey__inner {
+        position: relative;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: clamp(32px, 5vw, 88px);
+        align-items: center;
+      }
+      .content-journey__copy h2 {
+        max-width: 14ch;
+      }
+      .content-journey__copy h2 em { font-style: italic; color: var(--c-gold-500); }
+      .content-journey__copy p {
+        margin: 28px 0 32px;
+        max-width: 50ch;
+        color: rgba(25, 21, 18, 0.72);
+        font-size: var(--fs-large);
+      }
+      .content-journey__media {
+        position: relative;
+        aspect-ratio: 4 / 5;
+        overflow: hidden;
+        border-radius: var(--r-small);
+      }
+      .content-journey__media video, .content-journey__media img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .content-journey__media .stamp {
+        position: absolute;
+        bottom: 16px;
+        left: 16px;
+        padding: 8px 12px;
+        background: rgba(25, 21, 18, 0.55);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(239, 238, 236, 0.18);
+        font-family: var(--mono);
+        font-size: var(--fs-eyebrow);
+        letter-spacing: var(--ls-wide);
+        text-transform: uppercase;
+        color: var(--c-light-200);
+      }
+      @media (max-width: 880px) {
+        .content-journey__inner { grid-template-columns: 1fr; }
+      }
+
+      /* ──────────────────────────────────────────────────────────
+         SERVICES  ("Photography / Videography / Drone / Partnerships" port)
+         ────────────────────────────────────────────────────────── */
+      .content-services {
+        background: var(--c-dark-900);
+        color: var(--c-light-200);
+        padding: var(--section-pad) 0;
+        position: relative;
+      }
+      .content-services__head {
+        max-width: 48ch;
+        margin: 0 auto clamp(48px, 6vw, 96px);
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+        align-items: center;
+      }
+      .content-services__head h2 em { font-style: italic; color: var(--c-gold-400); }
+
+      .services-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        border-top: 1px solid rgba(239, 238, 236, 0.16);
+      }
+      .service-item {
+        position: relative;
+        padding: clamp(24px, 2.4vw, 40px) clamp(18px, 1.8vw, 28px) clamp(36px, 4vw, 60px) 0;
+        border-right: 1px solid rgba(239, 238, 236, 0.1);
+      }
+      .service-item:last-child { border-right: 0; padding-right: 0; }
+      .service-item .num {
+        font-family: var(--mono);
+        font-size: var(--fs-eyebrow);
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+        color: var(--c-gold-400);
+      }
+      .service-item h3 {
+        margin: 22px 0 16px;
+        font-family: var(--display);
+        font-weight: 900;
+        font-size: var(--fs-h4);
+        line-height: 1.04;
+        letter-spacing: -0.025em;
+        text-transform: uppercase;
+      }
+      .service-item h3 em { font-style: italic; color: var(--c-gold-400); }
+      .service-item p {
+        margin: 0 0 28px;
+        max-width: 28ch;
+        color: rgba(239, 238, 236, 0.72);
+        font-size: var(--fs-main);
+      }
+      .service-item::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: -1px;
+        height: 1px;
+        width: 36px;
+        background: var(--c-gold-400);
+      }
+      @media (max-width: 1000px) {
+        .services-grid { grid-template-columns: 1fr 1fr; }
+        .service-item { border-bottom: 1px solid rgba(239, 238, 236, 0.1); }
+      }
+      @media (max-width: 600px) {
+        .services-grid { grid-template-columns: 1fr; }
+        .service-item { border-right: 0; padding-right: 0; }
+      }
+
+      /* ──────────────────────────────────────────────────────────
+         STORY  ("Stories worth sharing" port — testimonials)
+         ────────────────────────────────────────────────────────── */
+      .content-story {
+        background: var(--c-light-200);
+        color: var(--c-dark-900);
+        padding: var(--section-pad) 0;
+      }
+      .content-story__head {
+        max-width: 56ch;
+        margin: 0 auto clamp(48px, 6vw, 88px);
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+        align-items: center;
+      }
+      .content-story__head h2 em { font-style: italic; color: var(--c-gold-500); }
+      .stories {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: clamp(20px, 2vw, 32px);
+      }
+      .story {
+        padding: clamp(28px, 3vw, 44px);
+        background: var(--c-light-100);
+        border: 1px solid rgba(25, 21, 18, 0.08);
+        border-radius: var(--r-small);
+        display: flex;
+        flex-direction: column;
+        gap: 28px;
+        position: relative;
+        min-height: 320px;
+      }
+      .story::before {
+        content: "“";
+        position: absolute;
+        top: -20px;
+        left: 28px;
+        font-family: var(--hero-display);
+        font-style: italic;
+        font-size: 100px;
+        line-height: 1;
+        color: var(--c-gold-500);
+        opacity: 0.32;
+      }
+      .story p {
+        margin: 0;
+        font-family: var(--hero-display);
+        font-weight: 400;
+        font-size: clamp(18px, 1.4vw, 22px);
+        line-height: 1.4;
+      }
+      .story-author {
+        margin-top: auto;
+        padding-top: 18px;
+        border-top: 1px solid rgba(25, 21, 18, 0.08);
+      }
+      .story-author strong {
+        display: block;
+        font-family: var(--mono);
+        font-size: var(--fs-eyebrow);
+        letter-spacing: var(--ls-wide);
+        text-transform: uppercase;
+      }
+      .story-author span {
+        font-family: var(--mono);
+        font-size: var(--fs-eyebrow);
+        letter-spacing: var(--ls-wide);
+        color: rgba(25, 21, 18, 0.55);
+      }
+      @media (max-width: 880px) {
+        .stories { grid-template-columns: 1fr; }
+      }
+
+      /* ──────────────────────────────────────────────────────────
+         CTA + FOOTER
+         ────────────────────────────────────────────────────────── */
+      .content-cta {
+        position: relative;
+        background: var(--c-dark-900);
+        color: var(--c-light-200);
+        padding: var(--section-pad) 0;
+        overflow: hidden;
+        isolation: isolate;
+      }
+      .content-cta__bg {
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+      }
+      .content-cta__bg video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0.36;
+      }
+      .content-cta__bg::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(circle at 20% 80%, rgba(200, 158, 93, 0.18), transparent 50%),
+          linear-gradient(180deg, rgba(25, 21, 18, 0.78) 0%, rgba(25, 21, 18, 0.94) 100%);
+      }
+      .content-cta__inner {
+        display: grid;
+        grid-template-columns: 1.2fr 1fr;
+        gap: clamp(32px, 5vw, 80px);
+        align-items: end;
+      }
+      .content-cta__inner h2 em { font-style: italic; color: var(--c-gold-400); }
+      .content-cta__inner p {
+        margin: 0 0 28px;
+        max-width: 48ch;
+        font-size: var(--fs-large);
+        color: rgba(239, 238, 236, 0.84);
+      }
+      .content-cta__actions { display: flex; flex-wrap: wrap; gap: 16px; }
+      .content-cta__chips {
+        margin-top: 36px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 36px;
+        font-family: var(--mono);
+        font-size: var(--fs-eyebrow);
+        letter-spacing: var(--ls-wide);
+        text-transform: uppercase;
+        color: rgba(239, 238, 236, 0.6);
+      }
+      .content-cta__chips strong {
+        display: block;
+        margin-top: 6px;
+        font-family: var(--hero-display);
+        font-style: italic;
+        font-weight: 400;
+        font-size: 18px;
+        letter-spacing: 0;
+        color: var(--c-light-200);
+        text-transform: none;
+      }
+      @media (max-width: 880px) {
+        .content-cta__inner { grid-template-columns: 1fr; }
+      }
+
+      .footer {
+        background: var(--c-dark-900);
+        color: var(--c-light-200);
+        padding: clamp(48px, 6vw, 88px) 0 0;
+        border-top: 1px solid rgba(239, 238, 236, 0.14);
+      }
+      .footer__grid {
+        display: grid;
+        grid-template-columns: 1.2fr 1fr 1fr 1fr;
+        gap: clamp(24px, 4vw, 64px);
+        align-items: start;
+        padding-bottom: clamp(48px, 6vw, 80px);
+      }
+      .footer__brand h3 {
+        margin: 18px 0 0;
+        font-family: var(--hero-display);
+        font-weight: 400;
+        font-size: clamp(28px, 3.4vw, 48px);
+        line-height: 1.1;
+        letter-spacing: -0.01em;
+        max-width: 14ch;
+      }
+      .footer__brand h3 em { font-style: italic; color: var(--c-gold-400); }
+      .footer h4 {
+        font-family: var(--mono);
+        font-weight: 500;
+        font-size: var(--fs-eyebrow);
+        letter-spacing: var(--ls-wide);
+        text-transform: uppercase;
+        color: var(--c-gold-400);
+        margin: 0 0 18px;
+      }
+      .footer ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+      .footer ul a {
+        font-family: var(--hero-display);
+        font-style: italic;
+        font-weight: 400;
+        font-size: 18px;
+        color: rgba(239, 238, 236, 0.84);
+        transition: color 260ms ease;
+      }
+      .footer ul a:hover { color: var(--c-gold-400); }
+      .footer__bigtype {
+        font-family: var(--display);
+        font-weight: 900;
+        font-size: clamp(80px, 22vw, 360px);
+        line-height: 0.84;
+        letter-spacing: -0.06em;
+        text-transform: uppercase;
+        color: rgba(239, 238, 236, 0.04);
+        white-space: nowrap;
+        overflow: hidden;
+        margin: 0 calc(var(--pad-x) * -1) 0;
+        padding: 24px 0;
+      }
+      .footer__bigtype em { font-style: italic; color: rgba(200, 158, 93, 0.16); }
+      .footer__baseline {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        padding: 24px 0;
+        border-top: 1px solid rgba(239, 238, 236, 0.12);
+        font-family: var(--mono);
+        font-size: var(--fs-eyebrow);
+        letter-spacing: var(--ls-wide);
+        text-transform: uppercase;
+        color: rgba(239, 238, 236, 0.55);
+      }
+      @media (max-width: 880px) {
+        .footer__grid { grid-template-columns: 1fr 1fr; }
+        .footer__baseline { flex-direction: column; align-items: flex-start; gap: 12px; }
+      }
+
+      /* ──────────────────────────────────────────────────────────
+         MODAL
+         ────────────────────────────────────────────────────────── */
+      .modal {
+        position: fixed;
+        inset: 0;
+        z-index: 130;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        background: rgba(25, 21, 18, 0.74);
+        backdrop-filter: blur(14px);
+      }
+      .modal.is-open { display: flex; }
+      .modal__dialog {
+        position: relative;
+        width: min(560px, 100%);
+        background: var(--c-light-200);
+        color: var(--c-dark-900);
+        padding: clamp(28px, 4vw, 48px) clamp(24px, 4vw, 44px);
+        border-radius: var(--r-small);
+        border: 1px solid rgba(25, 21, 18, 0.08);
+      }
+      .modal__close {
+        position: absolute;
+        top: 14px;
+        right: 14px;
+        width: 38px;
+        height: 38px;
+        border: 1px solid rgba(25, 21, 18, 0.18);
+        background: transparent;
+        font-size: 22px;
+        cursor: pointer;
+        color: var(--c-dark-900);
+        display: grid;
+        place-items: center;
+        border-radius: var(--r-main);
+      }
+      .modal h2 {
+        font-family: var(--hero-display);
+        font-weight: 400;
+        font-size: clamp(28px, 3vw, 40px);
+        line-height: 1.08;
+        letter-spacing: -0.01em;
+        margin: 14px 0;
+      }
+      .modal h2 em { font-style: italic; color: var(--c-gold-500); }
+      .modal p {
+        margin: 0;
+        max-width: 52ch;
+        color: rgba(25, 21, 18, 0.72);
+      }
+      .modal__links { display: grid; gap: 10px; margin-top: 26px; }
+      .modal__link {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        height: 56px;
+        padding: 0 18px;
+        border: 1px solid rgba(25, 21, 18, 0.18);
+        font-family: var(--mono);
+        font-size: var(--fs-eyebrow);
+        letter-spacing: var(--ls-wide);
+        text-transform: uppercase;
+        color: var(--c-dark-900);
+        border-radius: var(--r-main);
+        transition: background 260ms ease, color 260ms ease, border-color 260ms ease;
+      }
+      .modal__link:hover { background: var(--c-dark-900); color: var(--c-light-200); border-color: var(--c-dark-900); }
+      .modal__link svg { width: 20px; height: 20px; }
+      .modal__note {
+        margin-top: 18px;
+        font-family: var(--mono);
+        font-size: var(--fs-eyebrow);
+        letter-spacing: var(--ls-wide);
+        text-transform: uppercase;
+        color: rgba(25, 21, 18, 0.55);
+      }
+
+      /* ──────────────────────────────────────────────────────────
+         REVEALS
+         ────────────────────────────────────────────────────────── */
+      .reveal {
+        opacity: 0;
+        transform: translateY(28px);
+        transition: opacity 900ms cubic-bezier(0.2, 0.8, 0.2, 1), transform 900ms cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+      .reveal.is-in { opacity: 1; transform: translateY(0); }
+
+      .stagger > * {
+        opacity: 0;
+        transform: translateY(18px);
+        transition: opacity 700ms ease, transform 700ms cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+      .stagger.is-in > * {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      .stagger.is-in > *:nth-child(1) { transition-delay: 80ms; }
+      .stagger.is-in > *:nth-child(2) { transition-delay: 160ms; }
+      .stagger.is-in > *:nth-child(3) { transition-delay: 240ms; }
+      .stagger.is-in > *:nth-child(4) { transition-delay: 320ms; }
+      .stagger.is-in > *:nth-child(5) { transition-delay: 400ms; }
+
+      @media (prefers-reduced-motion: reduce) {
+        .reveal, .stagger > * { opacity: 1; transform: none; transition: none; }
+        .crisp-header__slide video, .crisp-header__slide img,
+        .hero-pane-media video { transform: none !important; transition: none; }
+      }
+
+      /* Small screens: prevent “type spilling” + keep margins sane */
+      @media (max-width: 520px) {
+        :root {
+          --fs-display: clamp(40px, 12vw, 92px);
+          --fs-h1: clamp(34px, 10vw, 80px);
+          --fs-h2: clamp(30px, 8.8vw, 72px);
+          --fs-large: clamp(18px, 5vw, 20px);
+        }
+        .hero-corners { inset: 92px var(--pad-x) 54px; }
+        .location-ticker-track { padding: 22px 0; }
+        .crisp-header__content { padding: 120px var(--pad-x) 44px; }
+      }
+    </style>
+  <script src="chrome-extension://liecbddmkiiihnedobmlmillhodjkdmb/js/recordConsoleEvents.js"></script></head>
+
+  <body class="theme-on-light">
+    <div class="grain" aria-hidden="true"></div>
+    <div class="page-progress" aria-hidden="true" style="--p: 100.00%;"><span></span></div>
+
+    <!-- ────────────────  LOADER  ──────────────── -->
+    <div class="loader is-hidden" id="loader" role="status" aria-live="polite">
+      <div class="loader-inner">
+        <div class="loader-eyebrow">Spatial AI · Loading worlds</div>
+        <h1 class="loader-title">preserve <em>my world</em></h1>
+      </div>
+      <div class="loader-foot">
+        <span>Buffering memory</span>
+        <div class="loader-bar" id="loaderBar" style="--p: 100%;"></div>
+        <span class="loader-pct" id="loaderPct">100%</span>
+      </div>
+    </div>
+
+    <!-- ────────────────  UTILITY  ──────────────── -->
+    <div class="utility" aria-label="Site utility">
+      <div><span class="dot"></span> Field footage online · 042 worlds preserved</div>
+      <div class="utility-extra"><a href="#how">How it works</a> &nbsp;·&nbsp; <a href="#feed">In action</a> &nbsp;·&nbsp; <a href="#cta">Submit a memory</a></div>
+    </div>
+
+    <!-- ────────────────  HEADER  ──────────────── -->
+    <header class="nav">
+      <a class="brand" href="#top">
+        <span class="brand-mark">
+          <img src="assets/preservethe-world-logo.png" alt="">
+        </span>
+        <span class="brand-text">
+          <strong>preserve <em>my</em> world</strong>
+          <span>Walkable memory · Heritage at risk</span>
+        </span>
+      </a>
+      <nav class="nav-links" aria-label="Primary">
+        <a href="#feed">Worlds</a>
+        <a href="#how">How it works</a>
+        <a href="#services">Capabilities</a>
+        <a href="#stories">Stories</a>
+      </nav>
+      <div class="nav-cta">
+        <a class="btn btn-ghost" href="#crisp">Play now</a>
+        <button class="btn upload-trigger" type="button">Upload a memory</button>
+      </div>
+    </header>
+
+    <main id="top">
+
+      <!-- ════════════════════════════════════════════════════════════
+           HERO — TravelNext-style threed_story:
+             one pinned lottie behind three stacked text panels.
+           ════════════════════════════════════════════════════════════ -->
+      <section class="tnl-hero" id="home" data-theme="dark" aria-label="Door hero" style="--door-p: 1.0000;">
+        <!-- Pinned background: full-bleed door lottie + readability tint -->
+        <div class="tnl-hero__bg" aria-hidden="true">
+          <div class="tnl-hero__door"><div id="tnlDoorPlayer"><canvas width="3024" height="1654" style="width: 100%; height: 100%; transform-origin: 0px 0px 0px; content-visibility: visible;"></canvas></div></div>
+          <div class="tnl-hero__tint"></div>
+        </div>
+
+        <!-- Three vertical panels (100vh + 200vh + 100vh = 400vh) -->
+        <div class="tnl-hero__panels">
+
+          <!-- Panel 1 — top-left copy, intro + CTA at bottom -->
+          <section class="tnl-hero__panel tnl-hero__panel--one">
+            <div class="tnl-hero__wrap u-container">
+              <div class="tnl-hero__copy tnl-hero__copy--one" data-hero-panel="0" style="--o: 0.000;">
+                <h1 class="t-hero">
+                  <span>Discover</span><span>the places</span><span>we’re&nbsp;trying</span><span>to <em>keep</em>.</span>
+                </h1>
+              </div>
+              <div class="tnl-hero__bottom" data-hero-panel="0" style="--o: 0.000;">
+                <p>Scroll to open the door. Walk through into a community-built archive of heritage sites, classrooms, streets, and family rooms—captured with nothing but phones.</p>
+                <div class="hero-actions">
+                  <a class="btn btn-ghost" href="#discover">Start exploring</a>
+                  <button class="btn upload-trigger" type="button">Upload a memory</button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Panel 2 — taller (200vh): two stacked text moments scroll past -->
+          <section class="tnl-hero__panel tnl-hero__panel--two">
+            <div class="tnl-hero__wrap u-container">
+              <div class="tnl-hero__copy tnl-hero__copy--two-a" data-hero-panel="1" style="--o: 0.000;">
+                <div class="tnl-hero__eyebrow t-eyebrow">002 · Sacred architecture</div>
+                <h2 class="t-hero">A place a city <em>still listens to</em>.</h2>
+                <p>Five minutes of phone video at a Mughal courtyard rebuilt as a walkable colonnade. School groups in another country can stand inside it without ever booking a flight.</p>
+              </div>
+              <div class="tnl-hero__copy tnl-hero__copy--two-b" data-hero-panel="2" style="--o: 0.000;">
+                <div class="tnl-hero__eyebrow t-eyebrow">003 · Living landscapes</div>
+                <h2 class="t-hero">Mountains that <em>won’t stay still</em>.</h2>
+                <p>Glaciers retreat. Tree lines climb. We rebuild fragile alpine valleys so the version captured in 2026 stays explorable, named, and timestamped — a baseline for every reading after this one.</p>
+              </div>
+            </div>
+          </section>
+
+          <!-- Panel 3 — final copy + CTA, offset right (matches reference) -->
+          <section class="tnl-hero__panel tnl-hero__panel--three">
+            <div class="tnl-hero__wrap u-container">
+              <div class="tnl-hero__copy tnl-hero__copy--three" data-hero-panel="3" style="--o: 1.000;">
+                <div class="tnl-hero__eyebrow t-eyebrow">004 · Built by everyone</div>
+                <h2 class="t-hero">The next generation expects to <em>walk&nbsp;in</em>, not just look at it.</h2>
+                <p>Phones are everywhere. People already carry footage of meaningful places. preservemy.world is the map that turns that footage into worlds.</p>
+                <div class="hero-actions">
+                  <a class="btn" href="#crisp">See the worlds</a>
+                  <a class="btn-icon-link" href="#how"><span>How it works</span><span class="arrow"></span></a>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- Persistent scroll hint (fades after first scroll) -->
+        <div class="tnl-hero__hint" aria-hidden="true" style="--hint-o: 0.000;"><i></i><span>Scroll to open · keep scrolling to walk in</span></div>
+        <div class="tnl-hero__fade" aria-hidden="true" style="opacity: 1;"></div>
+      </section>
+
+      <!-- Location ticker — travelnext-inspired infinite scroller -->
+      <section class="location-ticker" data-theme="dark" aria-label="Places preserved">
+        <div class="location-ticker-track" id="ticker">
+          <a href="#feed">Wadi Rum <span>↗</span></a>
+          <a href="#feed">Lahore <span>↗</span></a>
+          <a href="#feed">Fairy Meadows <span>↗</span></a>
+          <a href="#feed">Nanga Parbat <span>↗</span></a>
+          <a href="#feed">Karachi <span>↗</span></a>
+          <a href="#feed">Istanbul <span>↗</span></a>
+          <a href="#feed">Dubai <span>↗</span></a>
+          <a href="#feed">Madison, WI <span>↗</span></a>
+          <a href="#feed">Tokyo <span>↗</span></a>
+          <a href="#feed">The room a parent retired in <span>↗</span></a>
+          <!-- duplicate for seamless loop -->
+          <a href="#feed" aria-hidden="true">Wadi Rum <span>↗</span></a>
+          <a href="#feed" aria-hidden="true">Lahore <span>↗</span></a>
+          <a href="#feed" aria-hidden="true">Fairy Meadows <span>↗</span></a>
+          <a href="#feed" aria-hidden="true">Nanga Parbat <span>↗</span></a>
+          <a href="#feed" aria-hidden="true">Karachi <span>↗</span></a>
+          <a href="#feed" aria-hidden="true">Istanbul <span>↗</span></a>
+          <a href="#feed" aria-hidden="true">Dubai <span>↗</span></a>
+          <a href="#feed" aria-hidden="true">Madison, WI <span>↗</span></a>
+          <a href="#feed" aria-hidden="true">Tokyo <span>↗</span></a>
+          <a href="#feed" aria-hidden="true">The room a parent retired in <span>↗</span></a>
+        </div>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════════════
+           TRAVEL PICK — Discover unique destinations beyond imagination
+           (TravelNextLevel-inspired carousel)
+           ════════════════════════════════════════════════════════════ -->
+      <section class="tnl-destinations theme-light" id="discover" data-theme="light">
+        <div class="u-container">
+          <div class="tnl-destinations__head">
+            <p class="reveal is-in">
+              Step into the extraordinary—hidden valleys, sacred courtyards, and ordinary rooms that deserve to outlive a screenshot.
+              Each card below is a real capture type we preserve as a place you can walk inside.
+            </p>
+            <div>
+              <div class="t-eyebrow">Discover unique destinations</div>
+              <h2 class="big reveal is-in">Beyond your <em>imagination</em>.</h2>
+              <div class="tnl-destinations__sub">Drag to navigate</div>
+            </div>
+          </div>
+
+          <div class="tnl-cards" aria-label="Destinations carousel">
+            <a class="tnl-card" href="#feed">
+              <video class="lazy-video" data-src="assets/worlds/world-06.mp4" poster="assets/worlds/world-06.jpg" muted="" loop="" playsinline="" preload="none" src="assets/worlds/world-06.mp4"></video>
+              <div class="tnl-card__cap">
+                <h3>Wadi Rum — the red desert we can’t lose</h3>
+                <div class="meta"><span>Build 018</span><span>Landscape</span><span>Jordan</span></div>
+              </div>
+            </a>
+            <a class="tnl-card" href="#feed">
+              <video class="lazy-video" data-src="assets/worlds/world-07.mp4" poster="assets/worlds/world-07.jpg" muted="" loop="" playsinline="" preload="none" src="assets/worlds/world-07.mp4"></video>
+              <div class="tnl-card__cap">
+                <h3>Courtyard arches — geometry that holds a city</h3>
+                <div class="meta"><span>Build 021</span><span>Heritage</span><span>Lahore</span></div>
+              </div>
+            </a>
+            <a class="tnl-card" href="#feed">
+              <video class="lazy-video" data-src="assets/worlds/world-08.mp4" poster="assets/worlds/world-08.jpg" muted="" loop="" playsinline="" preload="none" src="assets/worlds/world-08.mp4"></video>
+              <div class="tnl-card__cap">
+                <h3>A school corridor — a memory you can teach from</h3>
+                <div class="meta"><span>Build 033</span><span>Education</span><span>Karachi</span></div>
+              </div>
+            </a>
+            <a class="tnl-card" href="#feed">
+              <video class="lazy-video" data-src="assets/worlds/world-09.mp4" poster="assets/worlds/world-09.jpg" muted="" loop="" playsinline="" preload="none" src="assets/worlds/world-09.mp4"></video>
+              <div class="tnl-card__cap">
+                <h3>A room a parent retired in — walked again</h3>
+                <div class="meta"><span>Build 005</span><span>Family</span><span>Submitted</span></div>
+              </div>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════════════
+           WALKABLE — same content, but styled like TravelNext “Latest articles”
+           ════════════════════════════════════════════════════════════ -->
+      <section class="tnl-editorial theme-light" id="walkable" data-theme="light">
+        <div class="u-container">
+          <div class="tnl-editorial__top">
+            <h2 class="tnl-editorial__title reveal is-in">
+              <span>Walkable places</span>
+              <span>you can actually</span>
+              <span>enter.</span>
+            </h2>
+            <div class="tnl-editorial__meta">Drag to navigate</div>
+          </div>
+
+          <div class="tnl-strip" aria-label="Walkable strip">
+            <a class="tnl-post" href="#feed">
+              <div class="tnl-post__img"><img src="assets/worlds/world-06.jpg" alt="" loading="lazy"></div>
+              <div class="tnl-post__body">
+                <div class="tnl-post__kicker">Landscape</div>
+                <h3 class="tnl-post__h">Wadi Rum — the red desert we can’t lose</h3>
+                <div class="tnl-post__a">Read more <i></i></div>
+                <div class="tnl-post__date">Build 018</div>
+              </div>
+            </a>
+            <a class="tnl-post" href="#feed">
+              <div class="tnl-post__img"><img src="assets/worlds/world-07.jpg" alt="" loading="lazy"></div>
+              <div class="tnl-post__body">
+                <div class="tnl-post__kicker">Heritage</div>
+                <h3 class="tnl-post__h">Courtyard arches — geometry that holds a city</h3>
+                <div class="tnl-post__a">Read more <i></i></div>
+                <div class="tnl-post__date">Build 021</div>
+              </div>
+            </a>
+            <a class="tnl-post" href="#feed">
+              <div class="tnl-post__img"><img src="assets/worlds/world-08.jpg" alt="" loading="lazy"></div>
+              <div class="tnl-post__body">
+                <div class="tnl-post__kicker">Education</div>
+                <h3 class="tnl-post__h">A school corridor — a memory you can teach from</h3>
+                <div class="tnl-post__a">Read more <i></i></div>
+                <div class="tnl-post__date">Build 033</div>
+              </div>
+            </a>
+            <a class="tnl-post" href="#feed">
+              <div class="tnl-post__img"><img src="assets/worlds/world-09.jpg" alt="" loading="lazy"></div>
+              <div class="tnl-post__body">
+                <div class="tnl-post__kicker">Family</div>
+                <h3 class="tnl-post__h">A room a parent retired in — walked again</h3>
+                <div class="tnl-post__a">Read more <i></i></div>
+                <div class="tnl-post__date">Build 005</div>
+              </div>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════════════
+           TRAVEL PICK — Latest articles (ported concept)
+           ════════════════════════════════════════════════════════════ -->
+      <section class="tnl-editorial theme-light" id="articles" data-theme="light">
+        <div class="u-container">
+          <div class="tnl-editorial__top">
+            <h2 class="tnl-editorial__title reveal is-in">
+              <span>Latest</span>
+              <span>articles</span>
+            </h2>
+            <div class="tnl-editorial__meta">Drag to navigate</div>
+          </div>
+
+          <div class="tnl-strip" aria-label="Latest articles strip">
+            <a class="tnl-post" href="#cta">
+              <div class="tnl-post__img"><img src="assets/worlds/world-01.jpg" alt="" loading="lazy"></div>
+              <div class="tnl-post__body">
+                <div class="tnl-post__kicker">Guide</div>
+                <h3 class="tnl-post__h">How to film a place with only a phone (and keep it honest)</h3>
+                <div class="tnl-post__a">Read more <i></i></div>
+                <div class="tnl-post__date">6 min · Field</div>
+              </div>
+            </a>
+            <a class="tnl-post" href="#cta">
+              <div class="tnl-post__img"><img src="assets/worlds/world-04.jpg" alt="" loading="lazy"></div>
+              <div class="tnl-post__body">
+                <div class="tnl-post__kicker">Note</div>
+                <h3 class="tnl-post__h">A climate baseline you can walk through, not just chart</h3>
+                <div class="tnl-post__a">Read more <i></i></div>
+                <div class="tnl-post__date">4 min · Mountain</div>
+              </div>
+            </a>
+            <a class="tnl-post" href="#cta">
+              <div class="tnl-post__img"><img src="assets/worlds/world-02.jpg" alt="" loading="lazy"></div>
+              <div class="tnl-post__body">
+                <div class="tnl-post__kicker">Ethics</div>
+                <h3 class="tnl-post__h">What “consent” looks like when the place is someone’s home</h3>
+                <div class="tnl-post__a">Read more <i></i></div>
+                <div class="tnl-post__date">5 min · Family</div>
+              </div>
+            </a>
+            <a class="tnl-post" href="#cta">
+              <div class="tnl-post__img"><img src="assets/worlds/world-05.jpg" alt="" loading="lazy"></div>
+              <div class="tnl-post__body">
+                <div class="tnl-post__kicker">Case</div>
+                <h3 class="tnl-post__h">Schools using walkable memory as a living syllabus</h3>
+                <div class="tnl-post__a">Read more <i></i></div>
+                <div class="tnl-post__date">7 min · Education</div>
+              </div>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════════════
+           TRAVEL PICK — Voyages of discovery (ported concept)
+           ════════════════════════════════════════════════════════════ -->
+      <section class="travel-section travel-voyages theme-light" id="voyages" data-theme="light">
+        <div class="u-container">
+          <div class="voyages">
+            <div>
+              <div class="t-eyebrow">Voyages of discovery</div>
+              <h2 class="t-h3 reveal is-in">Exploration becomes protection when the record is <em>walkable</em>.</h2>
+              <div class="voyages-list">
+                <div class="voyages-item reveal is-in">
+                  <div class="k">01 · Capture</div>
+                  <p class="v">Two to six minutes of steady footage. One place. One intent.</p>
+                </div>
+                <div class="voyages-item reveal is-in">
+                  <div class="k">02 · Rebuild</div>
+                  <p class="v">Spatial AI turns it into a world you can enter, measure, and share.</p>
+                </div>
+                <div class="voyages-item reveal is-in">
+                  <div class="k">03 · Teach</div>
+                  <p class="v">Students and researchers learn inside the place, not around it.</p>
+                </div>
+                <div class="voyages-item reveal is-in">
+                  <div class="k">04 · Preserve</div>
+                  <p class="v">A timestamped baseline that outlives a screenshot and resists forgetting.</p>
+                </div>
+              </div>
+            </div>
+            <div class="reveal is-in">
+              <p>
+                Travel sites sell the dream of discovery. We keep the evidence of what was here — and who it mattered to.
+                If a place is at risk, a volunteer with a phone can become a field correspondent in minutes.
+              </p>
+              <div style="margin-top:26px; display:flex; gap:16px; flex-wrap:wrap;">
+                <a class="btn" href="#cta">Start a preservation session</a>
+                <a class="btn btn-ghost" href="#how">See the process</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════════════
+           Next level experiences — text reveal on scroll
+           ════════════════════════════════════════════════════════════ -->
+      <section class="tnl-experiences" id="experiences" data-theme="dark">
+        <div class="u-container">
+          <div class="tnl-experiences__inner">
+            <div>
+              <div class="t-eyebrow">Next level</div>
+              
+            <h2 class="tnl-experiences__big split-lines"><div class="line" style="display: block; text-align: start; width: 100%; position: relative;"><div class="word" style="display: inline-block;">Travel</div> <div class="word" style="display: inline-block;">experiences</div><div class="line-mask" style="transform: scaleX(1);"></div></div><div class="line" style="display: block; text-align: start; width: 100%; position: relative;"><div class="word" style="display: inline-block;">that</div> <div class="word" style="display: inline-block;">feel</div> <div class="word" style="display: inline-block;">like</div> <div class="word" style="display: inline-block;">an</div><div class="line-mask" style="transform: scaleX(1);"></div></div><div class="line" style="display: block; text-align: start; width: 100%; position: relative;"><em style="display: inline-block; position: relative;"><div class="word" style="display: inline-block;">entrance</div></em><div class="word" style="display: inline-block;">,</div> <div class="word" style="display: inline-block;">not</div> <div class="word" style="display: inline-block;">a</div><div class="line-mask" style="transform: scaleX(1);"></div></div><div class="line" style="display: block; text-align: start; width: 100%; position: relative;"><div class="word" style="display: inline-block;">bookmark.</div><div class="line-mask" style="transform: scaleX(1);"></div></div></h2></div>
+            <p class="reveal">
+              The Travel Next Level sections you like work because the copy is minimal and the motion is paced.
+              We keep that same rhythm, but point it at preservation: evidence-first, nonprofit, and direct.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════════════
+           CRISP HEADER — tom carder "Let's make moving pictures" port
+           ════════════════════════════════════════════════════════════ -->
+      <section class="crisp-header" id="crisp" data-theme="dark">
+        <div class="crisp-header__slider" id="crispSlider">
+          <div class="crisp-header__slider-list">
+            <div class="crisp-header__slide is-active" data-slide="0">
+              <video data-src="assets/worlds/world-04.mp4" poster="assets/worlds/world-04.jpg" muted="" loop="" playsinline="" preload="auto"></video>
+            </div>
+            <div class="crisp-header__slide" data-slide="1">
+              <video data-src="assets/worlds/world-02.mp4" poster="assets/worlds/world-02.jpg" muted="" loop="" playsinline="" preload="metadata"></video>
+            </div>
+            <div class="crisp-header__slide" data-slide="2">
+              <video data-src="assets/worlds/world-05.mp4" poster="assets/worlds/world-05.jpg" muted="" loop="" playsinline="" preload="metadata"></video>
+            </div>
+            <div class="crisp-header__slide" data-slide="3">
+              <video data-src="assets/worlds/world-03.mp4" poster="assets/worlds/world-03.jpg" muted="" loop="" playsinline="" preload="metadata"></video>
+            </div>
+          </div>
+        </div>
+
+        <div class="crisp-header__content">
+          <div class="crisp-header__text reveal">
+            <div class="t-eyebrow">Let’s make walkable memory.</div>
+            <h2 class="t-display">
+              We turn ordinary <em>phone footage</em> into walkable 3D worlds.
+            </h2>
+            <p>
+              Send us a video of a place worth remembering — a courtyard, a classroom, a grandparent’s living room. Our Spatial AI flow rebuilds it as a 3D world anyone can step inside, share, and protect.
+            </p>
+          </div>
+
+          <div class="crisp-header__bottom">
+            <div class="crisp-header__cta">
+              <button class="btn upload-trigger" type="button">Upload a memory</button>
+              <a class="btn btn-ghost" href="#feed">See it in action</a>
+            </div>
+            <div class="crisp-header__nav" id="crispNav" role="tablist" aria-label="Hero scenes">
+              <button class="crisp-header__nav-btn is-active" data-target="0" role="tab" aria-selected="true">
+                <span>01</span>
+                <span class="crisp-header__nav-progress"></span>
+              </button>
+              <button class="crisp-header__nav-btn" data-target="1" role="tab" aria-selected="false">
+                <span>02</span>
+                <span class="crisp-header__nav-progress"></span>
+              </button>
+              <button class="crisp-header__nav-btn" data-target="2" role="tab" aria-selected="false">
+                <span>03</span>
+                <span class="crisp-header__nav-progress"></span>
+              </button>
+              <button class="crisp-header__nav-btn" data-target="3" role="tab" aria-selected="false">
+                <span>04</span>
+                <span class="crisp-header__nav-progress"></span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════════════
+           CONTENT INTRO  (tom carder content_intro port)
+           ════════════════════════════════════════════════════════════ -->
+      <section class="content-intro" id="intro" data-theme="light">
+        <div class="u-container">
+          <div class="content-intro__grid">
+            <div class="content-intro__meta stagger">
+              <div><span>01</span><span>Manifesto · 2026</span></div>
+              <div><span>02</span><span>Spatial AI · phone in, world out</span></div>
+              <div><span>03</span><span>Built with families, schools, and NGOs</span></div>
+              <div><span>04</span><span>Open to anyone with footage</span></div>
+            </div>
+            <div>
+              
+              <p class="content-intro__lede split-lines"><div class="line" style="display: block; text-align: start; width: 100%; position: relative;"><div class="word" style="display: inline-block;">The</div> <div class="word" style="display: inline-block;">world</div> <div class="word" style="display: inline-block;">is</div> <div class="word" style="display: inline-block;">changing</div><div class="line-mask" style="transform: scaleX(1);"></div></div><div class="line" style="display: block; text-align: start; width: 100%; position: relative;"><div class="word" style="display: inline-block;">faster</div> <div class="word" style="display: inline-block;">than</div> <div class="word" style="display: inline-block;">we</div> <div class="word" style="display: inline-block;">can</div><div class="line-mask" style="transform: scaleX(1);"></div></div><div class="line" style="display: block; text-align: start; width: 100%; position: relative;"><div class="word" style="display: inline-block;">document</div> <div class="word" style="display: inline-block;">it.</div> <div class="word" style="display: inline-block;">We</div> <div class="word" style="display: inline-block;">already</div><div class="line-mask" style="transform: scaleX(1);"></div></div><div class="line" style="display: block; text-align: start; width: 100%; position: relative;"><div class="word" style="display: inline-block;">record</div> <div class="word" style="display: inline-block;">the</div> <div class="word" style="display: inline-block;">world</div> <div class="word" style="display: inline-block;">with</div> <div class="word" style="display: inline-block;">our</div><div class="line-mask" style="transform: scaleX(1);"></div></div><div class="line" style="display: block; text-align: start; width: 100%; position: relative;"><div class="word" style="display: inline-block;">phones</div> <div class="word" style="display: inline-block;">—</div> <div class="word" style="display: inline-block;">we</div> <div class="word" style="display: inline-block;">just</div> <div class="word" style="display: inline-block;">keep</div><div class="line-mask" style="transform: scaleX(1);"></div></div><div class="line" style="display: block; text-align: start; width: 100%; position: relative;"><div class="word" style="display: inline-block;">filing</div> <div class="word" style="display: inline-block;">it</div> <div class="word" style="display: inline-block;">away</div> <div class="word" style="display: inline-block;">as</div><div class="line-mask" style="transform: scaleX(1);"></div></div><div class="line" style="display: block; text-align: start; width: 100%; position: relative;"><span class="crossed" style="display: inline-block; position: relative;"><div class="word" style="display: inline-block;">screenshots</div></span><div class="line-mask" style="transform: scaleX(1);"></div></div><div class="line" style="display: block; text-align: start; width: 100%; position: relative;"><em style="display: inline-block; position: relative;"><div class="word" style="display: inline-block;">walkable</div> <div class="word" style="display: inline-block;">memory</div></em><div class="word" style="display: inline-block;">.</div> <div class="word" style="display: inline-block;">Send</div> <div class="word" style="display: inline-block;">us</div><div class="line-mask" style="transform: scaleX(1);"></div></div><div class="line" style="display: block; text-align: start; width: 100%; position: relative;"><div class="word" style="display: inline-block;">a</div> <div class="word" style="display: inline-block;">video</div> <div class="word" style="display: inline-block;">of</div> <div class="word" style="display: inline-block;">a</div> <div class="word" style="display: inline-block;">place</div> <div class="word" style="display: inline-block;">worth</div><div class="line-mask" style="transform: scaleX(1);"></div></div><div class="line" style="display: block; text-align: start; width: 100%; position: relative;"><div class="word" style="display: inline-block;">remembering</div> <div class="word" style="display: inline-block;">and</div> <div class="word" style="display: inline-block;">we’ll</div><div class="line-mask" style="transform: scaleX(1);"></div></div><div class="line" style="display: block; text-align: start; width: 100%; position: relative;"><div class="word" style="display: inline-block;">turn</div> <div class="word" style="display: inline-block;">it</div> <div class="word" style="display: inline-block;">into</div> <div class="word" style="display: inline-block;">a</div> <div class="word" style="display: inline-block;">world</div> <div class="word" style="display: inline-block;">you</div><div class="line-mask" style="transform: scaleX(1);"></div></div><div class="line" style="display: block; text-align: start; width: 100%; position: relative;"><div class="word" style="display: inline-block;">can</div> <div class="word" style="display: inline-block;">step</div> <div class="word" style="display: inline-block;">inside.</div><div class="line-mask" style="transform: scaleX(1);"></div></div></p><div class="content-intro__after">
+                <a class="btn-icon-link" href="#how"><span>See how a video becomes a world</span><span class="arrow"></span></a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════════════
+           BOLD BRAND — exploded type on scroll
+           ════════════════════════════════════════════════════════════ -->
+      <section class="bold-brand" id="bold" data-theme="light">
+        <div class="bold-brand__spacer" id="boldBrand">
+          <div class="bold-brand__sticky">
+            <div class="u-container bold-brand__inner">
+              <div class="t-eyebrow">Bold brand</div>
+              <h2 class="bold-brand__title reveal">
+                Memory that <em>moves</em> — not just images that disappear.
+              </h2>
+              <p class="bold-brand__deck reveal">
+                A nonprofit archive shouldn’t feel luxury or loud. It should feel inevitable: calm typography, deliberate motion, and evidence-first storytelling.
+              </p>
+            </div>
+            <div class="bold-brand__frags" aria-hidden="true">
+              <span class="frag" data-frag="0" style="--tx: 0.0px; --ty: 0.0px; --r: 0.00deg; --s: 0.980; --o: 0;">Field <b>correspondents</b></span>
+              <span class="frag" data-frag="1" style="--tx: 0.0px; --ty: 0.0px; --r: 0.00deg; --s: 0.980; --o: 0;">Community <b>consent</b></span>
+              <span class="frag" data-frag="2" style="--tx: 0.0px; --ty: 0.0px; --r: 0.00deg; --s: 0.980; --o: 0;">3D <b>baseline</b></span>
+              <span class="frag" data-frag="3" style="--tx: 0.0px; --ty: 0.0px; --r: 0.00deg; --s: 0.980; --o: 0;">Open <b>heritage</b></span>
+              <span class="frag" data-frag="4" style="--tx: 0.0px; --ty: 0.0px; --r: 0.00deg; --s: 0.980; --o: 0;">Schools &amp; <b>NGOs</b></span>
+              <span class="frag" data-frag="5" style="--tx: 0.0px; --ty: 0.0px; --r: 0.00deg; --s: 0.980; --o: 0;">Phones → <b>worlds</b></span>
+              <span class="frag" data-frag="6" style="--tx: 0.0px; --ty: 0.0px; --r: 0.00deg; --s: 0.980; --o: 0;">Timestamped <b>evidence</b></span>
+              <span class="frag" data-frag="7" style="--tx: 0.0px; --ty: 0.0px; --r: 0.00deg; --s: 0.980; --o: 0;">Walkable <b>memory</b></span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════════════
+           PROJECT FEED — tom carder content_project_feed port
+           ════════════════════════════════════════════════════════════ -->
+      <section class="project-feed" id="feed" data-theme="dark">
+        <div class="u-container">
+          <header class="project-feed__header">
+            <div class="t-eyebrow">See it in action</div>
+            <h2 class="t-h2 reveal">From a phone in your <em>pocket</em>, to a place you can <em>step inside</em>.</h2>
+            <p>Four field captures, four very different places. Same Spatial AI flow: footage in, walkable world out, archived for whoever needs it next.</p>
+          </header>
+
+          <div class="project-feed__list">
+            <article class="pf-item" style="--on: 0.000;">
+              <span class="pf-item__corner tl"><svg viewBox="0 0 21 21"><path d="M0.5 0v20H20.5"></path></svg></span>
+              <span class="pf-item__corner tr"><svg viewBox="0 0 21 21"><path d="M0.5 0v20H20.5"></path></svg></span>
+              <span class="pf-item__corner bl"><svg viewBox="0 0 21 21"><path d="M0.5 0v20H20.5"></path></svg></span>
+              <span class="pf-item__corner br"><svg viewBox="0 0 21 21"><path d="M0.5 0v20H20.5"></path></svg></span>
+              <div class="pf-item__crop">
+                <div class="pf-item__media">
+                  <video class="lazy-video" data-src="assets/worlds/world-01.mp4" poster="assets/worlds/world-01.jpg" muted="" loop="" playsinline="" preload="none"></video>
+                </div>
+                <div class="pf-item__inner">
+                  <div class="pf-item__title">
+                    <div class="t-eyebrow">001 · Heritage at risk · Lahore</div>
+                    <h3>Mughal arches you can <em>actually walk under</em>.</h3>
+                  </div>
+                  <button class="pf-item__cta upload-trigger"><span>Read field note</span><span class="arrow"></span></button>
+                </div>
+              </div>
+            </article>
+
+            <article class="pf-item" style="--on: 0.000;">
+              <span class="pf-item__corner tl"><svg viewBox="0 0 21 21"><path d="M0.5 0v20H20.5"></path></svg></span>
+              <span class="pf-item__corner tr"><svg viewBox="0 0 21 21"><path d="M0.5 0v20H20.5"></path></svg></span>
+              <span class="pf-item__corner bl"><svg viewBox="0 0 21 21"><path d="M0.5 0v20H20.5"></path></svg></span>
+              <span class="pf-item__corner br"><svg viewBox="0 0 21 21"><path d="M0.5 0v20H20.5"></path></svg></span>
+              <div class="pf-item__crop">
+                <div class="pf-item__media">
+                  <video class="lazy-video" data-src="assets/worlds/world-04.mp4" poster="assets/worlds/world-04.jpg" muted="" loop="" playsinline="" preload="none"></video>
+                </div>
+                <div class="pf-item__inner">
+                  <div class="pf-item__title">
+                    <div class="t-eyebrow">002 · Climate baseline · Nanga Parbat</div>
+                    <h3>The mountain that <em>won’t stay still</em>.</h3>
+                  </div>
+                  <button class="pf-item__cta upload-trigger"><span>Read field note</span><span class="arrow"></span></button>
+                </div>
+              </div>
+            </article>
+
+            <article class="pf-item" style="--on: 0.000;">
+              <span class="pf-item__corner tl"><svg viewBox="0 0 21 21"><path d="M0.5 0v20H20.5"></path></svg></span>
+              <span class="pf-item__corner tr"><svg viewBox="0 0 21 21"><path d="M0.5 0v20H20.5"></path></svg></span>
+              <span class="pf-item__corner bl"><svg viewBox="0 0 21 21"><path d="M0.5 0v20H20.5"></path></svg></span>
+              <span class="pf-item__corner br"><svg viewBox="0 0 21 21"><path d="M0.5 0v20H20.5"></path></svg></span>
+              <div class="pf-item__crop">
+                <div class="pf-item__media">
+                  <video class="lazy-video" data-src="assets/worlds/hero-02.mp4" poster="assets/worlds/hero-02.jpg" muted="" loop="" playsinline="" preload="none"></video>
+                </div>
+                <div class="pf-item__inner">
+                  <div class="pf-item__title">
+                    <div class="t-eyebrow">003 · Spaces of identity · Karachi</div>
+                    <h3>An entrance no longer <em>open to the public</em>.</h3>
+                  </div>
+                  <button class="pf-item__cta upload-trigger"><span>Read field note</span><span class="arrow"></span></button>
+                </div>
+              </div>
+            </article>
+
+            <article class="pf-item" style="--on: 0.000;">
+              <span class="pf-item__corner tl"><svg viewBox="0 0 21 21"><path d="M0.5 0v20H20.5"></path></svg></span>
+              <span class="pf-item__corner tr"><svg viewBox="0 0 21 21"><path d="M0.5 0v20H20.5"></path></svg></span>
+              <span class="pf-item__corner bl"><svg viewBox="0 0 21 21"><path d="M0.5 0v20H20.5"></path></svg></span>
+              <span class="pf-item__corner br"><svg viewBox="0 0 21 21"><path d="M0.5 0v20H20.5"></path></svg></span>
+              <div class="pf-item__crop">
+                <div class="pf-item__media">
+                  <video class="lazy-video" data-src="assets/worlds/hero-01.mp4" poster="assets/worlds/hero-01.jpg" muted="" loop="" playsinline="" preload="none"></video>
+                </div>
+                <div class="pf-item__inner">
+                  <div class="pf-item__title">
+                    <div class="t-eyebrow">004 · Personal memory · Karachi</div>
+                    <h3>A grandparent’s living room, <em>walked again</em>.</h3>
+                  </div>
+                  <button class="pf-item__cta upload-trigger"><span>Read field note</span><span class="arrow"></span></button>
+                </div>
+              </div>
+            </article>
+          </div>
+
+          <div class="project-feed__cta">
+            <a class="btn-icon-link" href="#cta"><span>See more preserved worlds</span><span class="arrow"></span></a>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════════════
+           IN GOOD COMPANY — tom carder content_client port
+           ════════════════════════════════════════════════════════════ -->
+      <section class="content-client" id="company" data-theme="light">
+        <div class="u-container">
+          <div class="t-eyebrow">In good company</div>
+          <h2 class="content-client__title t-h3 reveal">Built with the people who <em>care about places</em>.</h2>
+          <p class="content-client__lead">From a single family commission to a multi-school field program, we bring the same care to every preserved world. We love working with teams who want to keep places honest.</p>
+          <div class="content-client__logos stagger">
+            <span>UNESCO</span>
+            <span><em>Open Heritage</em></span>
+            <span>UN-Habitat</span>
+            <span>MIT Solve</span>
+            <span><em>NDU</em> Karachi</span>
+            <span>Wisconsin Schools</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════════════
+           Tom Carder-style collage statement
+           ════════════════════════════════════════════════════════════ -->
+      <section class="tcm-collage" id="collage" data-theme="light">
+        <div class="u-container tcm-collage__wrap">
+          <div class="tcm-collage__grid">
+            <div class="tcm-collage__stamp">
+              <span class="pill">Built on trust</span>
+              <span>Families · Schools · NGOs</span>
+            </div>
+
+            <h2 class="tcm-collage__title reveal">
+              From bold <span class="tcm-inline" aria-hidden="true"><img src="assets/worlds/world-06.jpg" alt="" loading="lazy"></span>
+              <span class="soft">communities</span>
+              to everyday <span class="tcm-inline" aria-hidden="true"><img src="assets/worlds/world-07.jpg" alt="" loading="lazy"></span>
+              teams, we work with
+              <span class="tcm-inline" aria-hidden="true"><img src="assets/worlds/world-08.jpg" alt="" loading="lazy"></span>
+              people, places, and stories that have
+              <span class="tcm-inline" aria-hidden="true"><img src="assets/worlds/world-09.jpg" alt="" loading="lazy"></span>
+              a future to share.
+            </h2>
+
+            <p class="tcm-collage__lede reveal">
+              We take the same cinematic care you like from Tom Carder Media—big type, quiet confidence, and purposeful rhythm—
+              and aim it at preservation. No luxury tone. Just clarity.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════════════
+           DISCIPLINES — photography / video / graphics / drone
+           ════════════════════════════════════════════════════════════ -->
+      <section class="disciplines" id="disciplines" data-theme="dark">
+        <div class="u-container">
+          <div class="disciplines__grid">
+            <div>
+              <div class="t-eyebrow">In the field</div>
+              <h2 class="t-h2 reveal">Four disciplines. One goal: a record people can <em>walk inside</em>.</h2>
+              <p class="reveal" style="margin:18px 0 0; color:rgba(239,238,236,0.72); max-width:52ch; font-size:var(--fs-large);">
+                The Tom Carder feel you like isn’t “luxury” — it’s clarity and pace. Here we keep the same cinematic cadence, but with a nonprofit palette and a direct message.
+              </p>
+
+              <div class="disciplines__list" role="tablist" aria-label="Disciplines">
+                <button class="disc-btn is-active" type="button" data-disc="video" aria-selected="true">
+                  <span class="n">01</span>
+                  <span class="t">Video</span>
+                  <p class="d">Slow pans, steady walking, consistent exposure. The kind of footage Spatial AI can rebuild faithfully.</p>
+                </button>
+                <button class="disc-btn" type="button" data-disc="photo" aria-selected="false">
+                  <span class="n">02</span>
+                  <span class="t">Photography</span>
+                  <p class="d">Still frames become anchors: signage, inscriptions, room details — the evidence that gives memory a spine.</p>
+                </button>
+                <button class="disc-btn" type="button" data-disc="graphic" aria-selected="false">
+                  <span class="n">03</span>
+                  <span class="t">Graphics</span>
+                  <p class="d">Labels, timelines, maps, and context overlays that stay quiet until you need them.</p>
+                </button>
+                <button class="disc-btn" type="button" data-disc="drone" aria-selected="false">
+                  <span class="n">04</span>
+                  <span class="t">Drone</span>
+                  <p class="d">Wide context: how a site sits in its landscape, how boundaries change, what disappears first.</p>
+                </button>
+              </div>
+            </div>
+
+            <div class="disciplines__media" aria-label="Discipline media">
+              <video id="discMedia" class="lazy-video" data-src="assets/worlds/world-02.mp4" poster="assets/worlds/world-02.jpg" muted="" loop="" playsinline="" preload="none"></video>
+              <div class="disciplines__cap">
+                <strong id="discCapK">Video</strong>
+                <p id="discCapV">A slow, steady capture turns into a stable world. The pace is the point.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════════════
+           JOURNEY — tom carder content_journey port
+           ════════════════════════════════════════════════════════════ -->
+      <section class="content-journey" id="how" data-theme="light">
+        <div class="u-container">
+          <div class="content-journey__inner">
+            <div class="content-journey__copy reveal">
+              <div class="t-eyebrow">A simple process</div>
+              <h2 class="t-h3" style="margin-top: 18px;">From phone video to <em>explorable world</em>.</h2>
+              <p>preservemy.world is built around a real Spatial AI flow: create a session, upload footage, track progress, and generate a 3D world anyone can step inside. Record. Upload. Process. Explore. Four phases, no equipment, no cost to the contributor.</p>
+              <div style="display:flex; gap:18px; flex-wrap:wrap; align-items:center;">
+                <button class="btn btn-dark upload-trigger" type="button">Begin a session</button>
+                <a class="btn-icon-link" href="#feed"><span>Read process notes</span><span class="arrow"></span></a>
+              </div>
+            </div>
+            <div class="content-journey__media reveal">
+              <video class="lazy-video" data-src="assets/worlds/world-09.mp4" poster="assets/worlds/world-09.jpg" muted="" loop="" playsinline="" preload="none"></video>
+              <span class="stamp">Build 005 · Walkable</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════════════
+           CAPABILITIES — tom carder content_services port
+           ════════════════════════════════════════════════════════════ -->
+      <section class="content-services" id="services" data-theme="dark">
+        <div class="u-container">
+          <header class="content-services__head">
+            <div class="t-eyebrow">Capabilities</div>
+            <h2 class="t-h2 reveal">What we <em>actually preserve</em>.</h2>
+            <p style="margin:0; max-width:48ch; color:rgba(239,238,236,0.66); font-size:var(--fs-large);">Four kinds of footage. The same flow. A world you can walk through, share, and remember.</p>
+          </header>
+          <div class="services-grid">
+            <article class="service-item">
+              <div class="num">PHASE 01</div>
+              <h3>Record</h3>
+              <p>Capture or pull video of a place worth remembering — a room, monument, street, school, shrine, home, or cultural site.</p>
+              <a class="btn-icon-link" href="#cta"><span>Recording brief</span><span class="arrow"></span></a>
+            </article>
+            <article class="service-item">
+              <div class="num">PHASE 02</div>
+              <h3>Upload</h3>
+              <p>Send the footage to preservemy.world. The upload starts a 3D preservation session in your name.</p>
+              <a class="btn-icon-link" href="#cta"><span>Submission flow</span><span class="arrow"></span></a>
+            </article>
+            <article class="service-item">
+              <div class="num">PHASE 03</div>
+              <h3>Process</h3>
+              <p>Spatial AI tracks progress and turns the video into a photorealistic place you can explore, light it, label it, walk it.</p>
+              <a class="btn-icon-link" href="#cta"><span>Pipeline notes</span><span class="arrow"></span></a>
+            </article>
+            <article class="service-item">
+              <div class="num">PHASE 04</div>
+              <h3>Explore</h3>
+              <p>The result becomes a walkable 3D world that can be viewed, shared, downloaded, and remembered for as long as the internet remembers anything.</p>
+              <a class="btn-icon-link" href="#cta"><span>Explore worlds</span><span class="arrow"></span></a>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════════════
+           STORIES — tom carder content_story port
+           ════════════════════════════════════════════════════════════ -->
+      <section class="content-story" id="stories" data-theme="light">
+        <div class="u-container">
+          <header class="content-story__head">
+            <div class="t-eyebrow">Stories worth sharing</div>
+            <h2 class="t-h3 reveal">The future deserves more than <em>screenshots</em>.</h2>
+            <p style="margin:0; max-width:52ch; color:rgba(25,21,18,0.66); font-size:var(--fs-large);">Field correspondents, families, and educators on what a walkable archive feels like once a place they love is inside it.</p>
+          </header>
+          <div class="stories">
+            <article class="story reveal">
+              <p>Working with the team felt like handing a memory back — not surrendering it. They asked what mattered about my grandfather’s living room, and they kept that part honest in the rebuild.</p>
+              <div class="story-author">
+                <strong>Aisha Rahman</strong>
+                <span>Family correspondent · Karachi</span>
+              </div>
+            </article>
+            <article class="story reveal">
+              <p>Our students walked Wadi Rum on a Tuesday in a Wisconsin classroom. Three of them asked, unprompted, whether places like this are protected. That question is the entire point.</p>
+              <div class="story-author">
+                <strong>Daniel Vega</strong>
+                <span>Educator · Madison, WI</span>
+              </div>
+            </article>
+            <article class="story reveal">
+              <p>For an NGO documenting at‑risk sites, this is the first preservation tool that doesn’t require equipment we can’t ship. A volunteer with a phone is now a field correspondent.</p>
+              <div class="story-author">
+                <strong>Mira Sólyom</strong>
+                <span>Programs lead · Open Heritage</span>
+              </div>
+            </article>
+            <article class="story reveal">
+              <p>I sent five minutes of footage from my mother’s old school. They sent back a place I could walk through with her one last time. There aren’t enough words for that.</p>
+              <div class="story-author">
+                <strong>Idris N.</strong>
+                <span>Submitter · Lahore</span>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════════════
+           CTA
+           ════════════════════════════════════════════════════════════ -->
+      <section class="content-cta" id="cta" data-theme="dark">
+        <div class="content-cta__bg" aria-hidden="true">
+          <video class="lazy-video" data-src="assets/worlds/world-09.mp4" poster="assets/worlds/world-09.jpg" autoplay="" muted="" loop="" playsinline="" preload="metadata"></video>
+        </div>
+        <div class="u-container">
+          <div class="content-cta__inner">
+            <div>
+              <div class="t-eyebrow">Preserve your world</div>
+              <h2 class="t-h2 reveal" style="margin-top:18px;">Have a video of a place <em>worth remembering?</em></h2>
+            </div>
+            <div>
+              <p>A memory on your phone could become a world someone walks through years from now. Send us footage, nominate a place, become a student ambassador, or partner with the preservation map.</p>
+              <div class="content-cta__actions">
+                <button class="btn upload-trigger" type="button">Upload a memory</button>
+                <a class="btn btn-ghost" href="#feed">See it in action</a>
+              </div>
+              <div class="content-cta__chips">
+                <div>Submission window<strong>Open · 2026</strong></div>
+                <div>Average return<strong>72 hours</strong></div>
+                <div>Built worlds<strong>042 &amp; counting</strong></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════════════
+           FOOTER
+           ════════════════════════════════════════════════════════════ -->
+      <footer class="footer" data-theme="dark">
+        <div class="u-container">
+          <div class="footer__grid">
+            <div class="footer__brand">
+              <div class="t-eyebrow">preservemy.world</div>
+              <h3>The future deserves more than <em>screenshots</em>.</h3>
+            </div>
+            <div>
+              <h4>Visit</h4>
+              <ul>
+                <li><a href="#feed">Worlds</a></li>
+                <li><a href="#how">How it works</a></li>
+                <li><a href="#services">Capabilities</a></li>
+                <li><a href="#stories">Stories</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4>Get involved</h4>
+              <ul>
+                <li><a href="#cta" class="upload-trigger">Upload a memory</a></li>
+                <li><a href="#cta">Become an ambassador</a></li>
+                <li><a href="#cta">Partner with us</a></li>
+                <li><a href="#cta">Educator program</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4>Contact</h4>
+              <ul>
+                <li><a href="https://wa.me/" target="_blank" rel="noopener">WhatsApp</a></li>
+                <li><a href="https://instagram.com/" target="_blank" rel="noopener">Instagram</a></li>
+                <li><a href="https://www.linkedin.com/" target="_blank" rel="noopener">LinkedIn</a></li>
+                <li><a href="mailto:hello@preservemy.world">hello@preservemy.world</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="footer__bigtype" aria-hidden="true">preserve <em>my world</em></div>
+        <div class="u-container">
+          <div class="footer__baseline">
+            <span>© 2026 preservemy.world · A walkable archive</span>
+            <span>Spatial AI · phone in, world out</span>
+          </div>
+        </div>
+      </footer>
+    </main>
+
+    <!-- ════════════════  MODAL  ════════════════ -->
+    <div class="modal" id="uploadModal" role="dialog" aria-modal="true" aria-labelledby="uploadTitle" aria-hidden="true">
+      <div class="modal__dialog">
+        <button class="modal__close" type="button" aria-label="Close">×</button>
+        <div class="t-eyebrow" style="color: var(--c-gold-500);">Submit a memory</div>
+        <h2 id="uploadTitle">Approach us <em>before</em> sending footage.</h2>
+        <p>Storage and processing resources are limited right now, so coordinate with our team first. We will guide you on what to record, how to send it, and what happens next.</p>
+        <div class="modal__links">
+          <a class="modal__link" href="https://wa.me/" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.5 3.5A11 11 0 002 12a11 11 0 001.5 5.5L2 22l4.7-1.5A11 11 0 0020.5 3.5zM12 20a8 8 0 01-4-1.1l-.3-.2-2.8.9.9-2.7-.2-.3A8 8 0 1112 20zm4.6-5.4c-.3-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1-.2.3-.6.8-.8 1-.1.2-.3.2-.5.1-.3-.1-1.1-.4-2.1-1.3-.8-.7-1.3-1.5-1.5-1.8-.1-.3 0-.4.1-.5.1-.1.3-.3.4-.5.1-.1.2-.3.2-.4.1-.2 0-.4 0-.5 0-.1-.6-1.5-.8-2-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.4.1-.7.3-.2.3-.9.9-.9 2.2 0 1.3 1 2.6 1.1 2.8.1.2 2 3 4.8 4.2.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.6-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3z"></path></svg>
+            WhatsApp
+          </a>
+          <a class="modal__link" href="https://instagram.com/" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.2c3.2 0 3.6 0 4.8.1 1.2.1 1.9.2 2.3.4.6.2 1 .5 1.4.9.4.4.7.8.9 1.4.2.4.4 1.1.4 2.3.1 1.2.1 1.6.1 4.8s0 3.6-.1 4.8c-.1 1.2-.2 1.9-.4 2.3-.2.6-.5 1-.9 1.4-.4.4-.8.7-1.4.9-.4.2-1.1.4-2.3.4-1.2.1-1.6.1-4.8.1s-3.6 0-4.8-.1c-1.2-.1-1.9-.2-2.3-.4-.6-.2-1-.5-1.4-.9-.4-.4-.7-.8-.9-1.4-.2-.4-.4-1.1-.4-2.3C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.8c.1-1.2.2-1.9.4-2.3.2-.6.5-1 .9-1.4.4-.4.8-.7 1.4-.9.4-.2 1.1-.4 2.3-.4C8.4 2.2 8.8 2.2 12 2.2zm0 1.8c-3.1 0-3.5 0-4.7.1-.9 0-1.4.1-1.7.2-.4.2-.7.4-1 .7-.3.3-.5.6-.7 1-.1.3-.2.8-.2 1.7C3.6 8.5 3.6 8.9 3.6 12s0 3.5.1 4.7c0 .9.1 1.4.2 1.7.2.4.4.7.7 1 .3.3.6.5 1 .7.3.1.8.2 1.7.2 1.2.1 1.6.1 4.7.1s3.5 0 4.7-.1c.9 0 1.4-.1 1.7-.2.4-.2.7-.4 1-.7.3-.3.5-.6.7-1 .1-.3.2-.8.2-1.7.1-1.2.1-1.6.1-4.7s0-3.5-.1-4.7c0-.9-.1-1.4-.2-1.7-.2-.4-.4-.7-.7-1-.3-.3-.6-.5-1-.7-.3-.1-.8-.2-1.7-.2C15.5 4 15.1 4 12 4zm0 3.1A4.9 4.9 0 1116.9 12 4.9 4.9 0 0112 7.1zm0 8.1A3.2 3.2 0 108.8 12 3.2 3.2 0 0012 15.2zm5.1-8.4a1.1 1.1 0 11-1.1-1.1 1.1 1.1 0 011.1 1.1z"></path></svg>
+            Instagram
+          </a>
+          <a class="modal__link" href="https://www.linkedin.com/" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zM8.3 18.5H5.7V9.7h2.6zM7 8.5a1.5 1.5 0 111.5-1.5A1.5 1.5 0 017 8.5zm11.5 10h-2.6v-4.3c0-1 0-2.4-1.4-2.4s-1.7 1.1-1.7 2.3v4.4h-2.6V9.7h2.5v1.2a2.7 2.7 0 012.4-1.4c2.6 0 3.1 1.7 3.1 4z"></path></svg>
+            LinkedIn
+          </a>
+        </div>
+        <div class="modal__note">Please do not send large videos until a representative confirms next steps.</div>
+      </div>
+    </div>
+
+    <!-- ════════════════  LENIS SMOOTH SCROLL  ════════════════ -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lenis@1.2.3/dist/lenis.min.js"></script>
+
+    <script>
+      (function () {
+        const body = document.body;
+
+        /* ─── LENIS smooth scroll (slow / buttery, like tom carder) ─────── */
+        const lenis = new Lenis({
+          duration: 1.4,                  // slower easing
+          easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+          smoothWheel: true,
+          smoothTouch: false,
+          touchMultiplier: 1.4,
+          wheelMultiplier: 0.9
+        });
+        function raf(time) {
+          lenis.raf(time);
+          requestAnimationFrame(raf);
+        }
+        requestAnimationFrame(raf);
+
+        const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+        const splitTypeReady = import("https://cdn.jsdelivr.net/npm/split-type@0.3.4/+esm")
+          .then((m) => m.default)
+          .catch(() => null);
+
+        const debounce = (fn, ms) => {
+          let t;
+          return (...args) => {
+            clearTimeout(t);
+            t = setTimeout(() => fn(...args), ms);
+          };
+        };
+
+        function setupSplitLineReveal(SplitType, lenisInst) {
+          if (!SplitType || reduceMotion) return;
+          let splits = [];
+
+          const build = () => {
+            try {
+              splits.forEach((s) => {
+                try {
+                  s.revert();
+                } catch (_) {}
+              });
+              splits = [];
+              document.querySelectorAll(".split-lines").forEach((el) => {
+                const st = new SplitType(el, { types: "lines, words" });
+                splits.push(st);
+                (st.lines || []).forEach((line) => {
+                  line.style.position = "relative";
+                  const mask = document.createElement("div");
+                  mask.className = "line-mask";
+                  line.appendChild(mask);
+                });
+              });
+            } catch (_) {}
+          };
+
+          build();
+
+          const updateLineMasks = () => {
+            document.querySelectorAll(".split-lines .line").forEach((line) => {
+              const mask = line.querySelector(".line-mask");
+              if (!mask) return;
+              const r = line.getBoundingClientRect();
+              const vh = window.innerHeight;
+              const start = vh * 0.92;
+              const end = vh * 0.12;
+              const span = Math.max(140, start - end);
+              let prog = (start - r.top) / span;
+              prog = Math.max(0, Math.min(1, prog));
+              mask.style.transform = `scaleX(${(1 - prog).toFixed(4)})`;
+            });
+          };
+
+          lenisInst.on("scroll", updateLineMasks);
+          window.addEventListener(
+            "resize",
+            debounce(() => {
+              build();
+              updateLineMasks();
+            }, 220)
+          );
+          updateLineMasks();
+        }
+
+        splitTypeReady.then((ST) => {
+          if (ST) setupSplitLineReveal(ST, lenis);
+        });
+
+        /* ─── Page progress bar ─────── */
+        const pageProgress = document.querySelector(".page-progress");
+        lenis.on("scroll", (e) => {
+          const max = (e.dimensions && e.dimensions.height ? e.dimensions.height : document.documentElement.scrollHeight) - window.innerHeight;
+          const p = Math.min(1, Math.max(0, e.scroll / Math.max(max, 1)));
+          pageProgress.style.setProperty("--p", (p * 100).toFixed(2) + "%");
+        });
+
+        /* ─── LOADER (wait for first hero video) ─────── */
+        const loader = document.getElementById("loader");
+        const loaderBar = document.getElementById("loaderBar");
+        const loaderPct = document.getElementById("loaderPct");
+        const heroVideos = Array.from(document.querySelectorAll(".tnl-hero video, .crisp-header__slide video"));
+        const firstHeroVideo = null; // hero is now a lottie scene, no <video> here
+        const doorLoaderEl = document.getElementById("tnlDoorPlayer");
+        let finished = false;
+
+        const setProgress = () => {
+          const items = heroVideos.slice(0, 4);
+          if (!items.length) return;
+          let acc = 0;
+          for (const v of items) {
+            if (v.readyState >= 3) acc += 1;
+            else if (v.buffered && v.buffered.length && v.duration) {
+              acc += Math.min(v.buffered.end(v.buffered.length - 1) / v.duration, 1);
+            } else if (v.readyState >= 2) acc += 0.5;
+            else acc += 0.18;
+          }
+          const pct = Math.min(0.99, acc / items.length);
+          const display = Math.round(pct * 100);
+          loaderBar.style.setProperty("--p", display + "%");
+          loaderPct.textContent = display + "%";
+        };
+
+        const finishLoader = () => {
+          if (finished) return;
+          finished = true;
+          loaderBar.style.setProperty("--p", "100%");
+          loaderPct.textContent = "100%";
+          requestAnimationFrame(() => {
+            body.classList.remove("is-loading");
+            loader.classList.add("is-hidden");
+          });
+        };
+
+        heroVideos.forEach((v) => {
+          v.addEventListener("progress", setProgress);
+          v.addEventListener("loadeddata", setProgress);
+          v.addEventListener("canplay", setProgress);
+        });
+        setProgress();
+
+        if (firstHeroVideo) {
+          const onReady = () => {
+            firstHeroVideo.play().catch(() => {});
+            finishLoader();
+          };
+          if (firstHeroVideo.readyState >= 3) onReady();
+          else {
+            firstHeroVideo.addEventListener("canplay", onReady, { once: true });
+            firstHeroVideo.addEventListener("loadeddata", onReady, { once: true });
+          }
+        } else if (doorLoaderEl) {
+          const onDoorBoot = () => finishLoader();
+          doorLoaderEl.addEventListener("load", onDoorBoot, { once: true });
+          doorLoaderEl.addEventListener("ready", onDoorBoot, { once: true });
+          doorLoaderEl.addEventListener("door-lottie-ready", onDoorBoot, { once: true });
+          doorLoaderEl.addEventListener("error", onDoorBoot, { once: true });
+          doorLoaderEl.addEventListener("door-lottie-error", onDoorBoot, { once: true });
+        }
+        setTimeout(finishLoader, 6200);
+
+        /* ─── CRISP HEADER carousel (auto + dot nav, like tom carder) ─── */
+        const crispSlides = document.querySelectorAll(".crisp-header__slide");
+        const crispBtns = document.querySelectorAll(".crisp-header__nav-btn");
+        const ROTATE = 6800;
+        let crispActive = 0;
+        let crispTimer = null;
+
+        const setCrispProgress = (idx) => {
+          crispBtns.forEach((b) => b.querySelector(".crisp-header__nav-progress").style.setProperty("--w", "0%"));
+          const btn = crispBtns[idx];
+          if (!btn) return;
+          const bar = btn.querySelector(".crisp-header__nav-progress");
+          let start = null;
+          const tick = (ts) => {
+            if (start === null) start = ts;
+            const p = Math.min(1, (ts - start) / ROTATE);
+            bar.style.setProperty("--w", (p * 100).toFixed(1) + "%");
+            if (p < 1 && crispActive === idx) requestAnimationFrame(tick);
+          };
+          requestAnimationFrame(tick);
+        };
+
+        const goCrisp = (idx) => {
+          crispActive = (idx + crispSlides.length) % crispSlides.length;
+          crispSlides.forEach((s, i) => {
+            s.classList.toggle("is-active", i === crispActive);
+            const v = s.querySelector("video");
+            if (!v) return;
+            if (i === crispActive) {
+              if (!v.src && v.dataset.src) v.src = v.dataset.src;
+              v.play().catch(() => {});
+            } else {
+              v.pause();
+            }
+          });
+          crispBtns.forEach((b, i) => {
+            b.classList.toggle("is-active", i === crispActive);
+            b.setAttribute("aria-selected", String(i === crispActive));
+          });
+          setCrispProgress(crispActive);
+        };
+
+        const startCrisp = () => {
+          // activate first slide video src
+          crispSlides.forEach((s, i) => {
+            const v = s.querySelector("video");
+            if (i === 0 && v && !v.src && v.dataset.src) v.src = v.dataset.src;
+          });
+          clearInterval(crispTimer);
+          crispTimer = setInterval(() => goCrisp(crispActive + 1), ROTATE);
+          setCrispProgress(crispActive);
+        };
+        crispBtns.forEach((b) => {
+          b.addEventListener("click", () => {
+            goCrisp(parseInt(b.dataset.target, 10));
+            startCrisp();
+          });
+        });
+
+        /* Activate the carousel when section scrolls into view */
+        const crispSection = document.getElementById("crisp");
+        if (crispSection && "IntersectionObserver" in window) {
+          const crispObs = new IntersectionObserver((entries) => {
+            entries.forEach((e) => {
+              if (e.isIntersecting) {
+                startCrisp();
+                crispObs.unobserve(crispSection);
+              }
+            });
+          }, { rootMargin: "100px 0px" });
+          crispObs.observe(crispSection);
+        } else {
+          startCrisp();
+        }
+
+        /* ─── Lazy-load videos ─────── */
+        const lazyVideos = Array.from(document.querySelectorAll(".lazy-video, video[data-lazy]"));
+        const playLazy = (v) => {
+          if (!v.src && v.dataset.src) v.src = v.dataset.src;
+          v.play().catch(() => {});
+        };
+        if ("IntersectionObserver" in window) {
+          const lazyObs = new IntersectionObserver((entries) => {
+            entries.forEach((e) => {
+              if (e.isIntersecting) {
+                playLazy(e.target);
+                lazyObs.unobserve(e.target);
+              }
+            });
+          }, { rootMargin: "300px 0px" });
+          lazyVideos.forEach((v) => lazyObs.observe(v));
+        } else {
+          lazyVideos.forEach(playLazy);
+        }
+
+        /* ─── REVEAL on scroll ─────── */
+        const reveals = Array.from(document.querySelectorAll(".reveal, .stagger"));
+        if ("IntersectionObserver" in window) {
+          const revObs = new IntersectionObserver((entries) => {
+            entries.forEach((e) => {
+              if (e.isIntersecting) {
+                e.target.classList.add("is-in");
+                revObs.unobserve(e.target);
+              }
+            });
+          }, { rootMargin: "0px 0px -8% 0px", threshold: 0.1 });
+          reveals.forEach((r) => revObs.observe(r));
+        } else {
+          reveals.forEach((r) => r.classList.add("is-in"));
+        }
+
+        /* ─── Bold brand exploded type (scroll-driven, restrained) ─── */
+        const bold = document.getElementById("boldBrand");
+        const frags = Array.from(document.querySelectorAll(".frag"));
+        const fragTargets = [
+          { x: -360, y: -180, r: -10, s: 1.0 },
+          { x: 260, y: -210, r: 8, s: 1.0 },
+          { x: -420, y: 40, r: 6, s: 1.0 },
+          { x: 340, y: 80, r: -6, s: 1.0 },
+          { x: -220, y: 210, r: 10, s: 1.0 },
+          { x: 220, y: 220, r: -12, s: 1.0 },
+          { x: -40, y: -260, r: 0, s: 1.0 },
+          { x: 40, y: 280, r: 0, s: 1.0 }
+        ];
+        const updateBold = () => {
+          if (!bold || !frags.length) return;
+          const r = bold.getBoundingClientRect();
+          const total = bold.offsetHeight - window.innerHeight;
+          if (total <= 0) return;
+          const p = Math.min(1, Math.max(0, -r.top / total));
+          // ease-in-out to keep it calm
+          const e = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+          frags.forEach((el, i) => {
+            const t = fragTargets[i % fragTargets.length];
+            el.style.setProperty("--tx", (t.x * e).toFixed(1) + "px");
+            el.style.setProperty("--ty", (t.y * e).toFixed(1) + "px");
+            el.style.setProperty("--r", (t.r * e).toFixed(2) + "deg");
+            el.style.setProperty("--s", (0.98 + 0.04 * e).toFixed(3));
+            el.style.setProperty("--o", String(Math.min(1, Math.max(0, (p - 0.08) / 0.18))));
+          });
+        };
+        window.addEventListener("scroll", updateBold, { passive: true });
+        window.addEventListener("resize", updateBold);
+        updateBold();
+
+        /* ─── Hero — TravelNext threed_story scroll choreography ───
+           Single 400vh section with a sticky lottie behind three copy panels.
+           Section progress p∈[0,1] drives:
+             • lottie frame scrub (0 → totalFrames-1)
+             • per-panel copy reveal (panel 1 at start, panel 2-a/b in middle, panel 3 at end)
+             • a final dark fade-out for handoff into the next section            */
+        const heroSection = document.querySelector(".tnl-hero");
+        const doorPlayer = document.getElementById("tnlDoorPlayer");
+        const heroFade = document.querySelector(".tnl-hero__fade");
+        const heroHint = document.querySelector(".tnl-hero__hint");
+        const heroCopies = heroSection ? Array.from(heroSection.querySelectorAll("[data-hero-panel]")) : [];
+        const clamp01 = (n) => Math.min(1, Math.max(0, n));
+        const easeOutQuad = (t) => 1 - (1 - t) * (1 - t);
+
+        let doorRaf = 0;
+        let doorAnim = null;
+        let doorAnimReady = false;
+        let pendingDoorProgress = 0;
+
+        const scrubLottieToProgress = (t01) => {
+          const p = clamp01(t01);
+          pendingDoorProgress = p;
+          if (!doorAnim || !doorAnimReady) return;
+          try {
+            const maxF = Math.max(0, (doorAnim.totalFrames || 1) - 1);
+            doorAnim.goToAndStop(p * maxF, true);
+          } catch (_) {}
+        };
+
+        if (doorPlayer && window.lottie) {
+          try {
+            doorAnim = window.lottie.loadAnimation({
+              container: doorPlayer,
+              renderer: "canvas",
+              loop: false,
+              autoplay: false,
+              path: "assets/door-lottie/data.json",
+              rendererSettings: {
+                clearCanvas: true,
+                progressiveLoad: true,
+                preserveAspectRatio: "xMidYMid slice"
+              }
+            });
+            doorAnim.addEventListener("DOMLoaded", () => {
+              doorAnimReady = true;
+              scrubLottieToProgress(pendingDoorProgress);
+              doorPlayer.dispatchEvent(new CustomEvent("door-lottie-ready"));
+            });
+            doorAnim.addEventListener("data_failed", () => {
+              doorPlayer.dispatchEvent(new CustomEvent("door-lottie-error"));
+            });
+          } catch (_) {
+            doorPlayer.dispatchEvent(new CustomEvent("door-lottie-error"));
+          }
+        } else if (doorPlayer) {
+          doorPlayer.dispatchEvent(new CustomEvent("door-lottie-error"));
+        }
+
+        // Reveal windows in section-progress space (0..1).
+        // panel1 (data-hero-panel="0"): visible from the start, fades out as panel 2 enters.
+        // panel2-a ("1") and panel2-b ("2") split the 200vh middle panel.
+        // panel3 ("3"): visible at the end while the door finishes opening.
+        const heroWindows = [
+          { in: -1.00, peakIn: 0.00, peakOut: 0.18, out: 0.28 },
+          { in:  0.28, peakIn: 0.36, peakOut: 0.48, out: 0.56 },
+          { in:  0.54, peakIn: 0.62, peakOut: 0.74, out: 0.82 },
+          { in:  0.80, peakIn: 0.88, peakOut: 1.10, out: 1.20 }
+        ];
+        const windowOpacity = (p, w) => {
+          if (p < w.in) return 0;
+          if (p < w.peakIn) return (p - w.in) / Math.max(0.0001, w.peakIn - w.in);
+          if (p < w.peakOut) return 1;
+          if (p < w.out) return 1 - (p - w.peakOut) / Math.max(0.0001, w.out - w.peakOut);
+          return 0;
+        };
+
+        const updateHero = () => {
+          if (!heroSection) return;
+          const r = heroSection.getBoundingClientRect();
+          const total = heroSection.offsetHeight - window.innerHeight;
+          if (total <= 0) return;
+          const p = clamp01(-r.top / total);
+          heroSection.style.setProperty("--door-p", p.toFixed(4));
+
+          heroCopies.forEach((el) => {
+            const idx = parseInt(el.getAttribute("data-hero-panel") || "0", 10);
+            const w = heroWindows[idx] || heroWindows[0];
+            const o = easeOutQuad(clamp01(windowOpacity(p, w)));
+            el.style.setProperty("--o", o.toFixed(3));
+          });
+
+          // Lottie scrubs across the entire section progress so the very first
+          // wheel turn already moves frames — no dead zone.
+          if (!reduceMotion) scrubLottieToProgress(p);
+
+          if (heroHint) heroHint.style.setProperty("--hint-o", clamp01(1 - p * 5).toFixed(3));
+
+          const fadeT = clamp01((p - 0.92) / 0.08);
+          if (heroFade) heroFade.style.opacity = fadeT.toFixed(3);
+        };
+
+        const scheduleDoor = () => {
+          if (doorRaf) cancelAnimationFrame(doorRaf);
+          doorRaf = requestAnimationFrame(() => {
+            doorRaf = 0;
+            updateHero();
+          });
+        };
+
+        window.addEventListener("scroll", scheduleDoor, { passive: true });
+        window.addEventListener("resize", scheduleDoor);
+        lenis.on("scroll", scheduleDoor);
+
+        if (doorPlayer && reduceMotion) {
+          const snapDoorOpen = () => scrubLottieToProgress(1);
+          doorPlayer.addEventListener("door-lottie-ready", snapDoorOpen, { once: true });
+          snapDoorOpen();
+        }
+
+        scheduleDoor();
+        if (doorPlayer) {
+          doorPlayer.addEventListener("door-lottie-ready", scheduleDoor, { once: true });
+        }
+
+        /* ─── Disciplines media switcher ─── */
+        const discMedia = document.getElementById("discMedia");
+        const discCapK = document.getElementById("discCapK");
+        const discCapV = document.getElementById("discCapV");
+        const discBtns = Array.from(document.querySelectorAll(".disc-btn"));
+        const discMap = {
+          video: {
+            k: "Video",
+            v: "A slow, steady capture turns into a stable world. The pace is the point.",
+            src: "assets/worlds/world-02.mp4",
+            poster: "assets/worlds/world-02.jpg"
+          },
+          photo: {
+            k: "Photography",
+            v: "Still frames become anchors: details, inscriptions, signage — the things people return to.",
+            src: "assets/worlds/world-04.mp4",
+            poster: "assets/worlds/world-04.jpg"
+          },
+          graphic: {
+            k: "Graphics",
+            v: "Quiet overlays: labels, timelines, routes. Clarity that doesn’t steal attention from the place.",
+            src: "assets/worlds/world-07.mp4",
+            poster: "assets/worlds/world-07.jpg"
+          },
+          drone: {
+            k: "Drone",
+            v: "Wide context: boundaries, approach routes, landscape change — the view that explains everything else.",
+            src: "assets/worlds/world-06.mp4",
+            poster: "assets/worlds/world-06.jpg"
+          }
+        };
+        const setDisc = (key) => {
+          const d = discMap[key] || discMap.video;
+          discBtns.forEach((b) => {
+            const on = b.dataset.disc === key;
+            b.classList.toggle("is-active", on);
+            b.setAttribute("aria-selected", String(on));
+          });
+          if (discCapK) discCapK.textContent = d.k;
+          if (discCapV) discCapV.textContent = d.v;
+          if (discMedia) {
+            discMedia.poster = d.poster;
+            discMedia.dataset.src = d.src;
+            if (!discMedia.src) playLazy(discMedia);
+            else {
+              discMedia.src = d.src;
+              discMedia.load();
+              discMedia.play().catch(() => {});
+            }
+          }
+        };
+        discBtns.forEach((b) => b.addEventListener("click", () => setDisc(b.dataset.disc)));
+
+        /* ─── Project feed scroll-progress for crop marks (--on) ─── */
+        const pfItems = Array.from(document.querySelectorAll(".pf-item"));
+        const updatePf = () => {
+          const vh = window.innerHeight;
+          for (const item of pfItems) {
+            const r = item.getBoundingClientRect();
+            // 0 when fully off-screen, 1 when item center is in viewport
+            const center = r.top + r.height / 2;
+            const dist = Math.abs(center - vh / 2);
+            const max = vh / 2 + r.height / 2;
+            const t = Math.max(0, 1 - dist / max);
+            // ease toward 1 quickly when near center, slowly when far
+            const eased = t * t * (3 - 2 * t);
+            item.style.setProperty("--on", eased.toFixed(3));
+          }
+        };
+        window.addEventListener("scroll", updatePf, { passive: true });
+        window.addEventListener("resize", updatePf);
+        updatePf();
+
+        /* ─── HEADER theme switching by section ─────── */
+        const sections = Array.from(document.querySelectorAll("[data-theme]"));
+        const setTheme = (mode) => {
+          body.classList.toggle("theme-on-light", mode === "light");
+          body.classList.toggle("theme-on-dark", mode === "dark");
+        };
+        const onScroll = () => {
+          const probe = 80;
+          let cur = "dark";
+          for (const s of sections) {
+            const r = s.getBoundingClientRect();
+            if (r.top <= probe && r.bottom > probe) {
+              cur = s.dataset.theme;
+            }
+          }
+          setTheme(cur);
+        };
+        window.addEventListener("scroll", onScroll, { passive: true });
+        onScroll();
+
+        /* ─── MODAL ─────── */
+        const modal = document.getElementById("uploadModal");
+        const modalClose = modal.querySelector(".modal__close");
+        const triggers = document.querySelectorAll(".upload-trigger");
+        const openModal = () => {
+          modal.classList.add("is-open");
+          modal.setAttribute("aria-hidden", "false");
+          body.classList.add("modal-open");
+          modalClose.focus();
+        };
+        const closeModal = () => {
+          modal.classList.remove("is-open");
+          modal.setAttribute("aria-hidden", "true");
+          body.classList.remove("modal-open");
+        };
+        triggers.forEach((t) =>
+          t.addEventListener("click", (e) => {
+            e.preventDefault();
+            openModal();
+          })
+        );
+        modalClose.addEventListener("click", closeModal);
+        modal.addEventListener("click", (e) => { if (e.target === modal) closeModal(); });
+        document.addEventListener("keydown", (e) => {
+          if (e.key === "Escape" && modal.classList.contains("is-open")) closeModal();
+        });
+
+        /* ─── Smooth in-page nav links via Lenis ─────── */
+        document.querySelectorAll('a[href^="#"]').forEach((a) => {
+          a.addEventListener("click", (e) => {
+            const href = a.getAttribute("href");
+            if (!href || href === "#") return;
+            const target = document.querySelector(href);
+            if (!target) return;
+            e.preventDefault();
+            lenis.scrollTo(target, { offset: 0, duration: 1.6 });
+          });
+        });
+      })();
+    </script>
+  
+
+<button id="magix-fab" aria-label="Open Magix Panel" role="button" tabindex="0" style="position: fixed !important; bottom: 24px !important; right: 24px !important; border-radius: 12px !important; background-color: rgb(255, 255, 255) !important; color: rgb(0, 0, 0) !important; font-size: 14px !important; border: 1px solid rgb(224, 224, 224) !important; padding: 10px 18px !important; cursor: pointer !important; z-index: 2147483647 !important; box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 12px, rgba(0, 0, 0, 0.06) 0px 2px 4px !important; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, &quot;Helvetica Neue&quot;, Arial, sans-serif !important; font-weight: 600 !important; line-height: 1.4 !important; text-align: center !important; white-space: nowrap !important; user-select: none !important; transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important; transform: scale(1) !important; filter: none !important; opacity: 1 !important; visibility: visible !important; display: flex !important; align-items: center !important; justify-content: center !important; gap: 6px !important; width: auto !important; height: auto !important; min-width: auto !important; min-height: auto !important; max-width: none !important; max-height: none !important; margin: 0px !important; outline: none !important; text-decoration: none !important; text-transform: none !important; letter-spacing: 0.02em !important; word-spacing: normal !important; backdrop-filter: blur(10px) !important;">Magix 🪄</button></body></html>

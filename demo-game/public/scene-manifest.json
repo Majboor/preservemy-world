@@ -1,0 +1,20 @@
+{
+  "plyUrl": "https://dev.heyharoon.io/share_it/scene.ply",
+  "loaderPreviewUrl": "./loader-point-cloud.json",
+  "trajectoryUrl": "./trajectory.json",
+  "bounds": {
+    "lo": [-5.151638714216846, -7.936507618049872, -24.014577864553914],
+    "hi": [8.94925424224215, 16.594513847934735, 9.621693326955356]
+  },
+  "spawn": [1.4, -1.13, 0.89],
+  "spawnRotation": {
+    "yaw": 2.42,
+    "pitch": 1.19
+  },
+  "alignment": {
+    "x": 0,
+    "y": 0,
+    "z": 1.8
+  },
+  "collectibleSeed": "preserve-demo-v1"
+}
