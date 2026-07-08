@@ -1,6 +1,21 @@
 # preservemy.world 🌍🚪
 
+<p align="center">
+  <img alt="Type: static site" src="https://img.shields.io/badge/type-static%20site-217f6f" />
+  <img alt="Build: none required" src="https://img.shields.io/badge/build-none%20required-58a677" />
+  <img alt="3D: three.js + Spark" src="https://img.shields.io/badge/3D-three.js%20%2B%20Spark-8fdbbb" />
+  <img alt="PWA installable" src="https://img.shields.io/badge/PWA-installable-b85f45" />
+  <img alt="License: All rights reserved" src="https://img.shields.io/badge/license-all%20rights%20reserved-07161c" />
+</p>
+
 > Walkable memory, heritage at risk. Turn ordinary phone footage into 3D worlds you can wander back into.
+
+**One-line preview** (Python is already on most machines):
+
+```bash
+git clone https://github.com/waleedsworld/preservemy-world.git && cd preservemy-world && python3 -m http.server 5803
+# then open http://127.0.0.1:5803/
+```
 
 **preservemy.world** takes the places people are quietly losing — a family room before a move, a courtyard before repair, a mountain path before the season changes it — and turns everyday video into **walkable 3D memories**. No stock footage, no fancy rig. Just a phone, a place worth keeping, and a door you can open again later.
 
@@ -32,7 +47,7 @@ This repository holds the marketing site (a lovingly hand-built, scroll-animated
 - **Captured by real people, on real phones** — no stock footage anywhere on the site.
 - **Fully responsive** — the layout, type, and media all adapt gracefully from a 4K monitor down to a pocket screen.
 - **Fast & considerate** — reduced-motion support, lite mode for weak connections, and lazily-loaded video posters.
-- **Social-ready** — Open Graph and Twitter card metadata so shared links look the part.
+- **Discoverable by default** — full Open Graph + Twitter card metadata, a 1200×630 social card, JSON-LD structured data (`WebSite` / `Organization` / `WebApplication`), a canonical URL, `robots.txt`, `sitemap.xml`, a site web manifest, and a complete favicon set — so shared links look the part and search engines understand the site.
 - **Installable demo** — the reconstruction viewer ships a web manifest and service worker, so it can live on a home screen.
 
 ## 🚀 Run it locally

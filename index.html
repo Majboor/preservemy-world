@@ -9,26 +9,90 @@
       name="description"
       content="preservemy.world turns ordinary phone footage into walkable 3D worlds for culture, family memory, travel, and heritage preservation."
     />
+    <meta
+      name="keywords"
+      content="3D reconstruction, Gaussian splatting, photogrammetry, heritage preservation, walkable memory, 3D memory, point cloud, phone footage to 3D, digital heritage, memory preservation"
+    />
+    <meta name="author" content="preservemy.world" />
+    <link rel="canonical" href="https://preservemy.world/" />
 
     <!-- Open Graph / social sharing -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="preservemy.world" />
+    <meta property="og:url" content="https://preservemy.world/" />
+    <meta property="og:locale" content="en_US" />
     <meta property="og:title" content="preservemy.world - Walkable memory, heritage at risk" />
     <meta
       property="og:description"
       content="Turn ordinary phone footage into walkable 3D worlds for culture, family memory, travel, and heritage preservation."
     />
-    <meta property="og:image" content="assets/lost-relic-poster.jpg" />
+    <meta property="og:image" content="https://preservemy.world/assets/social-card.jpg" />
+    <meta property="og:image:secure_url" content="https://preservemy.world/assets/social-card.jpg" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="A reconstructed heritage world you can walk back into, captured on a phone." />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@preservemyworld" />
+    <meta name="twitter:creator" content="@preservemyworld" />
     <meta name="twitter:title" content="preservemy.world - Walkable memory, heritage at risk" />
     <meta
       name="twitter:description"
       content="Turn ordinary phone footage into walkable 3D worlds for culture, family memory, travel, and heritage preservation."
     />
-    <meta name="twitter:image" content="assets/lost-relic-poster.jpg" />
+    <meta name="twitter:image" content="https://preservemy.world/assets/social-card.jpg" />
+    <meta name="twitter:image:alt" content="A reconstructed heritage world you can walk back into, captured on a phone." />
 
-    <link rel="icon" href="assets/preservethe-world-logo.png" />
-    <link rel="apple-touch-icon" href="assets/preservethe-world-logo.png" />
+    <!-- Icons / favicons -->
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png" />
+    <link rel="mask-icon" href="assets/preservethe-world-logo.png" color="#217f6f" />
+    <link rel="manifest" href="site.webmanifest" />
+
+    <!-- Structured data -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "@id": "https://preservemy.world/#website",
+            "url": "https://preservemy.world/",
+            "name": "preservemy.world",
+            "description": "Turn ordinary phone footage into walkable 3D worlds for culture, family memory, travel, and heritage preservation.",
+            "inLanguage": "en",
+            "publisher": { "@id": "https://preservemy.world/#organization" }
+          },
+          {
+            "@type": "Organization",
+            "@id": "https://preservemy.world/#organization",
+            "name": "preservemy.world",
+            "url": "https://preservemy.world/",
+            "logo": "https://preservemy.world/assets/preservethe-world-logo.png",
+            "description": "preservemy.world turns everyday phone video into walkable 3D memories, preserving places and heritage at risk.",
+            "sameAs": [
+              "https://www.instagram.com/preservemy.world/",
+              "https://www.linkedin.com/company/preservemy-world/",
+              "https://www.facebook.com/61588918005259/",
+              "https://www.reddit.com/r/preserveMyWorld/"
+            ]
+          },
+          {
+            "@type": "WebApplication",
+            "name": "preservemy.world 3D demo",
+            "url": "https://preservemy.world/demo-game/",
+            "applicationCategory": "MultimediaApplication",
+            "operatingSystem": "Any (web browser)",
+            "browserRequirements": "Requires WebGL and JavaScript",
+            "description": "An in-browser 3D viewer that streams a captured real-world scene as a Gaussian splat with a guided camera trajectory.",
+            "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+            "publisher": { "@id": "https://preservemy.world/#organization" }
+          }
+        ]
+      }
+    </script>
 
     <!-- Perf: warm up the CDN connection and preload the render-critical display + body fonts to cut layout shift -->
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />

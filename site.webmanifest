@@ -1,0 +1,32 @@
+{
+  "name": "preservemy.world",
+  "short_name": "preservemy",
+  "description": "Turn ordinary phone footage into walkable 3D worlds for culture, family memory, travel, and heritage preservation.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#07161c",
+  "theme_color": "#07161c",
+  "lang": "en",
+  "categories": ["photo", "lifestyle", "utilities"],
+  "icons": [
+    {
+      "src": "assets/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

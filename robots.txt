@@ -1,0 +1,5 @@
+# preservemy.world
+User-agent: *
+Allow: /
+
+Sitemap: https://preservemy.world/sitemap.xml
