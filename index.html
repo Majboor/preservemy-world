@@ -2098,13 +2098,13 @@
               <div class="form-loader" id="formLoader" role="status" aria-live="polite">
                 <div class="form-loader-box">
                   <strong>Loading opportunity</strong>
-                  <p id="formLoaderText">Opening Submit video from Google Forms. This can take a few seconds.</p>
+                  <p id="formLoaderText">Opening Submit video now. This can take a few seconds.</p>
                   <div class="form-loader-bar" aria-hidden="true"></div>
                 </div>
               </div>
               <iframe
                 id="programForm"
-                src="https://script.google.com/macros/s/AKfycbwz0x15zSWKtnwg8Zu2nnojz_qabk_CRkZW6duoT6qXi54V862VhR5hVHCldEzx6OBD/exec?program=creator-access"
+                src="https://api.preservemy.world/apply?program=creator-access"
                 title="PMW Opportunity"
                 loading="lazy">
               </iframe>
@@ -2677,7 +2677,7 @@
         updateMasks();
       }
 
-      const FORM_BASE_URL = "https://script.google.com/macros/s/AKfycbwz0x15zSWKtnwg8Zu2nnojz_qabk_CRkZW6duoT6qXi54V862VhR5hVHCldEzx6OBD/exec";
+      const FORM_BASE_URL = "https://api.preservemy.world/apply";
       const programForm = document.getElementById("programForm");
       const formLoader = document.getElementById("formLoader");
       const formLoaderText = document.getElementById("formLoaderText");
@@ -2696,9 +2696,9 @@
         if (!formLoader) return;
         clearTimeout(formLoadTimer);
         formLoader.classList.remove("is-hidden");
-        formLoaderText.textContent = `Opening ${formNames[program] || "the selected opportunity"} from Google Forms. This can take a few seconds.`;
+        formLoaderText.textContent = `Opening ${formNames[program] || "the selected opportunity"} now. This can take a few seconds.`;
         formLoadTimer = setTimeout(() => {
-          formLoaderText.textContent = "Still waiting on Google Forms. The opportunity should appear here shortly.";
+          formLoaderText.textContent = "Still loading. The opportunity should appear here shortly.";
         }, 7000);
       };
       const hideFormLoader = () => {
