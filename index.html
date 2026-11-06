@@ -1759,6 +1759,7 @@
       .walk-head p { max-width: 460px; margin: 0; color: rgba(255,255,255,0.7); font-size: 19px; line-height: 1.6; }
       .walk-grid { display: grid; grid-template-columns: minmax(300px, 440px) 1fr; gap: 56px; align-items: start; }
       .walk-pocket { margin: 0; }
+      .walk-tabs.walk-worlds { margin: 0 0 16px; }
       .walk-device { position: relative; aspect-ratio: 440 / 760; width: min(100%, calc(80vh * 0.579)); border-radius: 28px; overflow: hidden; background: #f5f5f3; border: 1px solid var(--line-light); box-shadow: 0 40px 90px rgba(0,0,0,0.45); }
       .walk-device iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; display: block; }
       .walk-poster { position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; border: 0; background: transparent; cursor: pointer; color: #fff; }
@@ -1790,6 +1791,7 @@
         .walk-head { grid-template-columns: 1fr; gap: 24px; }
         .walk-grid { grid-template-columns: 1fr; gap: 44px; }
         .walk-device { width: min(100%, 440px); margin-inline: auto; }
+        .walk-tabs.walk-worlds { max-width: 440px; margin-inline: auto; margin-bottom: 16px; }
         .walk-pocket figcaption { max-width: 440px; margin-inline: auto; }
       }
       @media (max-width: 720px) {
@@ -1862,7 +1864,7 @@
               <video src="assets/places/lite/videos/fuji-720.mp4" poster="assets/places/lite/videos/fuji-poster-720.jpg" data-full-src="https://studio.preservemy.world/media/places/fuji-1080.mp4" data-hi-src="https://studio.preservemy.world/media/places/fuji-1440.mp4" data-full-poster="https://studio.preservemy.world/media/places/fuji-poster-1080.jpg" muted loop playsinline autoplay preload="auto"></video>
               <div class="hero-slide-copy">
                 <h1><span>Discover</span><span>the places</span><span>we're trying</span><span>to <em>keep</em>.</span></h1>
-                <p>Walk through a community-built archive of heritage sites, streets, classrooms, homes, and travel memories captured by us with ordinary phones. No stock footage.</p>
+                <p>Walk through a community-built archive of heritage sites, streets, classrooms, homes, and travel memories.</p>
                 <div class="hero-actions">
                   <a class="btn is-ghost" href="#worlds">Start exploring</a>
                   <a class="btn form-jump" href="#forms" data-program="creator-access">Upload a memory</a>
@@ -1889,7 +1891,7 @@
               <video src="assets/places/lite/videos/nanga-720.mp4" poster="assets/places/lite/videos/nanga-poster-720.jpg" data-full-src="https://studio.preservemy.world/media/places/nanga-1080.mp4" data-hi-src="https://studio.preservemy.world/media/places/nanga-1440.mp4" data-full-poster="https://studio.preservemy.world/media/places/nanga-poster-1080.jpg" muted loop playsinline preload="metadata"></video>
               <div class="hero-slide-copy">
                 <h1><span>Discover</span><span>the places</span><span>we're trying</span><span>to <em>keep</em>.</span></h1>
-                <p>Walk through a community-built archive of heritage sites, streets, classrooms, homes, and travel memories captured by us with ordinary phones. No stock footage.</p>
+                <p>Walk through a community-built archive of heritage sites, streets, classrooms, homes, and travel memories.</p>
                 <div class="hero-actions">
                   <a class="btn is-ghost" href="#worlds">Start exploring</a>
                   <a class="btn form-jump" href="#forms" data-program="creator-access">Upload a memory</a>
@@ -1916,7 +1918,7 @@
           <article class="hero-door-panel is-active">
             <div class="hero-copy">
               <h1><span>Discover</span><span>the places</span><span>we're trying</span><span>to <em>keep</em>.</span></h1>
-              <p>Walk through a community-built archive of heritage sites, streets, classrooms, homes, and travel memories captured by us with ordinary phones. No stock footage.</p>
+              <p>Walk through a community-built archive of heritage sites, streets, classrooms, homes, and travel memories.</p>
               <div class="hero-actions">
                 <a class="btn is-ghost" href="#worlds">Start exploring</a>
                 <a class="btn form-jump" href="#forms" data-program="creator-access">Upload a memory</a>
@@ -1998,20 +2000,24 @@
           <div class="walk-head">
             <div class="eyebrow">Walk it</div>
             <h2 id="walkTitle">Step inside <em>instead of watching.</em></h2>
-            <p>Drag to look around, use the two sticks to walk. This one is running live in your browser.</p>
+            <p>Drag to look around, use the on-screen controls to move. Each world runs live in your browser.</p>
           </div>
           <div class="walk-grid">
             <figure class="walk-pocket">
+              <div class="walk-tabs walk-worlds" role="tablist" aria-label="Worlds">
+                <button type="button" role="tab" aria-selected="true" data-pocket="badshahi-mosque-5673" data-name="Badshahi Mosque, Lahore" data-short="Badshahi Mosque" data-note="3D reconstruction from aerial footage. Aerial footage: The Drone Life PK." data-poster="https://studio.preservemy.world/media/posters/badshahi.jpg" data-alt="The Badshahi Mosque in Lahore as a 3D world, with on-screen controls below">Badshahi Mosque</button>
+                <button type="button" role="tab" aria-selected="false" data-pocket="konstancin-jeziorna-from-the-air-d8cf" data-name="Konstancin-Jeziorna, Poland" data-short="Konstancin-Jeziorna" data-note="3D reconstruction from aerial footage. Aerial footage: Saltando." data-poster="https://studio.preservemy.world/media/posters/konstancin.jpg" data-alt="Konstancin-Jeziorna in Poland seen from the air as a 3D world, with on-screen controls below">Konstancin</button>
+              </div>
               <div class="walk-device" id="walkDevice">
-                <button class="walk-poster" type="button" id="walkPocketStart" aria-label="Load the Badshahi Mosque world and walk inside">
-                  <img src="https://studio.preservemy.world/media/posters/badshahi.jpg" width="440" height="760" alt="The Badshahi Mosque in Lahore as a 3D world, with look and walk controls below" loading="lazy" decoding="async" />
-                  <span class="walk-cta"><i></i>Tap to walk inside</span>
+                <button class="walk-poster" type="button" id="walkPocketStart" aria-label="Load the Badshahi Mosque world and step inside">
+                  <img src="https://studio.preservemy.world/media/posters/badshahi.jpg" width="440" height="760" id="walkPocketPoster" alt="The Badshahi Mosque in Lahore as a 3D world, with on-screen controls below" loading="lazy" decoding="async" />
+                  <span class="walk-cta"><i></i>Tap to step inside</span>
                 </button>
               </div>
               <figcaption>
-                <strong>Badshahi Mosque, Lahore</strong>
-                <span>3D reconstruction from aerial footage. Aerial footage: The Drone Life PK.</span>
-                <span class="walk-links"><a href="https://studio.preservemy.world/?pocket=badshahi-mosque-5673" target="_blank" rel="noopener">Open full screen</a><a href="https://game.preservemy.world" target="_blank" rel="noopener">Full experience</a></span>
+                <strong id="walkPocketName">Badshahi Mosque, Lahore</strong>
+                <span id="walkPocketNote">3D reconstruction from aerial footage. Aerial footage: The Drone Life PK.</span>
+                <span class="walk-links"><a id="walkPocketFull" href="https://studio.preservemy.world/?pocket=badshahi-mosque-5673" target="_blank" rel="noopener">Open full screen</a><a href="https://game.preservemy.world" target="_blank" rel="noopener">Full experience</a></span>
               </figcaption>
             </figure>
             <div class="walk-fly">
@@ -2039,7 +2045,7 @@
           <div class="latest-copy">
             <div class="eyebrow">In action</div>
             <h2>From place footage to a world you can revisit.</h2>
-            <p>The new set moves between Mount Fuji, Lahore, Wadi Rum, and Fairy Meadows. All footage was captured by us and turned into memory, with no stock clips in the archive.</p>
+            <p>The new set moves between Mount Fuji, Lahore, Wadi Rum, and Fairy Meadows.</p>
             <div class="hero-actions"><a class="btn" href="https://game.preservemy.world">Play the archive</a><a class="btn is-ghost" href="#how">See the process</a></div>
           </div>
         </div>
@@ -2207,7 +2213,7 @@
             <h2>Send us a place worth remembering.</h2>
           </div>
           <div>
-            <p>Start with a video. We will turn the best submissions into prototype worlds and help shape the archive around the stories behind them. The footage on this page was captured by us, not pulled from stock.</p>
+            <p>Start with a video. We will turn the best submissions into prototype worlds and help shape the archive around the stories behind them.</p>
             <div class="hero-actions"><a class="btn form-jump" href="#forms" data-program="creator-access">Upload a memory</a><a class="btn is-ghost" href="https://www.instagram.com/preservemy.world/" target="_blank" rel="noopener">Instagram</a></div>
           </div>
         </div>
@@ -2241,14 +2247,16 @@
         var video = document.getElementById("walkVideo");
         var play = document.getElementById("walkPlay");
         if (!device || !video) return;
-        var POCKET = "https://studio.preservemy.world/?pocket=badshahi-mosque-5673";
+        var POCKET_BASE = "https://studio.preservemy.world/?pocket=";
+        var POCKET = POCKET_BASE + "badshahi-mosque-5673";
+        var pocketShort = "Badshahi Mosque";
         var poster = startBtn;
         function stopVideo() { video.pause(); video.removeAttribute("src"); video.removeAttribute("controls"); video.load(); screen.classList.remove("is-playing"); }
         function stopPocket() { var f = device.querySelector("iframe"); if (f) { f.remove(); device.appendChild(poster); } }
         function startPocket() {
           stopVideo();
           var f = document.createElement("iframe");
-          f.src = POCKET; f.title = "Badshahi Mosque, walkable 3D world";
+          f.src = POCKET; f.title = pocketShort + ", 3D world";
           f.allow = "fullscreen; xr-spatial-tracking; accelerometer; gyroscope"; f.setAttribute("allowfullscreen", "");
           poster.remove(); device.appendChild(f);
         }
@@ -2259,7 +2267,19 @@
         }
         startBtn.addEventListener("click", startPocket);
         play.addEventListener("click", startVideo);
-        var tabs = document.querySelectorAll(".walk-tabs button");
+        var worlds = document.querySelectorAll(".walk-worlds button");
+        function pickWorld(w) {
+          for (var i = 0; i < worlds.length; i++) worlds[i].setAttribute("aria-selected", worlds[i] === w ? "true" : "false");
+          stopPocket();
+          POCKET = POCKET_BASE + w.dataset.pocket; pocketShort = w.dataset.short;
+          var img = document.getElementById("walkPocketPoster"); img.src = w.dataset.poster; img.alt = w.dataset.alt;
+          startBtn.setAttribute("aria-label", "Load the " + w.dataset.short + " world and step inside");
+          document.getElementById("walkPocketName").textContent = w.dataset.name;
+          document.getElementById("walkPocketNote").textContent = w.dataset.note;
+          document.getElementById("walkPocketFull").href = POCKET;
+        }
+        for (var w = 0; w < worlds.length; w++) worlds[w].addEventListener("click", function () { pickWorld(this); });
+        var tabs = document.querySelectorAll(".walk-fly .walk-tabs button");
         video.dataset.src = tabs[0].dataset.src;
         function pick(tab, autoplay) {
           for (var i = 0; i < tabs.length; i++) tabs[i].setAttribute("aria-selected", tabs[i] === tab ? "true" : "false");
